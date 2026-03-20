@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Essensplaner</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #4338ca;
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Auth ───────────────────────────────────────────────── */
+    .auth-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; }
+    .auth-card { background: var(--card); border-radius: 14px; box-shadow: 0 4px 24px rgba(0,0,0,.09); padding: 2rem; width: 100%; max-width: 400px; }
+    .auth-logo { font-size: 1.6rem; font-weight: 800; color: var(--primary); margin-bottom: .25rem; }
+    .auth-sub  { color: var(--muted); font-size: .9rem; margin-bottom: 1.5rem; }
+    .auth-tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
+    .auth-tab  { flex: 1; padding: .5rem; border: none; background: var(--bg); border-radius: 8px; cursor: pointer; font-size: .9rem; font-weight: 600; color: var(--muted); transition: .15s; }
+    .auth-tab.active { background: var(--primary); color: #fff; }
+
+    /* ── Forms ──────────────────────────────────────────────── */
+    .fg { margin-bottom: 1rem; }
+    label { display: block; font-size: .82rem; font-weight: 600; color: var(--muted); margin-bottom: .35rem; }
+    input[type="text"], input[type="password"] {
+      width: 100%; padding: .6rem .75rem; border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: .95rem; outline: none; transition: border-color .15s; font-family: inherit;
+    }
+    input:focus { border-color: var(--primary); }
+    .err { display: none; color: var(--danger); font-size: .85rem; background: #fef2f2; padding: .5rem .75rem; border-radius: 6px; margin-bottom: 1rem; }
+
+    /* ── Buttons ────────────────────────────────────────────── */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+           padding: .6rem 1.2rem; border: none; border-radius: 8px; font-size: .9rem;
+           font-weight: 600; cursor: pointer; transition: .15s; font-family: inherit; }
+    .btn-primary { background: var(--primary); color: #fff; width: 100%; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-sm  { padding: .35rem .75rem; font-size: .8rem; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ── Nav ────────────────────────────────────────────────── */
+    nav { background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    .nav-logo  { font-weight: 800; font-size: 1.1rem; color: var(--primary); }
+    .nav-links { display: flex; gap: .25rem; }
+    .nav-btn   { padding: .4rem .85rem; border-radius: 8px; border: none; background: none;
+                 color: var(--muted); font-size: .9rem; font-weight: 500; cursor: pointer; transition: .15s; }
+    .nav-btn:hover  { background: var(--bg); }
+    .nav-btn.active { background: #eef2ff; color: var(--primary); }
+    .nav-user  { display: flex; align-items: center; gap: .75rem; font-size: .9rem; color: var(--muted); }
+    .nav-out   { background: none; border: none; color: var(--muted); cursor: pointer; font-size: .85rem; text-decoration: underline; }
+    .nav-out:hover { color: var(--danger); }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .main  { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+    .page  { display: none; }
+    .page.active { display: block; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+    .page-title  { font-size: 1.25rem; font-weight: 700; }
+
+    /* ── Week grid ──────────────────────────────────────────── */
+    .week-nav   { display: flex; gap: .5rem; align-items: center; }
+    .week-label { font-size: .9rem; color: var(--muted); min-width: 190px; text-align: center; }
+    .week-grid  { display: grid; grid-template-columns: repeat(7, 1fr); gap: .75rem; }
+    @media (max-width: 900px) { .week-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 500px) { .week-grid { grid-template-columns: 1fr; } }
+
+    .day-card   { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+    .day-card.today { border-color: var(--primary); box-shadow: 0 0 0 2px #c7d2fe; }
+    .day-head   { padding: .55rem .875rem; background: #6366f1; color: #fff; }
+    .day-card.today .day-head { background: var(--primary); }
+    .day-name   { font-weight: 700; font-size: .85rem; }
+    .day-date   { font-size: .72rem; opacity: .85; }
+
+    .meal-slot  { padding: .55rem .875rem; border-bottom: 1px solid var(--border); min-height: 52px; }
+    .meal-slot:last-child { border-bottom: none; }
+    .meal-type  { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: .2rem; }
+    .meal-name  { font-size: .85rem; cursor: pointer; min-height: 1.2em; }
+    .meal-name:empty::before { content: '+ Mahlzeit'; color: #aaa; font-size: .8rem; }
+    .meal-name:hover { color: var(--primary); }
+    .meal-edit  { display: flex; gap: .3rem; }
+    .meal-input { flex: 1; padding: .25rem .5rem; border: 1.5px solid var(--primary); border-radius: 6px; font-size: .85rem; outline: none; font-family: inherit; }
+
+    /* ── Shopping ───────────────────────────────────────────── */
+    .s-list  { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+    .s-section { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+                 color: var(--muted); padding: .45rem 1rem; background: var(--bg); border-bottom: 1px solid var(--border); }
+    .s-item  { display: flex; align-items: center; gap: .75rem; padding: .7rem 1rem; border-bottom: 1px solid var(--border); }
+    .s-item:last-of-type { border-bottom: none; }
+    .s-item.done .s-text { text-decoration: line-through; color: var(--muted); }
+    .s-item input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--primary); flex-shrink: 0; cursor: pointer; }
+    .s-text  { flex: 1; font-size: .9rem; }
+    .s-del   { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 1rem; padding: .2rem .35rem; border-radius: 4px; }
+    .s-del:hover { color: var(--danger); background: #fef2f2; }
+    .s-add   { display: flex; gap: .5rem; padding: .75rem 1rem; background: var(--bg); border-top: 1px solid var(--border); }
+    .s-add input { flex: 1; padding: .5rem .75rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; outline: none; font-family: inherit; }
+    .s-add input:focus { border-color: var(--primary); }
+    .empty   { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .9rem; }
+  </style>
+</head>
+<body>
+
+<!-- ── Auth ─────────────────────────────────────────────────────── -->
+<div id="authScreen" class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">🍽️ Essensplaner</div>
+    <div class="auth-sub">Plane deine Mahlzeiten für die Woche</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="showTab('login')">Anmelden</button>
+      <button class="auth-tab" onclick="showTab('register')">Registrieren</button>
+    </div>
+    <div id="authErr" class="err"></div>
+
+    <div id="loginForm">
+      <div class="fg"><label>Benutzername</label><input type="text" id="lUser" placeholder="dein_name" /></div>
+      <div class="fg"><label>Passwort</label><input type="password" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" /></div>
+      <button class="btn btn-primary" onclick="doLogin()">Anmelden</button>
+    </div>
+
+    <div id="regForm" style="display:none">
+      <div class="fg"><label>Benutzername</label><input type="text" id="rUser" placeholder="dein_name" /></div>
+      <div class="fg"><label>Passwort</label><input type="password" id="rPass" placeholder="••••••••" /></div>
+      <div class="fg"><label>Passwort bestätigen</label><input type="password" id="rPass2" placeholder="••••••••" onkeydown="if(event.key==='Enter')doRegister()" /></div>
+      <button class="btn btn-primary" onclick="doRegister()">Registrieren</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── App ──────────────────────────────────────────────────────── -->
+<div id="appScreen" style="display:none">
+  <nav>
+    <div class="nav-inner">
+      <div class="nav-logo">🍽️ Essensplaner</div>
+      <div class="nav-links">
+        <button class="nav-btn active" id="navPlan" onclick="showPage('plan',this)">Wochenplan</button>
+        <button class="nav-btn" id="navShop" onclick="showPage('shopping',this)">Einkaufsliste</button>
+      </div>
+      <div class="nav-user">
+        <span id="navName"></span>
+        <button class="nav-out" onclick="doLogout()">Abmelden</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main">
+    <!-- Wochenplan -->
+    <div id="planPage" class="page active">
+      <div class="page-header">
+        <div class="page-title">Wochenplan</div>
+        <div class="week-nav">
+          <button class="btn btn-outline btn-sm" onclick="changeWeek(-1)">‹</button>
+          <span class="week-label" id="weekLabel"></span>
+          <button class="btn btn-outline btn-sm" onclick="changeWeek(1)">›</button>
+        </div>
+      </div>
+      <div class="week-grid" id="weekGrid"></div>
+    </div>
+
+    <!-- Einkaufsliste -->
+    <div id="shoppingPage" class="page">
+      <div class="page-header">
+        <div class="page-title">Einkaufsliste</div>
+        <button class="btn btn-outline btn-sm" onclick="renderShopping()">↻ Aktualisieren</button>
+      </div>
+      <div class="s-list" id="sList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Constants ────────────────────────────────────────────────────
+const DAYS  = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+const MEALS = ['Frühstück','Mittagessen','Abendessen'];
+
+// ── State ────────────────────────────────────────────────────────
+let currentUser = null;
+let weekOffset  = 0;
+
+// ── Helpers ──────────────────────────────────────────────────────
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function hash(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+  return h.toString(36);
+}
+
+function monday(offset = 0) {
+  const d = new Date();
+  const dow = d.getDay();
+  d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow) + offset * 7);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+const dateKey = d => d.toISOString().slice(0, 10);
+const dateFmt = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+const todayKey = () => dateKey(new Date());
+
+// ── Storage ──────────────────────────────────────────────────────
+function getUsers() { return JSON.parse(localStorage.getItem('ep_users') || '{}'); }
+function saveUsers(u) { localStorage.setItem('ep_users', JSON.stringify(u)); }
+
+function getData() { return JSON.parse(localStorage.getItem('ep_data_' + currentUser) || '{"meals":{},"shopping":[],"checked":{}}'); }
+function saveData(d) { localStorage.setItem('ep_data_' + currentUser, JSON.stringify(d)); }
+
+function getMeal(date, mi)      { return getData().meals[date + '_' + mi] || ''; }
+function setMeal(date, mi, val) { const d = getData(); d.meals[date + '_' + mi] = val; saveData(d); }
+
+// ── Auth ─────────────────────────────────────────────────────────
+function showTab(tab) {
+  document.getElementById('loginForm').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('regForm').style.display   = tab === 'register' ? '' : 'none';
+  document.getElementById('authErr').style.display   = 'none';
+  document.querySelectorAll('.auth-tab').forEach((el, i) =>
+    el.classList.toggle('active', i === (tab === 'login' ? 0 : 1)));
+}
+
+function authErr(msg) {
+  const el = document.getElementById('authErr');
+  el.textContent = msg;
+  el.style.display = '';
+}
+
+function doLogin() {
+  const user = document.getElementById('lUser').value.trim();
+  const pass = document.getElementById('lPass').value;
+  if (!user || !pass) return authErr('Bitte alle Felder ausfüllen.');
+  const users = getUsers();
+  if (!users[user] || users[user].pw !== hash(pass)) return authErr('Benutzername oder Passwort falsch.');
+  startSession(user);
+}
+
+function doRegister() {
+  const user  = document.getElementById('rUser').value.trim();
+  const pass  = document.getElementById('rPass').value;
+  const pass2 = document.getElementById('rPass2').value;
+  if (!user || !pass || !pass2) return authErr('Bitte alle Felder ausfüllen.');
+  if (pass !== pass2) return authErr('Passwörter stimmen nicht überein.');
+  if (pass.length < 4) return authErr('Passwort muss mindestens 4 Zeichen haben.');
+  const users = getUsers();
+  if (users[user]) return authErr('Benutzername bereits vergeben.');
+  users[user] = { pw: hash(pass) };
+  saveUsers(users);
+  startSession(user);
+}
+
+function startSession(user) {
+  currentUser = user;
+  localStorage.setItem('ep_session', user);
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display  = '';
+  document.getElementById('navName').textContent = user;
+  renderWeek();
+}
+
+function doLogout() {
+  currentUser = null;
+  localStorage.removeItem('ep_session');
+  document.getElementById('appScreen').style.display  = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+}
+
+// ── Navigation ───────────────────────────────────────────────────
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(name + 'Page').classList.add('active');
+  btn.classList.add('active');
+  if (name === 'shopping') renderShopping();
+}
+
+// ── Week plan ────────────────────────────────────────────────────
+function changeWeek(dir) { weekOffset += dir; renderWeek(); }
+
+function renderWeek() {
+  const mon = monday(weekOffset);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+
+  document.getElementById('weekLabel').textContent =
+    weekOffset ===  0 ? 'Diese Woche' :
+    weekOffset ===  1 ? 'Nächste Woche' :
+    weekOffset === -1 ? 'Letzte Woche'  :
+    dateFmt(mon) + ' – ' + dateFmt(sun);
+
+  const grid = document.getElementById('weekGrid');
+  grid.innerHTML = '';
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    const dk = dateKey(d);
+    const isToday = dk === todayKey();
+
+    const card = document.createElement('div');
+    card.className = 'day-card' + (isToday ? ' today' : '');
+    card.innerHTML =
+      `<div class="day-head">
+        <div class="day-name">${DAYS[i]}${isToday ? ' ●' : ''}</div>
+        <div class="day-date">${dateFmt(d)}</div>
+      </div>` +
+      MEALS.map((m, mi) =>
+        `<div class="meal-slot" id="slot_${dk}_${mi}">
+          <div class="meal-type">${m}</div>
+          <div class="meal-name" onclick="editMeal('${dk}',${mi})">${esc(getMeal(dk, mi))}</div>
+        </div>`
+      ).join('');
+
+    grid.appendChild(card);
+  }
+}
+
+function editMeal(dk, mi) {
+  const slot = document.getElementById(`slot_${dk}_${mi}`);
+  const nameEl = slot.querySelector('.meal-name');
+  if (slot.querySelector('.meal-edit')) return;
+  nameEl.style.display = 'none';
+
+  const row = document.createElement('div');
+  row.className = 'meal-edit';
+  row.innerHTML =
+    `<input class="meal-input" value="${esc(getMeal(dk, mi))}" placeholder="z.B. Pasta" />
+     <button class="btn btn-primary btn-sm" onclick="saveMeal('${dk}',${mi},this)">✓</button>`;
+  slot.appendChild(row);
+
+  const inp = row.querySelector('input');
+  inp.focus(); inp.select();
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter')  saveMeal(dk, mi, row.querySelector('button'));
+    if (e.key === 'Escape') cancelEdit(dk, mi);
+  });
+}
+
+function saveMeal(dk, mi, btn) {
+  const val = btn.closest('.meal-edit').querySelector('input').value.trim();
+  setMeal(dk, mi, val);
+  renderWeek();
+}
+
+function cancelEdit(dk, mi) {
+  const slot = document.getElementById(`slot_${dk}_${mi}`);
+  const edit = slot.querySelector('.meal-edit');
+  if (edit) edit.remove();
+  slot.querySelector('.meal-name').style.display = '';
+}
+
+// ── Shopping list ─────────────────────────────────────────────────
+function renderShopping() {
+  const mon = monday(weekOffset);
+  const fromPlan = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(mon); d.setDate(mon.getDate() + i);
+    const dk = dateKey(d);
+    for (let mi = 0; mi < 3; mi++) {
+      const m = getMeal(dk, mi);
+      if (m) fromPlan.push(m);
+    }
+  }
+
+  const data   = getData();
+  const custom = data.shopping || [];
+  const chk    = data.checked  || {};
+  const el     = document.getElementById('sList');
+  el.innerHTML = '';
+
+  if (!fromPlan.length && !custom.length) {
+    el.innerHTML = '<div class="empty">Keine Einträge. Trage Mahlzeiten im Wochenplan ein!</div>';
+    return;
+  }
+
+  if (fromPlan.length) {
+    el.innerHTML += '<div class="s-section">Aus dem Wochenplan</div>';
+    fromPlan.forEach((item, i) => {
+      const done = !!chk['p' + i];
+      el.innerHTML += `
+        <div class="s-item${done ? ' done' : ''}" id="pi_${i}">
+          <input type="checkbox" ${done ? 'checked' : ''} onchange="togglePlan(${i},this)" />
+          <span class="s-text">${esc(item)}</span>
+        </div>`;
+    });
+  }
+
+  el.innerHTML += '<div class="s-section">Eigene Artikel</div>';
+  custom.forEach((item, i) => {
+    el.innerHTML += `
+      <div class="s-item${item.done ? ' done' : ''}" id="ci_${i}">
+        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleCustom(${i},this)" />
+        <span class="s-text">${esc(item.name)}</span>
+        <button class="s-del" onclick="delCustom(${i})" title="Löschen">✕</button>
+      </div>`;
+  });
+
+  el.innerHTML += `
+    <div class="s-add">
+      <input type="text" id="newItem" placeholder="Artikel hinzufügen …" onkeydown="if(event.key==='Enter')addItem()" />
+      <button class="btn btn-primary btn-sm" onclick="addItem()">+ Hinzufügen</button>
+    </div>`;
+}
+
+function togglePlan(i, cb) {
+  const d = getData();
+  if (!d.checked) d.checked = {};
+  d.checked['p' + i] = cb.checked;
+  saveData(d);
+  document.getElementById('pi_' + i).classList.toggle('done', cb.checked);
+}
+
+function toggleCustom(i, cb) {
+  const d = getData();
+  d.shopping[i].done = cb.checked;
+  saveData(d);
+  document.getElementById('ci_' + i).classList.toggle('done', cb.checked);
+}
+
+function delCustom(i) {
+  const d = getData();
+  d.shopping.splice(i, 1);
+  saveData(d);
+  renderShopping();
+}
+
+function addItem() {
+  const inp  = document.getElementById('newItem');
+  const name = inp.value.trim();
+  if (!name) return;
+  const d = getData();
+  d.shopping.push({ name, done: false });
+  saveData(d);
+  inp.value = '';
+  renderShopping();
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+const saved = localStorage.getItem('ep_session');
+if (saved && getUsers()[saved]) startSession(saved);
+</script>
+</body>
+</html>
