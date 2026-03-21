@@ -15,6 +15,16 @@
       --muted: #6b7280;
       --danger: #ef4444;
     }
+    [data-theme="dark"] {
+      --primary: #818cf8;
+      --primary-dark: #6366f1;
+      --bg: #111827;
+      --card: #1f2937;
+      --border: #374151;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --danger: #f87171;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
@@ -43,6 +53,7 @@
            font-weight: 600; cursor: pointer; transition: .15s; font-family: inherit; }
     .btn-primary { background: var(--primary); color: #fff; width: 100%; }
     .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
     .btn-sm  { padding: .35rem .75rem; font-size: .8rem; }
     .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
     .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
@@ -105,12 +116,33 @@
     .s-add input { flex: 1; padding: .5rem .75rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; outline: none; font-family: inherit; }
     .s-add input:focus { border-color: var(--primary); }
     .empty   { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .9rem; }
+
+    /* ── Settings ───────────────────────────────────────────── */
+    .settings-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1rem; }
+    .settings-row  { display: flex; align-items: center; justify-content: space-between; padding: .9rem 1.25rem; border-bottom: 1px solid var(--border); }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-label { font-size: .95rem; font-weight: 500; }
+    .settings-sub   { font-size: .8rem; color: var(--muted); margin-top: .15rem; }
+    .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 24px; cursor: pointer; transition: .2s; }
+    .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+    .toggle input:checked + .toggle-slider { background: var(--primary); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { opacity: .88; }
+
+    /* ── Loading ─────────────────────────────────────────────── */
+    .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; font-size: 1rem; color: var(--muted); }
   </style>
 </head>
 <body>
 
+<!-- ── Loading ───────────────────────────────────────────────────── -->
+<div id="loadingScreen" class="loading">Wird geladen …</div>
+
 <!-- ── Auth ─────────────────────────────────────────────────────── -->
-<div id="authScreen" class="auth-wrap">
+<div id="authScreen" class="auth-wrap" style="display:none">
   <div class="auth-card">
     <div class="auth-logo">🍽️ Essensplaner</div>
     <div class="auth-sub">Plane deine Mahlzeiten für die Woche</div>
@@ -123,14 +155,14 @@
     <div id="loginForm">
       <div class="fg"><label>Benutzername</label><input type="text" id="lUser" placeholder="dein_name" /></div>
       <div class="fg"><label>Passwort</label><input type="password" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" /></div>
-      <button class="btn btn-primary" onclick="doLogin()">Anmelden</button>
+      <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Anmelden</button>
     </div>
 
     <div id="regForm" style="display:none">
       <div class="fg"><label>Benutzername</label><input type="text" id="rUser" placeholder="dein_name" /></div>
-      <div class="fg"><label>Passwort</label><input type="password" id="rPass" placeholder="••••••••" /></div>
+      <div class="fg"><label>Passwort</label><input type="password" id="rPass" placeholder="•••••••• (min. 6 Zeichen)" /></div>
       <div class="fg"><label>Passwort bestätigen</label><input type="password" id="rPass2" placeholder="••••••••" onkeydown="if(event.key==='Enter')doRegister()" /></div>
-      <button class="btn btn-primary" onclick="doRegister()">Registrieren</button>
+      <button class="btn btn-primary" id="registerBtn" onclick="doRegister()">Registrieren</button>
     </div>
   </div>
 </div>
@@ -143,6 +175,7 @@
       <div class="nav-links">
         <button class="nav-btn active" id="navPlan" onclick="showPage('plan',this)">Wochenplan</button>
         <button class="nav-btn" id="navShop" onclick="showPage('shopping',this)">Einkaufsliste</button>
+        <button class="nav-btn" id="navSettings" onclick="showPage('settings',this)">Einstellungen</button>
       </div>
       <div class="nav-user">
         <span id="navName"></span>
@@ -173,26 +206,70 @@
       </div>
       <div class="s-list" id="sList"></div>
     </div>
+
+    <!-- Einstellungen -->
+    <div id="settingsPage" class="page">
+      <div class="page-header">
+        <div class="page-title">Einstellungen</div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Dark Mode</div>
+            <div class="settings-sub">Dunkles Farbschema verwenden</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="darkToggle" onchange="toggleDark(this.checked)" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Account löschen</div>
+            <div class="settings-sub">Löscht deinen Account und alle gespeicherten Daten unwiderruflich</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteAccount()">Account löschen</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- ── Firebase SDKs ─────────────────────────────────────────────── -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
 <script>
+// ── Firebase Config ───────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyBqYqgPi_qeSxhmVpeDZcLd8Hl6OotdA_I",
+  authDomain: "memorydeck-af728.firebaseapp.com",
+  projectId: "memorydeck-af728",
+  storageBucket: "memorydeck-af728.firebasestorage.app",
+  messagingSenderId: "1077936268943",
+  appId: "1:1077936268943:web:9bf39e8a18f3f79068b2fa"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
 // ── Constants ────────────────────────────────────────────────────
 const DAYS  = ['Mo','Di','Mi','Do','Fr','Sa','So'];
 const MEALS = ['Frühstück','Mittagessen','Abendessen'];
+const FAKE_DOMAIN = '@essensplaner.app';
 
 // ── State ────────────────────────────────────────────────────────
 let currentUser = null;
+let currentUid  = null;
 let weekOffset  = 0;
+let appData     = { meals: {}, shopping: [], checked: {} };
 
 // ── Helpers ──────────────────────────────────────────────────────
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-function hash(s) {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-  return h.toString(36);
-}
 
 function monday(offset = 0) {
   const d = new Date();
@@ -205,15 +282,26 @@ const dateKey = d => d.toISOString().slice(0, 10);
 const dateFmt = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
 const todayKey = () => dateKey(new Date());
 
-// ── Storage ──────────────────────────────────────────────────────
-function getUsers() { return JSON.parse(localStorage.getItem('ep_users') || '{}'); }
-function saveUsers(u) { localStorage.setItem('ep_users', JSON.stringify(u)); }
+function userRef() {
+  return db.collection('users').doc(currentUid).collection('data').doc('main');
+}
 
-function getData() { return JSON.parse(localStorage.getItem('ep_data_' + currentUser) || '{"meals":{},"shopping":[],"checked":{}}'); }
-function saveData(d) { localStorage.setItem('ep_data_' + currentUser, JSON.stringify(d)); }
+// ── Data (Firestore) ─────────────────────────────────────────────
+async function loadData() {
+  const doc = await userRef().get();
+  if (doc.exists) {
+    appData = { meals: {}, shopping: [], checked: {}, ...doc.data() };
+  } else {
+    appData = { meals: {}, shopping: [], checked: {} };
+  }
+}
 
-function getMeal(date, mi)      { return getData().meals[date + '_' + mi] || ''; }
-function setMeal(date, mi, val) { const d = getData(); d.meals[date + '_' + mi] = val; saveData(d); }
+function saveData() {
+  userRef().set(appData).catch(console.error);
+}
+
+function getMeal(date, mi)      { return appData.meals[date + '_' + mi] || ''; }
+function setMeal(date, mi, val) { appData.meals[date + '_' + mi] = val; saveData(); }
 
 // ── Auth ─────────────────────────────────────────────────────────
 function showTab(tab) {
@@ -230,43 +318,116 @@ function authErr(msg) {
   el.style.display = '';
 }
 
-function doLogin() {
-  const user = document.getElementById('lUser').value.trim();
-  const pass = document.getElementById('lPass').value;
-  if (!user || !pass) return authErr('Bitte alle Felder ausfüllen.');
-  const users = getUsers();
-  if (!users[user] || users[user].pw !== hash(pass)) return authErr('Benutzername oder Passwort falsch.');
-  startSession(user);
+function setBusy(btnId, busy) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = busy;
+  btn.textContent = busy ? 'Bitte warten …' : (btnId === 'loginBtn' ? 'Anmelden' : 'Registrieren');
 }
 
-function doRegister() {
-  const user  = document.getElementById('rUser').value.trim();
+async function doLogin() {
+  const user = document.getElementById('lUser').value.trim().toLowerCase();
+  const pass = document.getElementById('lPass').value;
+  if (!user || !pass) return authErr('Bitte alle Felder ausfüllen.');
+  if (!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
+
+  setBusy('loginBtn', true);
+  try {
+    await auth.signInWithEmailAndPassword(user + FAKE_DOMAIN, pass);
+  } catch (e) {
+    authErr('Benutzername oder Passwort falsch.');
+    setBusy('loginBtn', false);
+  }
+}
+
+async function doRegister() {
+  const user  = document.getElementById('rUser').value.trim().toLowerCase();
   const pass  = document.getElementById('rPass').value;
   const pass2 = document.getElementById('rPass2').value;
   if (!user || !pass || !pass2) return authErr('Bitte alle Felder ausfüllen.');
+  if (!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
   if (pass !== pass2) return authErr('Passwörter stimmen nicht überein.');
-  if (pass.length < 4) return authErr('Passwort muss mindestens 4 Zeichen haben.');
-  const users = getUsers();
-  if (users[user]) return authErr('Benutzername bereits vergeben.');
-  users[user] = { pw: hash(pass) };
-  saveUsers(users);
-  startSession(user);
+  if (pass.length < 6) return authErr('Passwort muss mindestens 6 Zeichen haben.');
+
+  setBusy('registerBtn', true);
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(user + FAKE_DOMAIN, pass);
+    await db.collection('users').doc(cred.user.uid).set({ username: user });
+  } catch (e) {
+    if (e.code === 'auth/email-already-in-use') {
+      authErr('Benutzername bereits vergeben.');
+    } else {
+      authErr('Fehler: ' + e.message);
+    }
+    setBusy('registerBtn', false);
+  }
 }
 
-function startSession(user) {
-  currentUser = user;
-  localStorage.setItem('ep_session', user);
+async function startSession(uid, username) {
+  currentUid  = uid;
+  currentUser = username;
+  await loadData();
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('appScreen').style.display  = '';
-  document.getElementById('navName').textContent = user;
+  document.getElementById('navName').textContent = username;
   renderWeek();
 }
 
-function doLogout() {
+function showAuthScreen() {
+  currentUid  = null;
   currentUser = null;
-  localStorage.removeItem('ep_session');
+  appData     = { meals: {}, shopping: [], checked: {} };
   document.getElementById('appScreen').style.display  = 'none';
   document.getElementById('authScreen').style.display = 'flex';
+  setBusy('loginBtn', false);
+  setBusy('registerBtn', false);
+}
+
+function doLogout() {
+  auth.signOut();
+}
+
+// ── Firebase Auth State ───────────────────────────────────────────
+auth.onAuthStateChanged(async firebaseUser => {
+  document.getElementById('loadingScreen').style.display = 'none';
+  if (firebaseUser) {
+    const profileDoc = await db.collection('users').doc(firebaseUser.uid).get();
+    const username = profileDoc.exists ? profileDoc.data().username
+                                       : firebaseUser.email.split('@')[0];
+    await startSession(firebaseUser.uid, username);
+  } else {
+    showAuthScreen();
+  }
+});
+
+// ── Dark Mode ────────────────────────────────────────────────────
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  localStorage.setItem('ep_theme', dark ? 'dark' : 'light');
+}
+
+function toggleDark(dark) {
+  applyTheme(dark);
+}
+
+(function() {
+  const saved = localStorage.getItem('ep_theme');
+  if (saved === 'dark') applyTheme(true);
+})();
+
+// ── Account Deletion ─────────────────────────────────────────────
+async function deleteAccount() {
+  if (!confirm('Willst du deinen Account und alle deine Daten wirklich unwiderruflich löschen?')) return;
+  try {
+    await db.collection('users').doc(currentUid).collection('data').doc('main').delete();
+    await db.collection('users').doc(currentUid).delete();
+    await auth.currentUser.delete();
+  } catch (e) {
+    if (e.code === 'auth/requires-recent-login') {
+      alert('Bitte melde dich ab und erneut an, um deinen Account zu löschen.');
+    } else {
+      alert('Fehler beim Löschen: ' + e.message);
+    }
+  }
 }
 
 // ── Navigation ───────────────────────────────────────────────────
@@ -276,6 +437,10 @@ function showPage(name, btn) {
   document.getElementById(name + 'Page').classList.add('active');
   btn.classList.add('active');
   if (name === 'shopping') renderShopping();
+  if (name === 'settings') {
+    document.getElementById('darkToggle').checked =
+      localStorage.getItem('ep_theme') === 'dark';
+  }
 }
 
 // ── Week plan ────────────────────────────────────────────────────
@@ -365,9 +530,8 @@ function renderShopping() {
     }
   }
 
-  const data   = getData();
-  const custom = data.shopping || [];
-  const chk    = data.checked  || {};
+  const custom = appData.shopping || [];
+  const chk    = appData.checked  || {};
   const el     = document.getElementById('sList');
   el.innerHTML = '';
 
@@ -406,24 +570,21 @@ function renderShopping() {
 }
 
 function togglePlan(i, cb) {
-  const d = getData();
-  if (!d.checked) d.checked = {};
-  d.checked['p' + i] = cb.checked;
-  saveData(d);
+  if (!appData.checked) appData.checked = {};
+  appData.checked['p' + i] = cb.checked;
+  saveData();
   document.getElementById('pi_' + i).classList.toggle('done', cb.checked);
 }
 
 function toggleCustom(i, cb) {
-  const d = getData();
-  d.shopping[i].done = cb.checked;
-  saveData(d);
+  appData.shopping[i].done = cb.checked;
+  saveData();
   document.getElementById('ci_' + i).classList.toggle('done', cb.checked);
 }
 
 function delCustom(i) {
-  const d = getData();
-  d.shopping.splice(i, 1);
-  saveData(d);
+  appData.shopping.splice(i, 1);
+  saveData();
   renderShopping();
 }
 
@@ -431,16 +592,11 @@ function addItem() {
   const inp  = document.getElementById('newItem');
   const name = inp.value.trim();
   if (!name) return;
-  const d = getData();
-  d.shopping.push({ name, done: false });
-  saveData(d);
+  appData.shopping.push({ name, done: false });
+  saveData();
   inp.value = '';
   renderShopping();
 }
-
-// ── Init ──────────────────────────────────────────────────────────
-const saved = localStorage.getItem('ep_session');
-if (saved && getUsers()[saved]) startSession(saved);
 </script>
 </body>
 </html>
