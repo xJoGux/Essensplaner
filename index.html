@@ -108,6 +108,7 @@
     .s-item  { display: flex; align-items: center; gap: .75rem; padding: .7rem 1rem; border-bottom: 1px solid var(--border); }
     .s-item:last-of-type { border-bottom: none; }
     .s-item.done .s-text { text-decoration: line-through; color: var(--muted); }
+    .s-section.done-section { color: var(--muted); opacity: .7; }
     .s-item input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--primary); flex-shrink: 0; cursor: pointer; }
     .s-text  { flex: 1; font-size: .9rem; }
     .s-del   { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 1rem; padding: .2rem .35rem; border-radius: 4px; }
@@ -545,46 +546,79 @@ function renderShopping() {
     return;
   }
 
-  if (fromPlan.length) {
+  const doneItems = [];
+
+  const activePlan = fromPlan.filter((_, i) => !chk['p' + i]);
+  const donePlan   = fromPlan.map((item, i) => ({ item, key: 'p' + i, type: 'plan' }))
+                             .filter(x => chk[x.key]);
+
+  if (activePlan.length) {
     el.innerHTML += '<div class="s-section">Aus dem Wochenplan</div>';
     fromPlan.forEach((item, i) => {
-      const done = !!chk['p' + i];
+      if (chk['p' + i]) return;
       el.innerHTML += `
-        <div class="s-item${done ? ' done' : ''}" id="pi_${i}">
-          <input type="checkbox" ${done ? 'checked' : ''} onchange="togglePlan(${i},this)" />
+        <div class="s-item" id="pi_${i}">
+          <input type="checkbox" onchange="togglePlan(${i},this)" />
           <span class="s-text">${esc(item)}</span>
         </div>`;
     });
   }
 
-  el.innerHTML += '<div class="s-section">Eigene Artikel</div>';
-  custom.forEach((item, i) => {
-    el.innerHTML += `
-      <div class="s-item${item.done ? ' done' : ''}" id="ci_${i}">
-        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleCustom(${i},this)" />
-        <span class="s-text">${esc(item.name)}</span>
-        <button class="s-del" onclick="delCustom(${i})" title="Löschen">✕</button>
-      </div>`;
-  });
+  const activeCustom = custom.filter(x => !x.done);
+  const doneCustom   = custom.map((x, i) => ({ ...x, i })).filter(x => x.done);
+
+  if (activeCustom.length || !activePlan.length) {
+    el.innerHTML += '<div class="s-section">Eigene Artikel</div>';
+    custom.forEach((item, i) => {
+      if (item.done) return;
+      el.innerHTML += `
+        <div class="s-item" id="ci_${i}">
+          <input type="checkbox" onchange="toggleCustom(${i},this)" />
+          <span class="s-text">${esc(item.name)}</span>
+          <button class="s-del" onclick="delCustom(${i})" title="Löschen">✕</button>
+        </div>`;
+    });
+  }
 
   el.innerHTML += `
     <div class="s-add">
       <input type="text" id="newItem" placeholder="Artikel hinzufügen …" onkeydown="if(event.key==='Enter')addItem()" />
       <button class="btn btn-primary btn-sm" onclick="addItem()">+ Hinzufügen</button>
     </div>`;
+
+  const allDone = [...donePlan, ...doneCustom.map(x => ({ item: x.name, key: 'c' + x.i, type: 'custom', i: x.i }))];
+  if (allDone.length) {
+    el.innerHTML += '<div class="s-section done-section">Zuletzt abgehakt</div>';
+    donePlan.forEach(({ item, key }, idx) => {
+      const origIdx = fromPlan.indexOf(item);
+      el.innerHTML += `
+        <div class="s-item done" id="pi_done_${idx}">
+          <input type="checkbox" checked onchange="togglePlan(${origIdx},this)" />
+          <span class="s-text">${esc(item)}</span>
+        </div>`;
+    });
+    doneCustom.forEach(({ name, i }) => {
+      el.innerHTML += `
+        <div class="s-item done" id="ci_done_${i}">
+          <input type="checkbox" checked onchange="toggleCustom(${i},this)" />
+          <span class="s-text">${esc(name)}</span>
+          <button class="s-del" onclick="delCustom(${i})" title="Löschen">✕</button>
+        </div>`;
+    });
+  }
 }
 
 function togglePlan(i, cb) {
   if (!appData.checked) appData.checked = {};
   appData.checked['p' + i] = cb.checked;
   saveData();
-  document.getElementById('pi_' + i).classList.toggle('done', cb.checked);
+  renderShopping();
 }
 
 function toggleCustom(i, cb) {
   appData.shopping[i].done = cb.checked;
   saveData();
-  document.getElementById('ci_' + i).classList.toggle('done', cb.checked);
+  renderShopping();
 }
 
 function delCustom(i) {
