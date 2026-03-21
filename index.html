@@ -43,6 +43,7 @@
            font-weight: 600; cursor: pointer; transition: .15s; font-family: inherit; }
     .btn-primary { background: var(--primary); color: #fff; width: 100%; }
     .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
     .btn-sm  { padding: .35rem .75rem; font-size: .8rem; }
     .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
     .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
@@ -105,12 +106,18 @@
     .s-add input { flex: 1; padding: .5rem .75rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; outline: none; font-family: inherit; }
     .s-add input:focus { border-color: var(--primary); }
     .empty   { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .9rem; }
+
+    /* ── Loading ─────────────────────────────────────────────── */
+    .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; font-size: 1rem; color: var(--muted); }
   </style>
 </head>
 <body>
 
+<!-- ── Loading ───────────────────────────────────────────────────── -->
+<div id="loadingScreen" class="loading">Wird geladen …</div>
+
 <!-- ── Auth ─────────────────────────────────────────────────────── -->
-<div id="authScreen" class="auth-wrap">
+<div id="authScreen" class="auth-wrap" style="display:none">
   <div class="auth-card">
     <div class="auth-logo">🍽️ Essensplaner</div>
     <div class="auth-sub">Plane deine Mahlzeiten für die Woche</div>
@@ -123,14 +130,14 @@
     <div id="loginForm">
       <div class="fg"><label>Benutzername</label><input type="text" id="lUser" placeholder="dein_name" /></div>
       <div class="fg"><label>Passwort</label><input type="password" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" /></div>
-      <button class="btn btn-primary" onclick="doLogin()">Anmelden</button>
+      <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Anmelden</button>
     </div>
 
     <div id="regForm" style="display:none">
       <div class="fg"><label>Benutzername</label><input type="text" id="rUser" placeholder="dein_name" /></div>
-      <div class="fg"><label>Passwort</label><input type="password" id="rPass" placeholder="••••••••" /></div>
+      <div class="fg"><label>Passwort</label><input type="password" id="rPass" placeholder="•••••••• (min. 6 Zeichen)" /></div>
       <div class="fg"><label>Passwort bestätigen</label><input type="password" id="rPass2" placeholder="••••••••" onkeydown="if(event.key==='Enter')doRegister()" /></div>
-      <button class="btn btn-primary" onclick="doRegister()">Registrieren</button>
+      <button class="btn btn-primary" id="registerBtn" onclick="doRegister()">Registrieren</button>
     </div>
   </div>
 </div>
@@ -176,23 +183,39 @@
   </div>
 </div>
 
+<!-- ── Firebase SDKs ─────────────────────────────────────────────── -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
 <script>
+// ── Firebase Config ───────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyBqYqgPi_qeSxhmVpeDZcLd8Hl6OotdA_I",
+  authDomain: "memorydeck-af728.firebaseapp.com",
+  projectId: "memorydeck-af728",
+  storageBucket: "memorydeck-af728.firebasestorage.app",
+  messagingSenderId: "1077936268943",
+  appId: "1:1077936268943:web:9bf39e8a18f3f79068b2fa"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
 // ── Constants ────────────────────────────────────────────────────
 const DAYS  = ['Mo','Di','Mi','Do','Fr','Sa','So'];
 const MEALS = ['Frühstück','Mittagessen','Abendessen'];
+const FAKE_DOMAIN = '@essensplaner.app';
 
 // ── State ────────────────────────────────────────────────────────
 let currentUser = null;
+let currentUid  = null;
 let weekOffset  = 0;
+let appData     = { meals: {}, shopping: [], checked: {} };
 
 // ── Helpers ──────────────────────────────────────────────────────
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-function hash(s) {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-  return h.toString(36);
-}
 
 function monday(offset = 0) {
   const d = new Date();
@@ -205,15 +228,26 @@ const dateKey = d => d.toISOString().slice(0, 10);
 const dateFmt = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
 const todayKey = () => dateKey(new Date());
 
-// ── Storage ──────────────────────────────────────────────────────
-function getUsers() { return JSON.parse(localStorage.getItem('ep_users') || '{}'); }
-function saveUsers(u) { localStorage.setItem('ep_users', JSON.stringify(u)); }
+function userRef() {
+  return db.collection('users').doc(currentUid).collection('data').doc('main');
+}
 
-function getData() { return JSON.parse(localStorage.getItem('ep_data_' + currentUser) || '{"meals":{},"shopping":[],"checked":{}}'); }
-function saveData(d) { localStorage.setItem('ep_data_' + currentUser, JSON.stringify(d)); }
+// ── Data (Firestore) ─────────────────────────────────────────────
+async function loadData() {
+  const doc = await userRef().get();
+  if (doc.exists) {
+    appData = { meals: {}, shopping: [], checked: {}, ...doc.data() };
+  } else {
+    appData = { meals: {}, shopping: [], checked: {} };
+  }
+}
 
-function getMeal(date, mi)      { return getData().meals[date + '_' + mi] || ''; }
-function setMeal(date, mi, val) { const d = getData(); d.meals[date + '_' + mi] = val; saveData(d); }
+function saveData() {
+  userRef().set(appData).catch(console.error);
+}
+
+function getMeal(date, mi)      { return appData.meals[date + '_' + mi] || ''; }
+function setMeal(date, mi, val) { appData.meals[date + '_' + mi] = val; saveData(); }
 
 // ── Auth ─────────────────────────────────────────────────────────
 function showTab(tab) {
@@ -230,44 +264,88 @@ function authErr(msg) {
   el.style.display = '';
 }
 
-function doLogin() {
-  const user = document.getElementById('lUser').value.trim();
-  const pass = document.getElementById('lPass').value;
-  if (!user || !pass) return authErr('Bitte alle Felder ausfüllen.');
-  const users = getUsers();
-  if (!users[user] || users[user].pw !== hash(pass)) return authErr('Benutzername oder Passwort falsch.');
-  startSession(user);
+function setBusy(btnId, busy) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = busy;
+  btn.textContent = busy ? 'Bitte warten …' : (btnId === 'loginBtn' ? 'Anmelden' : 'Registrieren');
 }
 
-function doRegister() {
-  const user  = document.getElementById('rUser').value.trim();
+async function doLogin() {
+  const user = document.getElementById('lUser').value.trim().toLowerCase();
+  const pass = document.getElementById('lPass').value;
+  if (!user || !pass) return authErr('Bitte alle Felder ausfüllen.');
+  if (!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
+
+  setBusy('loginBtn', true);
+  try {
+    await auth.signInWithEmailAndPassword(user + FAKE_DOMAIN, pass);
+  } catch (e) {
+    authErr('Benutzername oder Passwort falsch.');
+    setBusy('loginBtn', false);
+  }
+}
+
+async function doRegister() {
+  const user  = document.getElementById('rUser').value.trim().toLowerCase();
   const pass  = document.getElementById('rPass').value;
   const pass2 = document.getElementById('rPass2').value;
   if (!user || !pass || !pass2) return authErr('Bitte alle Felder ausfüllen.');
+  if (!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
   if (pass !== pass2) return authErr('Passwörter stimmen nicht überein.');
-  if (pass.length < 4) return authErr('Passwort muss mindestens 4 Zeichen haben.');
-  const users = getUsers();
-  if (users[user]) return authErr('Benutzername bereits vergeben.');
-  users[user] = { pw: hash(pass) };
-  saveUsers(users);
-  startSession(user);
+  if (pass.length < 6) return authErr('Passwort muss mindestens 6 Zeichen haben.');
+
+  setBusy('registerBtn', true);
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(user + FAKE_DOMAIN, pass);
+    // Store display username in Firestore profile
+    await db.collection('users').doc(cred.user.uid).set({ username: user });
+  } catch (e) {
+    if (e.code === 'auth/email-already-in-use') {
+      authErr('Benutzername bereits vergeben.');
+    } else {
+      authErr('Fehler: ' + e.message);
+    }
+    setBusy('registerBtn', false);
+  }
 }
 
-function startSession(user) {
-  currentUser = user;
-  localStorage.setItem('ep_session', user);
+async function startSession(uid, username) {
+  currentUid  = uid;
+  currentUser = username;
+  await loadData();
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('appScreen').style.display  = '';
-  document.getElementById('navName').textContent = user;
+  document.getElementById('navName').textContent = username;
   renderWeek();
 }
 
-function doLogout() {
+function showAuthScreen() {
+  currentUid  = null;
   currentUser = null;
-  localStorage.removeItem('ep_session');
+  appData     = { meals: {}, shopping: [], checked: {} };
   document.getElementById('appScreen').style.display  = 'none';
   document.getElementById('authScreen').style.display = 'flex';
+  setBusy('loginBtn', false);
+  setBusy('registerBtn', false);
 }
+
+function doLogout() {
+  auth.signOut();
+}
+
+// ── Firebase Auth State ───────────────────────────────────────────
+auth.onAuthStateChanged(async firebaseUser => {
+  document.getElementById('loadingScreen').style.display = 'none';
+  if (firebaseUser) {
+    // Fetch username from profile doc
+    const profileDoc = await db.collection('users').doc(firebaseUser.uid).get();
+    const username = profileDoc.exists ? profileDoc.data().username
+                                       : firebaseUser.email.split('@')[0];
+    await startSession(firebaseUser.uid, username);
+  } else {
+    showAuthScreen();
+  }
+});
 
 // ── Navigation ───────────────────────────────────────────────────
 function showPage(name, btn) {
@@ -365,9 +443,8 @@ function renderShopping() {
     }
   }
 
-  const data   = getData();
-  const custom = data.shopping || [];
-  const chk    = data.checked  || {};
+  const custom = appData.shopping || [];
+  const chk    = appData.checked  || {};
   const el     = document.getElementById('sList');
   el.innerHTML = '';
 
@@ -406,24 +483,21 @@ function renderShopping() {
 }
 
 function togglePlan(i, cb) {
-  const d = getData();
-  if (!d.checked) d.checked = {};
-  d.checked['p' + i] = cb.checked;
-  saveData(d);
+  if (!appData.checked) appData.checked = {};
+  appData.checked['p' + i] = cb.checked;
+  saveData();
   document.getElementById('pi_' + i).classList.toggle('done', cb.checked);
 }
 
 function toggleCustom(i, cb) {
-  const d = getData();
-  d.shopping[i].done = cb.checked;
-  saveData(d);
+  appData.shopping[i].done = cb.checked;
+  saveData();
   document.getElementById('ci_' + i).classList.toggle('done', cb.checked);
 }
 
 function delCustom(i) {
-  const d = getData();
-  d.shopping.splice(i, 1);
-  saveData(d);
+  appData.shopping.splice(i, 1);
+  saveData();
   renderShopping();
 }
 
@@ -431,16 +505,11 @@ function addItem() {
   const inp  = document.getElementById('newItem');
   const name = inp.value.trim();
   if (!name) return;
-  const d = getData();
-  d.shopping.push({ name, done: false });
-  saveData(d);
+  appData.shopping.push({ name, done: false });
+  saveData();
   inp.value = '';
   renderShopping();
 }
-
-// ── Init ──────────────────────────────────────────────────────────
-const saved = localStorage.getItem('ep_session');
-if (saved && getUsers()[saved]) startSession(saved);
 </script>
 </body>
 </html>
