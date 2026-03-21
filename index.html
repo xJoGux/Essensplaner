@@ -116,6 +116,7 @@
     .s-add   { display: flex; gap: .5rem; padding: .75rem 1rem; background: var(--bg); border-top: 1px solid var(--border); }
     .s-add input { flex: 1; padding: .5rem .75rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; outline: none; font-family: inherit; }
     .s-add input:focus { border-color: var(--primary); }
+    .s-add .btn { width: auto; flex-shrink: 0; }
     .empty   { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .9rem; }
 
     /* ── Settings ───────────────────────────────────────────── */
@@ -546,16 +547,13 @@ function renderShopping() {
     return;
   }
 
-  const doneItems = [];
+  // Plan items – nur aktive anzeigen
+  const planActive = fromPlan.map((item, i) => ({ item, i })).filter(x => !chk['p' + x.i]);
+  const planDone   = fromPlan.map((item, i) => ({ item, i })).filter(x => !!chk['p' + x.i]);
 
-  const activePlan = fromPlan.filter((_, i) => !chk['p' + i]);
-  const donePlan   = fromPlan.map((item, i) => ({ item, key: 'p' + i, type: 'plan' }))
-                             .filter(x => chk[x.key]);
-
-  if (activePlan.length) {
+  if (planActive.length) {
     el.innerHTML += '<div class="s-section">Aus dem Wochenplan</div>';
-    fromPlan.forEach((item, i) => {
-      if (chk['p' + i]) return;
+    planActive.forEach(({ item, i }) => {
       el.innerHTML += `
         <div class="s-item" id="pi_${i}">
           <input type="checkbox" onchange="togglePlan(${i},this)" />
@@ -564,21 +562,19 @@ function renderShopping() {
     });
   }
 
-  const activeCustom = custom.filter(x => !x.done);
-  const doneCustom   = custom.map((x, i) => ({ ...x, i })).filter(x => x.done);
+  // Eigene Artikel – aktive anzeigen
+  const customActive = custom.map((x, i) => ({ ...x, i })).filter(x => !x.done);
+  const customDone   = custom.map((x, i) => ({ ...x, i })).filter(x => x.done);
 
-  if (activeCustom.length || !activePlan.length) {
-    el.innerHTML += '<div class="s-section">Eigene Artikel</div>';
-    custom.forEach((item, i) => {
-      if (item.done) return;
-      el.innerHTML += `
-        <div class="s-item" id="ci_${i}">
-          <input type="checkbox" onchange="toggleCustom(${i},this)" />
-          <span class="s-text">${esc(item.name)}</span>
-          <button class="s-del" onclick="delCustom(${i})" title="Löschen">✕</button>
-        </div>`;
-    });
-  }
+  el.innerHTML += '<div class="s-section">Eigene Artikel</div>';
+  customActive.forEach(({ name, i }) => {
+    el.innerHTML += `
+      <div class="s-item" id="ci_${i}">
+        <input type="checkbox" onchange="toggleCustom(${i},this)" />
+        <span class="s-text">${esc(name)}</span>
+        <button class="s-del" onclick="delCustom(${i})" title="Löschen">✕</button>
+      </div>`;
+  });
 
   el.innerHTML += `
     <div class="s-add">
@@ -586,20 +582,19 @@ function renderShopping() {
       <button class="btn btn-primary btn-sm" onclick="addItem()">+ Hinzufügen</button>
     </div>`;
 
-  const allDone = [...donePlan, ...doneCustom.map(x => ({ item: x.name, key: 'c' + x.i, type: 'custom', i: x.i }))];
-  if (allDone.length) {
-    el.innerHTML += '<div class="s-section done-section">Zuletzt abgehakt</div>';
-    donePlan.forEach(({ item, key }, idx) => {
-      const origIdx = fromPlan.indexOf(item);
+  // Erledigte Einträge ganz unten
+  if (planDone.length || customDone.length) {
+    el.innerHTML += '<div class="s-section done-section">Erledigt</div>';
+    planDone.forEach(({ item, i }) => {
       el.innerHTML += `
-        <div class="s-item done" id="pi_done_${idx}">
-          <input type="checkbox" checked onchange="togglePlan(${origIdx},this)" />
+        <div class="s-item done">
+          <input type="checkbox" checked onchange="togglePlan(${i},this)" />
           <span class="s-text">${esc(item)}</span>
         </div>`;
     });
-    doneCustom.forEach(({ name, i }) => {
+    customDone.forEach(({ name, i }) => {
       el.innerHTML += `
-        <div class="s-item done" id="ci_done_${i}">
+        <div class="s-item done">
           <input type="checkbox" checked onchange="toggleCustom(${i},this)" />
           <span class="s-text">${esc(name)}</span>
           <button class="s-del" onclick="delCustom(${i})" title="Löschen">✕</button>
