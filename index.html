@@ -78,12 +78,38 @@
     .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
     .page-title  { font-size: 1.25rem; font-weight: 700; }
 
+    /* ── View switcher ──────────────────────────────────────── */
+    .view-switch { display: flex; gap: .25rem; background: var(--bg); border-radius: 10px; padding: .2rem; border: 1px solid var(--border); }
+    .view-btn    { padding: .3rem .75rem; border-radius: 7px; border: none; background: none; font-size: .82rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: .15s; }
+    .view-btn.active { background: var(--primary); color: #fff; }
+
     /* ── Week grid ──────────────────────────────────────────── */
     .week-nav   { display: flex; gap: .5rem; align-items: center; }
     .week-label { font-size: .9rem; color: var(--muted); min-width: 190px; text-align: center; }
     .week-grid  { display: grid; grid-template-columns: repeat(7, 1fr); gap: .75rem; }
     @media (max-width: 900px) { .week-grid { grid-template-columns: repeat(2,1fr); } }
     @media (max-width: 500px) { .week-grid { grid-template-columns: 1fr; } }
+
+    /* ── Day view ───────────────────────────────────────────── */
+    .day-view-card { background: var(--card); border-radius: 14px; border: 1px solid var(--border); max-width: 480px; overflow: hidden; }
+    .day-view-card.today { border-color: var(--primary); box-shadow: 0 0 0 2px #c7d2fe; }
+    .day-view-head { padding: .9rem 1.25rem; background: #6366f1; color: #fff; }
+    .day-view-card.today .day-view-head { background: var(--primary); }
+    .day-view-name { font-weight: 700; font-size: 1.1rem; }
+    .day-view-date { font-size: .85rem; opacity: .85; }
+
+    /* ── Month grid ─────────────────────────────────────────── */
+    .month-grid    { display: grid; grid-template-columns: repeat(7, 1fr); gap: .4rem; }
+    .month-header  { display: grid; grid-template-columns: repeat(7, 1fr); gap: .4rem; margin-bottom: .3rem; }
+    .month-dname   { text-align: center; font-size: .72rem; font-weight: 700; color: var(--muted); padding: .25rem 0; text-transform: uppercase; }
+    .month-cell    { background: var(--card); border: 1px solid var(--border); border-radius: 8px; min-height: 80px; padding: .35rem .4rem; cursor: pointer; transition: border-color .15s; }
+    .month-cell:hover { border-color: var(--primary); }
+    .month-cell.today { border-color: var(--primary); box-shadow: 0 0 0 2px #c7d2fe; }
+    .month-cell.other-month { opacity: .4; }
+    .month-num     { font-size: .75rem; font-weight: 700; color: var(--muted); margin-bottom: .25rem; }
+    .month-cell.today .month-num { color: var(--primary); }
+    .month-meal-dot { font-size: .72rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: .1rem; }
+    @media (max-width: 600px) { .month-cell { min-height: 55px; } .month-meal-dot { display: none; } }
 
     .day-card   { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
     .day-card.today { border-color: var(--primary); box-shadow: 0 0 0 2px #c7d2fe; }
@@ -190,14 +216,21 @@
     <!-- Wochenplan -->
     <div id="planPage" class="page active">
       <div class="page-header">
-        <div class="page-title">Wochenplan</div>
-        <div class="week-nav">
-          <button class="btn btn-outline btn-sm" onclick="changeWeek(-1)">‹</button>
-          <span class="week-label" id="weekLabel"></span>
-          <button class="btn btn-outline btn-sm" onclick="changeWeek(1)">›</button>
+        <div class="page-title" id="planTitle">Wochenplan</div>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+          <div class="view-switch">
+            <button class="view-btn" id="vDay" onclick="setView('day')">Tag</button>
+            <button class="view-btn active" id="vWeek" onclick="setView('week')">Woche</button>
+            <button class="view-btn" id="vMonth" onclick="setView('month')">Monat</button>
+          </div>
+          <div class="week-nav">
+            <button class="btn btn-outline btn-sm" onclick="changeOffset(-1)">‹</button>
+            <span class="week-label" id="weekLabel"></span>
+            <button class="btn btn-outline btn-sm" onclick="changeOffset(1)">›</button>
+          </div>
         </div>
       </div>
-      <div class="week-grid" id="weekGrid"></div>
+      <div id="planView"></div>
     </div>
 
     <!-- Einkaufsliste -->
@@ -268,6 +301,7 @@ const FAKE_DOMAIN = '@essensplaner.app';
 let currentUser = null;
 let currentUid  = null;
 let weekOffset  = 0;
+let currentView = 'week';
 let appData     = { meals: {}, shopping: [], checked: {} };
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -371,7 +405,7 @@ async function startSession(uid, username) {
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('appScreen').style.display  = '';
   document.getElementById('navName').textContent = username;
-  renderWeek();
+  renderPlan();
 }
 
 function showAuthScreen() {
@@ -445,21 +479,75 @@ function showPage(name, btn) {
   }
 }
 
-// ── Week plan ────────────────────────────────────────────────────
-function changeWeek(dir) { weekOffset += dir; renderWeek(); }
+// ── View switching ────────────────────────────────────────────────
+function setView(v) {
+  currentView = v;
+  weekOffset  = 0;
+  ['day','week','month'].forEach(x => {
+    document.getElementById('v' + x.charAt(0).toUpperCase() + x.slice(1))
+            .classList.toggle('active', x === v);
+  });
+  renderPlan();
+}
 
+function changeOffset(dir) { weekOffset += dir; renderPlan(); }
+
+function renderPlan() {
+  if (currentView === 'week')  renderWeek();
+  else if (currentView === 'day') renderDay();
+  else renderMonth();
+}
+
+// ── Day view ─────────────────────────────────────────────────────
+function renderDay() {
+  const d = new Date();
+  d.setDate(d.getDate() + weekOffset);
+  d.setHours(0,0,0,0);
+  const dk = dateKey(d);
+  const isToday = dk === todayKey();
+  const dayIdx  = (d.getDay() + 6) % 7;
+
+  document.getElementById('planTitle').textContent = 'Tagesplan';
+  document.getElementById('weekLabel').textContent =
+    weekOffset === 0 ? 'Heute' :
+    weekOffset === 1 ? 'Morgen' :
+    weekOffset === -1 ? 'Gestern' :
+    DAYS[dayIdx] + ', ' + dateFmt(d);
+
+  const view = document.getElementById('planView');
+  const card = document.createElement('div');
+  card.className = 'day-view-card' + (isToday ? ' today' : '');
+  card.innerHTML =
+    `<div class="day-view-head">
+      <div class="day-view-name">${DAYS[dayIdx]}${isToday ? ' ●' : ''}</div>
+      <div class="day-view-date">${d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}</div>
+    </div>` +
+    MEALS.map((m, mi) =>
+      `<div class="meal-slot" id="slot_${dk}_${mi}">
+        <div class="meal-type">${m}</div>
+        <div class="meal-name" onclick="editMeal('${dk}',${mi})">${esc(getMeal(dk, mi))}</div>
+      </div>`
+    ).join('');
+
+  view.innerHTML = '';
+  view.appendChild(card);
+}
+
+// ── Week view ─────────────────────────────────────────────────────
 function renderWeek() {
   const mon = monday(weekOffset);
   const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
 
+  document.getElementById('planTitle').textContent = 'Wochenplan';
   document.getElementById('weekLabel').textContent =
     weekOffset ===  0 ? 'Diese Woche' :
     weekOffset ===  1 ? 'Nächste Woche' :
     weekOffset === -1 ? 'Letzte Woche'  :
     dateFmt(mon) + ' – ' + dateFmt(sun);
 
-  const grid = document.getElementById('weekGrid');
-  grid.innerHTML = '';
+  const view = document.getElementById('planView');
+  const grid = document.createElement('div');
+  grid.className = 'week-grid';
 
   for (let i = 0; i < 7; i++) {
     const d = new Date(mon);
@@ -483,6 +571,81 @@ function renderWeek() {
 
     grid.appendChild(card);
   }
+
+  view.innerHTML = '';
+  view.appendChild(grid);
+}
+
+// ── Month view ────────────────────────────────────────────────────
+function renderMonth() {
+  const now   = new Date();
+  const year  = now.getFullYear();
+  const month = now.getMonth() + weekOffset;
+  const first = new Date(year, month, 1);
+  const last  = new Date(year, month + 1, 0);
+
+  document.getElementById('planTitle').textContent = 'Monatsplan';
+  document.getElementById('weekLabel').textContent =
+    first.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+
+  const view = document.getElementById('planView');
+  view.innerHTML = '';
+
+  const hdr = document.createElement('div');
+  hdr.className = 'month-header';
+  DAYS.forEach(n => { hdr.innerHTML += `<div class="month-dname">${n}</div>`; });
+  view.appendChild(hdr);
+
+  const grid = document.createElement('div');
+  grid.className = 'month-grid';
+
+  const startDow = (first.getDay() + 6) % 7;
+  for (let i = 0; i < startDow; i++) {
+    const prev = new Date(year, month, 1 - startDow + i);
+    grid.appendChild(monthCell(prev, true));
+  }
+
+  for (let d = 1; d <= last.getDate(); d++) {
+    grid.appendChild(monthCell(new Date(year, month, d), false));
+  }
+
+  const total = startDow + last.getDate();
+  const remainder = (7 - (total % 7)) % 7;
+  for (let i = 1; i <= remainder; i++) {
+    grid.appendChild(monthCell(new Date(year, month + 1, i), true));
+  }
+
+  view.appendChild(grid);
+}
+
+function monthCell(d, otherMonth) {
+  const dk = dateKey(d);
+  const isToday = dk === todayKey();
+  const dayIdx  = (d.getDay() + 6) % 7;
+
+  const cell = document.createElement('div');
+  cell.className = 'month-cell' + (isToday ? ' today' : '') + (otherMonth ? ' other-month' : '');
+  cell.title = 'Tag anzeigen';
+
+  let html = `<div class="month-num">${d.getDate()}</div>`;
+  MEALS.forEach((m, mi) => {
+    const val = getMeal(dk, mi);
+    if (val) html += `<div class="month-meal-dot" title="${esc(m)}: ${esc(val)}">· ${esc(val)}</div>`;
+  });
+  cell.innerHTML = html;
+
+  cell.onclick = () => {
+    const today = new Date(); today.setHours(0,0,0,0);
+    d.setHours(0,0,0,0);
+    const diff = Math.round((d - today) / 86400000);
+    weekOffset = diff;
+    document.getElementById('vWeek').classList.remove('active');
+    document.getElementById('vMonth').classList.remove('active');
+    document.getElementById('vDay').classList.add('active');
+    currentView = 'day';
+    renderPlan();
+  };
+  return cell;
 }
 
 function editMeal(dk, mi) {
@@ -509,7 +672,7 @@ function editMeal(dk, mi) {
 function saveMeal(dk, mi, btn) {
   const val = btn.closest('.meal-edit').querySelector('input').value.trim();
   setMeal(dk, mi, val);
-  renderWeek();
+  renderPlan();
 }
 
 function cancelEdit(dk, mi) {
@@ -542,7 +705,6 @@ function renderShopping() {
     return;
   }
 
-  // Plan items – nur aktive anzeigen
   const planActive = fromPlan.map((item, i) => ({ item, i })).filter(x => !chk['p' + x.i]);
   const planDone   = fromPlan.map((item, i) => ({ item, i })).filter(x => !!chk['p' + x.i]);
 
@@ -557,7 +719,6 @@ function renderShopping() {
     });
   }
 
-  // Eigene Artikel – aktive anzeigen
   const customActive = custom.map((x, i) => ({ ...x, i })).filter(x => !x.done);
   const customDone   = custom.map((x, i) => ({ ...x, i })).filter(x => x.done);
 
@@ -577,7 +738,6 @@ function renderShopping() {
       <button class="btn btn-primary btn-sm" onclick="addItem()">+ Hinzufügen</button>
     </div>`;
 
-  // Erledigte Einträge ganz unten
   if (planDone.length || customDone.length) {
     el.innerHTML += '<div class="s-section done-section">Erledigt</div>';
     planDone.forEach(({ item, i }) => {
