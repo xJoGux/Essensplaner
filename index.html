@@ -346,6 +346,7 @@
         </div>
         <div id="changePwForm" style="display:none" class="settings-changepw">
           <div id="changePwErr" class="err"></div>
+          <div class="fg"><label>Aktuelles Passwort</label><input type="password" id="currentPw" placeholder="Aktuelles Passwort" /></div>
           <div class="fg"><label>Neues Passwort</label><input type="password" id="newPw1" placeholder="Neues Passwort (min. 6 Zeichen)" /></div>
           <div class="fg"><label>Passwort bestätigen</label><input type="password" id="newPw2" placeholder="Wiederholen" onkeydown="if(event.key==='Enter')saveNewPw()" /></div>
           <div style="display:flex;gap:.5rem">
@@ -512,7 +513,7 @@ function showTab(tab) {
 function authErr(msg) {
   const el = document.getElementById('authErr');
   el.textContent = msg;
-  el.style.display = '';
+  el.style.display = 'block';
 }
 
 function setBusy(btnId, busy) {
@@ -609,24 +610,28 @@ function toggleChangePwForm() {
   const open = form.style.display === 'none';
   form.style.display = open ? '' : 'none';
   if (open) {
+    document.getElementById('currentPw').value = '';
     document.getElementById('newPw1').value = '';
     document.getElementById('newPw2').value = '';
     document.getElementById('changePwErr').style.display = 'none';
-    document.getElementById('newPw1').focus();
+    document.getElementById('currentPw').focus();
   }
 }
 
 async function saveNewPw() {
+  const currentPw = document.getElementById('currentPw').value;
   const pw1 = document.getElementById('newPw1').value;
   const pw2 = document.getElementById('newPw2').value;
   const errEl = document.getElementById('changePwErr');
   errEl.style.display = 'none';
 
-  if (!pw1 || !pw2) { errEl.textContent = 'Bitte beide Felder ausfüllen.'; errEl.style.display = ''; return; }
-  if (pw1.length < 6) { errEl.textContent = 'Passwort muss mindestens 6 Zeichen haben.'; errEl.style.display = ''; return; }
-  if (pw1 !== pw2) { errEl.textContent = 'Passwörter stimmen nicht überein.'; errEl.style.display = ''; return; }
+  if (!currentPw || !pw1 || !pw2) { errEl.textContent = 'Bitte alle Felder ausfüllen.'; errEl.style.display = 'block'; return; }
+  if (pw1.length < 6) { errEl.textContent = 'Passwort muss mindestens 6 Zeichen haben.'; errEl.style.display = 'block'; return; }
+  if (pw1 !== pw2) { errEl.textContent = 'Passwörter stimmen nicht überein.'; errEl.style.display = 'block'; return; }
 
   try {
+    const credential = firebase.auth.EmailAuthProvider.credential(currentUser + FAKE_DOMAIN, currentPw);
+    await auth.currentUser.reauthenticateWithCredential(credential);
     await auth.currentUser.updatePassword(pw1);
     await db.collection('users').doc(currentUid).update({ password: pw1 });
     _cachedPw = pw1;
@@ -634,12 +639,12 @@ async function saveNewPw() {
     toggleChangePwForm();
     alert('Passwort erfolgreich geändert.');
   } catch (e) {
-    if (e.code === 'auth/requires-recent-login') {
-      errEl.textContent = 'Bitte melde dich ab und erneut an, dann erneut versuchen.';
+    if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+      errEl.textContent = 'Aktuelles Passwort ist falsch.';
     } else {
       errEl.textContent = 'Fehler: ' + e.message;
     }
-    errEl.style.display = '';
+    errEl.style.display = 'block';
   }
 }
 
