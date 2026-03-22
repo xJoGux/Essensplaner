@@ -6,29 +6,17 @@
   <title>Essensplaner</title>
   <style>
     :root {
-      --primary: #4f46e5;
-      --primary-dark: #4338ca;
-      --bg: #f9fafb;
-      --card: #ffffff;
-      --border: #e5e7eb;
-      --text: #111827;
-      --muted: #6b7280;
-      --danger: #ef4444;
+      --primary: #4f46e5; --primary-dark: #4338ca; --bg: #f9fafb;
+      --card: #ffffff; --border: #e5e7eb; --text: #111827;
+      --muted: #6b7280; --danger: #ef4444;
     }
     [data-theme="dark"] {
-      --primary: #818cf8;
-      --primary-dark: #6366f1;
-      --bg: #111827;
-      --card: #1f2937;
-      --border: #374151;
-      --text: #f9fafb;
-      --muted: #9ca3af;
-      --danger: #f87171;
+      --primary: #818cf8; --primary-dark: #6366f1; --bg: #111827;
+      --card: #1f2937; --border: #374151; --text: #f9fafb;
+      --muted: #9ca3af; --danger: #f87171;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-    /* ── Auth ───────────────────────────────────────────────── */
     .auth-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; }
     .auth-card { background: var(--card); border-radius: 14px; box-shadow: 0 4px 24px rgba(0,0,0,.09); padding: 2rem; width: 100%; max-width: 400px; }
     .auth-logo { font-size: 1.6rem; font-weight: 800; color: var(--primary); margin-bottom: .25rem; }
@@ -36,8 +24,6 @@
     .auth-tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
     .auth-tab  { flex: 1; padding: .5rem; border: none; background: var(--bg); border-radius: 8px; cursor: pointer; font-size: .9rem; font-weight: 600; color: var(--muted); transition: .15s; }
     .auth-tab.active { background: var(--primary); color: #fff; }
-
-    /* ── Forms ──────────────────────────────────────────────── */
     .fg { margin-bottom: 1rem; }
     label { display: block; font-size: .82rem; font-weight: 600; color: var(--muted); margin-bottom: .35rem; }
     input[type="text"], input[type="password"] {
@@ -46,8 +32,6 @@
     }
     input:focus { border-color: var(--primary); }
     .err { display: none; color: var(--danger); font-size: .85rem; background: #fef2f2; padding: .5rem .75rem; border-radius: 6px; margin-bottom: 1rem; }
-
-    /* ── Buttons ────────────────────────────────────────────── */
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
            padding: .6rem 1.2rem; border: none; border-radius: 8px; font-size: .9rem;
            font-weight: 600; cursor: pointer; transition: .15s; font-family: inherit; }
@@ -57,48 +41,35 @@
     .btn-sm  { padding: .35rem .75rem; font-size: .8rem; }
     .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
     .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-
-    /* ── Nav ────────────────────────────────────────────────── */
     nav { background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
     .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 60px; }
     .nav-logo  { font-weight: 800; font-size: 1.1rem; color: var(--primary); }
     .nav-links { display: flex; gap: .25rem; }
-    .nav-btn   { padding: .4rem .85rem; border-radius: 8px; border: none; background: none;
-                 color: var(--muted); font-size: .9rem; font-weight: 500; cursor: pointer; transition: .15s; }
+    .nav-btn   { padding: .4rem .85rem; border-radius: 8px; border: none; background: none; color: var(--muted); font-size: .9rem; font-weight: 500; cursor: pointer; transition: .15s; }
     .nav-btn:hover  { background: var(--bg); }
     .nav-btn.active { background: #eef2ff; color: var(--primary); }
     .nav-user  { display: flex; align-items: center; gap: .75rem; font-size: .9rem; color: var(--muted); }
     .nav-out   { background: none; border: none; color: var(--muted); cursor: pointer; font-size: .85rem; text-decoration: underline; }
     .nav-out:hover { color: var(--danger); }
-
-    /* ── Layout ─────────────────────────────────────────────── */
     .main  { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
     .page  { display: none; }
     .page.active { display: block; }
     .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
     .page-title  { font-size: 1.25rem; font-weight: 700; }
-
-    /* ── View switcher ──────────────────────────────────────── */
     .view-switch { display: flex; gap: .25rem; background: var(--bg); border-radius: 10px; padding: .2rem; border: 1px solid var(--border); }
     .view-btn    { padding: .3rem .75rem; border-radius: 7px; border: none; background: none; font-size: .82rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: .15s; }
     .view-btn.active { background: var(--primary); color: #fff; }
-
-    /* ── Week grid ──────────────────────────────────────────── */
     .week-nav   { display: flex; gap: .5rem; align-items: center; }
     .week-label { font-size: .9rem; color: var(--muted); min-width: 190px; text-align: center; }
     .week-grid  { display: grid; grid-template-columns: repeat(7, 1fr); gap: .75rem; }
     @media (max-width: 900px) { .week-grid { grid-template-columns: repeat(2,1fr); } }
     @media (max-width: 500px) { .week-grid { grid-template-columns: 1fr; } }
-
-    /* ── Day view ───────────────────────────────────────────── */
     .day-view-card { background: var(--card); border-radius: 14px; border: 1px solid var(--border); max-width: 480px; overflow: hidden; }
     .day-view-card.today { border-color: var(--primary); box-shadow: 0 0 0 2px #c7d2fe; }
     .day-view-head { padding: .9rem 1.25rem; background: #6366f1; color: #fff; }
     .day-view-card.today .day-view-head { background: var(--primary); }
     .day-view-name { font-weight: 700; font-size: 1.1rem; }
     .day-view-date { font-size: .85rem; opacity: .85; }
-
-    /* ── Month grid ─────────────────────────────────────────── */
     .month-grid    { display: grid; grid-template-columns: repeat(7, 1fr); gap: .4rem; }
     .month-header  { display: grid; grid-template-columns: repeat(7, 1fr); gap: .4rem; margin-bottom: .3rem; }
     .month-dname   { text-align: center; font-size: .72rem; font-weight: 700; color: var(--muted); padding: .25rem 0; text-transform: uppercase; }
@@ -111,8 +82,6 @@
     .month-today-badge { font-size: .65rem; font-weight: 700; background: var(--primary); color: #fff; border-radius: 99px; padding: .05rem .4rem; margin-left: .3rem; vertical-align: middle; }
     .month-meal-dot { font-size: .72rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: .1rem; }
     @media (max-width: 600px) { .month-cell { min-height: 55px; } .month-meal-dot { display: none; } }
-
-    /* ── Ingredient modal ────────────────────────────────────── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 1rem; }
     .modal-box     { background: var(--card); border-radius: 14px; padding: 1.5rem; width: 100%; max-width: 380px; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
     .modal-title   { font-weight: 700; font-size: 1rem; margin-bottom: 1rem; }
@@ -120,14 +89,12 @@
     .modal-ing-item { display: flex; align-items: center; gap: .65rem; font-size: .9rem; }
     .modal-ing-item input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--primary); flex-shrink: 0; cursor: pointer; }
     .modal-actions  { display: flex; gap: .5rem; justify-content: flex-end; }
-
     .day-card   { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
     .day-card.today { border-color: var(--primary); box-shadow: 0 0 0 2px #c7d2fe; }
     .day-head   { padding: .55rem .875rem; background: #6366f1; color: #fff; }
     .day-card.today .day-head { background: var(--primary); }
     .day-name   { font-weight: 700; font-size: .85rem; }
     .day-date   { font-size: .72rem; opacity: .85; }
-
     .meal-slot  { padding: .55rem .875rem; border-bottom: 1px solid var(--border); min-height: 52px; }
     .meal-slot:last-child { border-bottom: none; }
     .meal-type  { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: .2rem; }
@@ -136,11 +103,8 @@
     .meal-name:hover { color: var(--primary); }
     .meal-edit  { display: flex; gap: .3rem; }
     .meal-input { flex: 1; padding: .25rem .5rem; border: 1.5px solid var(--primary); border-radius: 6px; font-size: .85rem; outline: none; font-family: inherit; }
-
-    /* ── Shopping ───────────────────────────────────────────── */
     .s-list  { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
-    .s-section { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
-                 color: var(--muted); padding: .45rem 1rem; background: var(--bg); border-bottom: 1px solid var(--border); }
+    .s-section { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: .45rem 1rem; background: var(--bg); border-bottom: 1px solid var(--border); }
     .s-item  { display: flex; align-items: center; gap: .75rem; padding: .7rem 1rem; border-bottom: 1px solid var(--border); }
     .s-item:last-of-type { border-bottom: none; }
     .s-item.done .s-text { text-decoration: line-through; color: var(--muted); }
@@ -154,8 +118,6 @@
     .s-add input:focus { border-color: var(--primary); }
     .s-add .btn { width: auto; flex-shrink: 0; }
     .empty   { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .9rem; }
-
-    /* ── Settings ───────────────────────────────────────────── */
     .settings-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1rem; }
     .settings-section { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: .55rem 1.25rem; background: var(--bg); border-bottom: 1px solid var(--border); }
     .settings-row  { display: flex; align-items: center; justify-content: space-between; padding: .9rem 1.25rem; border-bottom: 1px solid var(--border); gap: 1rem; }
@@ -175,11 +137,7 @@
     .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
     .btn-danger { background: var(--danger); color: #fff; }
     .btn-danger:hover { opacity: .88; }
-
-    /* ── Loading ─────────────────────────────────────────────── */
     .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; font-size: 1rem; color: var(--muted); }
-
-    /* ── Recipes ─────────────────────────────────────────────── */
     .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
     .recipe-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 1rem; }
     .recipe-card-name { font-weight: 700; font-size: 1rem; margin-bottom: .25rem; }
@@ -198,30 +156,21 @@
     .ing-tag-edit    { display: flex; align-items: center; gap: .25rem; background: #eef2ff; color: var(--primary); font-size: .78rem; padding: .2rem .5rem; border-radius: 99px; font-weight: 600; }
     [data-theme="dark"] .ing-tag-edit { background: #312e81; }
     .ing-tag-edit button { background: none; border: none; cursor: pointer; color: var(--primary); font-size: .85rem; line-height: 1; padding: 0; }
-
-    /* ── Quantity input ──────────────────────────────────────── */
     .qty-inp { width:82px; padding:.25rem .45rem; border:1.5px solid var(--border); border-radius:6px; font-size:.82rem; outline:none; font-family:inherit; flex-shrink:0; }
     .qty-inp:focus { border-color:var(--primary); }
-
-    /* ── Autocomplete ────────────────────────────────────────── */
     .ac-wrap { position: relative; flex: 1; }
     .ac-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1.5px solid var(--primary); border-radius: 8px; z-index: 200; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,.12); }
     .ac-item { padding: .45rem .75rem; font-size: .85rem; cursor: pointer; }
     .ac-item:hover { background: #eef2ff; }
     [data-theme="dark"] .ac-item:hover { background: #312e81; }
-
-    /* ── Meal slot extras ────────────────────────────────────── */
     .meal-ing-btn { font-size: .7rem; color: var(--primary); background: none; border: none; cursor: pointer; padding: .1rem .3rem; border-radius: 4px; margin-top: .15rem; display: block; }
     .meal-ing-btn:hover { background: #eef2ff; }
     [data-theme="dark"] .meal-ing-btn:hover { background: #312e81; }
   </style>
 </head>
 <body>
-
-<!-- ── Loading ───────────────────────────────────────────────────── -->
 <div id="loadingScreen" class="loading">Wird geladen …</div>
 
-<!-- ── Auth ─────────────────────────────────────────────────────── -->
 <div id="authScreen" class="auth-wrap" style="display:none">
   <div class="auth-card">
     <div class="auth-logo">🍽️ Essensplaner</div>
@@ -231,13 +180,11 @@
       <button class="auth-tab" onclick="showTab('register')">Registrieren</button>
     </div>
     <div id="authErr" class="err"></div>
-
     <div id="loginForm">
       <div class="fg"><label>Benutzername</label><input type="text" id="lUser" placeholder="dein_name" /></div>
       <div class="fg"><label>Passwort</label><input type="password" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" /></div>
       <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Anmelden</button>
     </div>
-
     <div id="regForm" style="display:none">
       <div class="fg"><label>Benutzername</label><input type="text" id="rUser" placeholder="dein_name" /></div>
       <div class="fg"><label>Passwort</label><input type="password" id="rPass" placeholder="•••••••• (min. 6 Zeichen)" /></div>
@@ -247,7 +194,6 @@
   </div>
 </div>
 
-<!-- ── App ──────────────────────────────────────────────────────── -->
 <div id="appScreen" style="display:none">
   <nav>
     <div class="nav-inner">
@@ -264,7 +210,6 @@
       </div>
     </div>
   </nav>
-
   <div class="main">
     <!-- Wochenplan -->
     <div id="planPage" class="page active">
@@ -285,7 +230,6 @@
       </div>
       <div id="planView"></div>
     </div>
-
     <!-- Einkaufsliste -->
     <div id="shoppingPage" class="page">
       <div class="page-header">
@@ -294,7 +238,6 @@
       </div>
       <div class="s-list" id="sList"></div>
     </div>
-
     <!-- Rezepte -->
     <div id="recipesPage" class="page">
       <div class="page-header">
@@ -324,12 +267,9 @@
       </div>
       <div class="recipe-grid" id="recipeGrid"></div>
     </div>
-
     <!-- Einstellungen -->
     <div id="settingsPage" class="page">
-      <div class="page-header">
-        <div class="page-title">Einstellungen</div>
-      </div>
+      <div class="page-header"><div class="page-title">Einstellungen</div></div>
       <div class="settings-card">
         <div class="settings-section">Account</div>
         <div class="settings-row">
@@ -346,6 +286,7 @@
         </div>
         <div id="changePwForm" style="display:none" class="settings-changepw">
           <div id="changePwErr" class="err"></div>
+          <div class="fg"><label>Aktuelles Passwort</label><input type="password" id="currentPw" placeholder="Aktuelles Passwort" /></div>
           <div class="fg"><label>Neues Passwort</label><input type="password" id="newPw1" placeholder="Neues Passwort (min. 6 Zeichen)" /></div>
           <div class="fg"><label>Passwort bestätigen</label><input type="password" id="newPw2" placeholder="Wiederholen" onkeydown="if(event.key==='Enter')saveNewPw()" /></div>
           <div style="display:flex;gap:.5rem">
@@ -354,7 +295,6 @@
           </div>
         </div>
       </div>
-
       <div class="settings-card">
         <div class="settings-row">
           <div>
@@ -380,7 +320,6 @@
   </div>
 </div>
 
-<!-- ── Ingredient selection modal ────────────────────────────────── -->
 <div id="ingModal" class="modal-overlay" style="display:none" onclick="closeIngModal(event)">
   <div class="modal-box">
     <div class="modal-title" id="ingModalTitle">Zutaten auswählen</div>
@@ -392,13 +331,10 @@
   </div>
 </div>
 
-<!-- ── Firebase SDKs ─────────────────────────────────────────────── -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
 <script>
-// ── Firebase Config ───────────────────────────────────────────────
 const firebaseConfig = {
   apiKey: "AIzaSyBqYqgPi_qeSxhmVpeDZcLd8Hl6OotdA_I",
   authDomain: "memorydeck-af728.firebaseapp.com",
@@ -407,768 +343,450 @@ const firebaseConfig = {
   messagingSenderId: "1077936268943",
   appId: "1:1077936268943:web:9bf39e8a18f3f79068b2fa"
 };
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-// ── Constants ────────────────────────────────────────────────────
 const DAYS  = ['Mo','Di','Mi','Do','Fr','Sa','So'];
 const MEALS = ['Frühstück','Mittagessen','Abendessen'];
 const FAKE_DOMAIN = '@essensplaner.app';
 
-// ── State ────────────────────────────────────────────────────────
-let currentUser = null;
-let currentUid  = null;
-let weekOffset  = 0;
-let currentView = 'week';
-let appData     = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
-let _cachedPw   = '';
-let _pwVisible  = false;
+let currentUser = null, currentUid = null, weekOffset = 0, currentView = 'week';
+let appData = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
+let _cachedPw = '', _pwVisible = false;
 
-// ── Helpers ──────────────────────────────────────────────────────
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-function monday(offset = 0) {
-  const d = new Date();
-  const dow = d.getDay();
-  d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow) + offset * 7);
-  d.setHours(0, 0, 0, 0);
-  return d;
+function monday(offset=0) {
+  const d=new Date(), dow=d.getDay();
+  d.setDate(d.getDate()+(dow===0?-6:1-dow)+offset*7); d.setHours(0,0,0,0); return d;
 }
-const dateKey = d => d.toISOString().slice(0, 10);
-const dateFmt = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+const dateKey = d => d.toISOString().slice(0,10);
+const dateFmt = d => d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
 const todayKey = () => dateKey(new Date());
+function userRef() { return db.collection('users').doc(currentUid).collection('data').doc('main'); }
 
-function userRef() {
-  return db.collection('users').doc(currentUid).collection('data').doc('main');
-}
-
-// ── Data (Firestore) ─────────────────────────────────────────────
 async function loadData() {
   const doc = await userRef().get();
   if (doc.exists) {
-    appData = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {}, ...doc.data() };
-    appData.recipes = appData.recipes.map(r => ({
-      ...r,
-      ingredients: (r.ingredients || []).map(ing =>
-        typeof ing === 'string' ? { name: ing, qty: '' } : ing
-      )
-    }));
-    appData.shopping = appData.shopping.map(item =>
-      typeof item === 'object' ? { qty: '', ...item } : { name: String(item), qty: '', done: false }
-    );
+    appData = { meals:{}, shopping:[], checked:{}, recipes:[], mealRecipes:{}, ...doc.data() };
+    appData.recipes = appData.recipes.map(r => ({...r, ingredients:(r.ingredients||[]).map(ing=>typeof ing==='string'?{name:ing,qty:''}:ing)}));
+    appData.shopping = appData.shopping.map(item=>typeof item==='object'?{qty:'',...item}:{name:String(item),qty:'',done:false});
   } else {
-    appData = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
+    appData = { meals:{}, shopping:[], checked:{}, recipes:[], mealRecipes:{} };
   }
 }
 
-// ── Quantity helpers ──────────────────────────────────────────────
 function parseQty(s) {
-  s = (s || '').trim();
-  const m = s.match(/^(\d+(?:[.,]\d+)?)\s*(.*)/);
-  if (m) return { amount: parseFloat(m[1].replace(',', '.')), unit: m[2].trim().toLowerCase() };
-  return { amount: null, unit: s.toLowerCase() };
+  s=(s||'').trim();
+  const m=s.match(/^(\d+(?:[.,]\d+)?)\s*(.*)/);
+  if(m) return {amount:parseFloat(m[1].replace(',','.')),unit:m[2].trim().toLowerCase()};
+  return {amount:null,unit:s.toLowerCase()};
 }
-
-function combineQty(qa, qb) {
-  if (!qa) return qb || '';
-  if (!qb) return qa || '';
-  const a = parseQty(qa), b = parseQty(qb);
-  if (a.amount !== null && b.amount !== null && a.unit === b.unit) {
-    const sum = +(a.amount + b.amount).toFixed(4).replace(/\.?0+$/, '');
-    return sum + (a.unit ? ' ' + a.unit : '');
+function combineQty(qa,qb) {
+  if(!qa) return qb||''; if(!qb) return qa||'';
+  const a=parseQty(qa),b=parseQty(qb);
+  if(a.amount!==null&&b.amount!==null&&a.unit===b.unit) {
+    const sum=+(a.amount+b.amount).toFixed(4).replace(/\.?0+$/,'');
+    return sum+(a.unit?' '+a.unit:'');
   }
-  return qa + ' + ' + qb;
+  return qa+' + '+qb;
 }
-
-function addToShopping(name, qty) {
-  const existing = appData.shopping.find(x => x.name.toLowerCase() === name.toLowerCase());
-  if (existing) {
-    existing.qty = combineQty(existing.qty, qty || '');
-  } else {
-    appData.shopping.push({ name, qty: qty || '', done: false });
-  }
+function addToShopping(name,qty) {
+  const existing=appData.shopping.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(existing) existing.qty=combineQty(existing.qty,qty||'');
+  else appData.shopping.push({name,qty:qty||'',done:false});
 }
+function saveData() { userRef().set(appData).catch(console.error); }
+function getMeal(date,mi) { return appData.meals[date+'_'+mi]||''; }
+function setMeal(date,mi,val) { appData.meals[date+'_'+mi]=val; saveData(); }
 
-function saveData() {
-  userRef().set(appData).catch(console.error);
-}
-
-function getMeal(date, mi)      { return appData.meals[date + '_' + mi] || ''; }
-function setMeal(date, mi, val) { appData.meals[date + '_' + mi] = val; saveData(); }
-
-// ── Auth ─────────────────────────────────────────────────────────
 function showTab(tab) {
-  document.getElementById('loginForm').style.display = tab === 'login' ? '' : 'none';
-  document.getElementById('regForm').style.display   = tab === 'register' ? '' : 'none';
-  document.getElementById('authErr').style.display   = 'none';
-  document.querySelectorAll('.auth-tab').forEach((el, i) =>
-    el.classList.toggle('active', i === (tab === 'login' ? 0 : 1)));
+  document.getElementById('loginForm').style.display=tab==='login'?'':'none';
+  document.getElementById('regForm').style.display=tab==='register'?'':'none';
+  document.getElementById('authErr').style.display='none';
+  document.querySelectorAll('.auth-tab').forEach((el,i)=>el.classList.toggle('active',i===(tab==='login'?0:1)));
 }
-
-function authErr(msg) {
-  const el = document.getElementById('authErr');
-  el.textContent = msg;
-  el.style.display = '';
-}
-
-function setBusy(btnId, busy) {
-  const btn = document.getElementById(btnId);
-  btn.disabled = busy;
-  btn.textContent = busy ? 'Bitte warten …' : (btnId === 'loginBtn' ? 'Anmelden' : 'Registrieren');
+function authErr(msg) { const el=document.getElementById('authErr'); el.textContent=msg; el.style.display='block'; }
+function setBusy(btnId,busy) {
+  const btn=document.getElementById(btnId); btn.disabled=busy;
+  btn.textContent=busy?'Bitte warten …':(btnId==='loginBtn'?'Anmelden':'Registrieren');
 }
 
 async function doLogin() {
-  const user = document.getElementById('lUser').value.trim().toLowerCase();
-  const pass = document.getElementById('lPass').value;
-  if (!user || !pass) return authErr('Bitte alle Felder ausfüllen.');
-  if (!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
-  setBusy('loginBtn', true);
-  try {
-    await auth.signInWithEmailAndPassword(user + FAKE_DOMAIN, pass);
-  } catch (e) {
-    authErr('Benutzername oder Passwort falsch.');
-    setBusy('loginBtn', false);
-  }
+  const user=document.getElementById('lUser').value.trim().toLowerCase();
+  const pass=document.getElementById('lPass').value;
+  if(!user||!pass) return authErr('Bitte alle Felder ausfüllen.');
+  if(!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
+  setBusy('loginBtn',true);
+  try { await auth.signInWithEmailAndPassword(user+FAKE_DOMAIN,pass); }
+  catch(e) { authErr('Benutzername oder Passwort falsch.'); setBusy('loginBtn',false); }
 }
 
 async function doRegister() {
-  const user  = document.getElementById('rUser').value.trim().toLowerCase();
-  const pass  = document.getElementById('rPass').value;
-  const pass2 = document.getElementById('rPass2').value;
-  if (!user || !pass || !pass2) return authErr('Bitte alle Felder ausfüllen.');
-  if (!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
-  if (pass !== pass2) return authErr('Passwörter stimmen nicht überein.');
-  if (pass.length < 6) return authErr('Passwort muss mindestens 6 Zeichen haben.');
-  setBusy('registerBtn', true);
+  const user=document.getElementById('rUser').value.trim().toLowerCase();
+  const pass=document.getElementById('rPass').value;
+  const pass2=document.getElementById('rPass2').value;
+  if(!user||!pass||!pass2) return authErr('Bitte alle Felder ausfüllen.');
+  if(!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
+  if(pass!==pass2) return authErr('Passwörter stimmen nicht überein.');
+  if(pass.length<6) return authErr('Passwort muss mindestens 6 Zeichen haben.');
+  setBusy('registerBtn',true);
   try {
-    const cred = await auth.createUserWithEmailAndPassword(user + FAKE_DOMAIN, pass);
-    await db.collection('users').doc(cred.user.uid).set({ username: user, password: pass });
-  } catch (e) {
-    if (e.code === 'auth/email-already-in-use') {
-      authErr('Benutzername bereits vergeben.');
-    } else {
-      authErr('Fehler: ' + e.message);
-    }
-    setBusy('registerBtn', false);
+    const cred=await auth.createUserWithEmailAndPassword(user+FAKE_DOMAIN,pass);
+    await db.collection('users').doc(cred.user.uid).set({username:user,password:pass});
+  } catch(e) {
+    authErr(e.code==='auth/email-already-in-use'?'Benutzername bereits vergeben.':'Fehler: '+e.message);
+    setBusy('registerBtn',false);
   }
 }
 
-async function startSession(uid, username) {
-  currentUid  = uid;
-  currentUser = username;
+async function startSession(uid,username) {
+  currentUid=uid; currentUser=username;
   await loadData();
-  document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('appScreen').style.display  = '';
-  document.getElementById('navName').textContent = username;
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('appScreen').style.display='';
+  document.getElementById('navName').textContent=username;
   renderPlan();
 }
-
 function showAuthScreen() {
-  currentUid  = null;
-  currentUser = null;
-  appData     = { meals: {}, shopping: [], checked: {} };
-  document.getElementById('appScreen').style.display  = 'none';
-  document.getElementById('authScreen').style.display = 'flex';
-  setBusy('loginBtn', false);
-  setBusy('registerBtn', false);
+  currentUid=null; currentUser=null;
+  appData={meals:{},shopping:[],checked:{}};
+  document.getElementById('appScreen').style.display='none';
+  document.getElementById('authScreen').style.display='flex';
+  setBusy('loginBtn',false); setBusy('registerBtn',false);
 }
-
 function doLogout() { auth.signOut(); }
 
-// ── Firebase Auth State ───────────────────────────────────────────
 auth.onAuthStateChanged(async firebaseUser => {
-  document.getElementById('loadingScreen').style.display = 'none';
-  if (firebaseUser) {
-    const profileDoc = await db.collection('users').doc(firebaseUser.uid).get();
-    const username = profileDoc.exists ? profileDoc.data().username
-                                       : firebaseUser.email.split('@')[0];
-    _cachedPw = profileDoc.exists ? (profileDoc.data().password || '') : '';
-    await startSession(firebaseUser.uid, username);
-  } else {
-    showAuthScreen();
-  }
+  document.getElementById('loadingScreen').style.display='none';
+  if(firebaseUser) {
+    const profileDoc=await db.collection('users').doc(firebaseUser.uid).get();
+    const username=profileDoc.exists?profileDoc.data().username:firebaseUser.email.split('@')[0];
+    _cachedPw=profileDoc.exists?(profileDoc.data().password||')':'';
+    await startSession(firebaseUser.uid,username);
+  } else { showAuthScreen(); }
 });
 
-// ── Password management ───────────────────────────────────────────
 function toggleShowPw() {
-  _pwVisible = !_pwVisible;
-  document.getElementById('settingsPwDisplay').textContent = _pwVisible ? (_cachedPw || '(nicht verfügbar)') : '••••••••••••';
-  document.getElementById('settingsPwToggleBtn').textContent = _pwVisible ? 'Verbergen' : 'Anzeigen';
+  _pwVisible=!_pwVisible;
+  document.getElementById('settingsPwDisplay').textContent=_pwVisible?(_cachedPw||'(nicht verfügbar)'):'••••••••••••';
+  document.getElementById('settingsPwToggleBtn').textContent=_pwVisible?'Verbergen':'Anzeigen';
 }
-
 function toggleChangePwForm() {
-  const form = document.getElementById('changePwForm');
-  const open = form.style.display === 'none';
-  form.style.display = open ? '' : 'none';
-  if (open) {
-    document.getElementById('newPw1').value = '';
-    document.getElementById('newPw2').value = '';
-    document.getElementById('changePwErr').style.display = 'none';
-    document.getElementById('newPw1').focus();
+  const form=document.getElementById('changePwForm');
+  const open=form.style.display==='none';
+  form.style.display=open?'':'none';
+  if(open) {
+    document.getElementById('currentPw').value='';
+    document.getElementById('newPw1').value='';
+    document.getElementById('newPw2').value='';
+    document.getElementById('changePwErr').style.display='none';
+    document.getElementById('currentPw').focus();
   }
 }
-
 async function saveNewPw() {
-  const pw1 = document.getElementById('newPw1').value;
-  const pw2 = document.getElementById('newPw2').value;
-  const errEl = document.getElementById('changePwErr');
-  errEl.style.display = 'none';
-  if (!pw1 || !pw2) { errEl.textContent = 'Bitte beide Felder ausfüllen.'; errEl.style.display = ''; return; }
-  if (pw1.length < 6) { errEl.textContent = 'Passwort muss mindestens 6 Zeichen haben.'; errEl.style.display = ''; return; }
-  if (pw1 !== pw2) { errEl.textContent = 'Passwörter stimmen nicht überein.'; errEl.style.display = ''; return; }
+  const currentPw=document.getElementById('currentPw').value;
+  const pw1=document.getElementById('newPw1').value;
+  const pw2=document.getElementById('newPw2').value;
+  const errEl=document.getElementById('changePwErr');
+  errEl.style.display='none';
+  if(!currentPw||!pw1||!pw2) { errEl.textContent='Bitte alle Felder ausfüllen.'; errEl.style.display='block'; return; }
+  if(pw1.length<6) { errEl.textContent='Passwort muss mindestens 6 Zeichen haben.'; errEl.style.display='block'; return; }
+  if(pw1!==pw2) { errEl.textContent='Passwörter stimmen nicht überein.'; errEl.style.display='block'; return; }
   try {
+    const credential=firebase.auth.EmailAuthProvider.credential(currentUser+FAKE_DOMAIN,currentPw);
+    await auth.currentUser.reauthenticateWithCredential(credential);
     await auth.currentUser.updatePassword(pw1);
-    await db.collection('users').doc(currentUid).update({ password: pw1 });
-    _cachedPw = pw1;
-    if (_pwVisible) document.getElementById('settingsPwDisplay').textContent = pw1;
+    await db.collection('users').doc(currentUid).update({password:pw1});
+    _cachedPw=pw1;
+    if(_pwVisible) document.getElementById('settingsPwDisplay').textContent=pw1;
     toggleChangePwForm();
     alert('Passwort erfolgreich geändert.');
-  } catch (e) {
-    errEl.textContent = e.code === 'auth/requires-recent-login'
-      ? 'Bitte melde dich ab und erneut an, dann erneut versuchen.'
-      : 'Fehler: ' + e.message;
-    errEl.style.display = '';
+  } catch(e) {
+    errEl.textContent=(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential')?'Aktuelles Passwort ist falsch.':'Fehler: '+e.message;
+    errEl.style.display='block';
   }
 }
 
-// ── Dark Mode ────────────────────────────────────────────────────
 function applyTheme(dark) {
-  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-  localStorage.setItem('ep_theme', dark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+  localStorage.setItem('ep_theme',dark?'dark':'light');
 }
 function toggleDark(dark) { applyTheme(dark); }
-(function() { if (localStorage.getItem('ep_theme') === 'dark') applyTheme(true); })();
+(function(){ const saved=localStorage.getItem('ep_theme'); if(saved==='dark') applyTheme(true); })();
 
-// ── Account Deletion ─────────────────────────────────────────────
 async function deleteAccount() {
-  if (!confirm('Willst du deinen Account und alle deine Daten wirklich unwiderruflich löschen?')) return;
+  if(!confirm('Willst du deinen Account und alle deine Daten wirklich unwiderruflich löschen?')) return;
   try {
     await db.collection('users').doc(currentUid).collection('data').doc('main').delete();
     await db.collection('users').doc(currentUid).delete();
     await auth.currentUser.delete();
-  } catch (e) {
-    alert(e.code === 'auth/requires-recent-login'
-      ? 'Bitte melde dich ab und erneut an, um deinen Account zu löschen.'
-      : 'Fehler beim Löschen: ' + e.message);
+  } catch(e) {
+    alert(e.code==='auth/requires-recent-login'?'Bitte melde dich ab und erneut an, um deinen Account zu löschen.':'Fehler beim Löschen: '+e.message);
   }
 }
 
-// ── Navigation ───────────────────────────────────────────────────
-function showPage(name, btn) {
-  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-  document.getElementById(name + 'Page').classList.add('active');
+function showPage(name,btn) {
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById(name+'Page').classList.add('active');
   btn.classList.add('active');
-  if (name === 'shopping') renderShopping();
-  if (name === 'recipes')  renderRecipes();
-  if (name === 'settings') {
-    document.getElementById('darkToggle').checked = localStorage.getItem('ep_theme') === 'dark';
-    document.getElementById('settingsUsername').textContent = currentUser || '';
-    _pwVisible = false;
-    document.getElementById('settingsPwDisplay').textContent = '••••••••••••';
-    document.getElementById('settingsPwToggleBtn').textContent = 'Anzeigen';
-    document.getElementById('changePwForm').style.display = 'none';
+  if(name==='shopping') renderShopping();
+  if(name==='recipes') renderRecipes();
+  if(name==='settings') {
+    document.getElementById('darkToggle').checked=localStorage.getItem('ep_theme')==='dark';
+    document.getElementById('settingsUsername').textContent=currentUser||'';
+    _pwVisible=false;
+    document.getElementById('settingsPwDisplay').textContent='••••••••••••';
+    document.getElementById('settingsPwToggleBtn').textContent='Anzeigen';
+    document.getElementById('changePwForm').style.display='none';
   }
 }
 
-// ── View switching ────────────────────────────────────────────────
 function setView(v) {
-  currentView = v;
-  weekOffset  = 0;
-  ['day','week','month'].forEach(x => {
-    document.getElementById('v' + x.charAt(0).toUpperCase() + x.slice(1))
-            .classList.toggle('active', x === v);
-  });
+  currentView=v; weekOffset=0;
+  ['day','week','month'].forEach(x=>document.getElementById('v'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('active',x===v));
   renderPlan();
 }
-
-function changeOffset(dir) { weekOffset += dir; renderPlan(); }
-
+function changeOffset(dir) { weekOffset+=dir; renderPlan(); }
 function renderPlan() {
-  if (currentView === 'week')  renderWeek();
-  else if (currentView === 'day') renderDay();
+  if(currentView==='week') renderWeek();
+  else if(currentView==='day') renderDay();
   else renderMonth();
 }
 
-// ── Day view ─────────────────────────────────────────────────────
 function renderDay() {
-  const d = new Date();
-  d.setDate(d.getDate() + weekOffset);
-  d.setHours(0,0,0,0);
-  const dk = dateKey(d);
-  const isToday = dk === todayKey();
-  const dayIdx  = (d.getDay() + 6) % 7;
-
-  document.getElementById('planTitle').textContent = 'Tagesplan';
-  document.getElementById('weekLabel').textContent =
-    weekOffset === 0 ? 'Heute' :
-    weekOffset === 1 ? 'Morgen' :
-    weekOffset === -1 ? 'Gestern' :
-    DAYS[dayIdx] + ', ' + dateFmt(d);
-
-  const view = document.getElementById('planView');
-  const card = document.createElement('div');
-  card.className = 'day-view-card' + (isToday ? ' today' : '');
-  card.innerHTML =
-    `<div class="day-view-head">
-      <div class="day-view-name">${DAYS[dayIdx]}${isToday ? ' ●' : ''}</div>
-      <div class="day-view-date">${d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}</div>
-    </div>` +
-    MEALS.map((m, mi) =>
-      `<div class="meal-slot" id="slot_${dk}_${mi}">
-        <div class="meal-type">${m}</div>
-        <div class="meal-name" onclick="editMeal('${dk}',${mi})">${esc(getMeal(dk, mi))}</div>
-      </div>`
-    ).join('');
-
-  view.innerHTML = '';
-  view.appendChild(card);
+  const d=new Date(); d.setDate(d.getDate()+weekOffset); d.setHours(0,0,0,0);
+  const dk=dateKey(d), isToday=dk===todayKey(), dayIdx=(d.getDay()+6)%7;
+  document.getElementById('planTitle').textContent='Tagesplan';
+  document.getElementById('weekLabel').textContent=weekOffset===0?'Heute':weekOffset===1?'Morgen':weekOffset===-1?'Gestern':DAYS[dayIdx]+', '+dateFmt(d);
+  const view=document.getElementById('planView');
+  const card=document.createElement('div');
+  card.className='day-view-card'+(isToday?' today':'');
+  card.innerHTML=`<div class="day-view-head"><div class="day-view-name">${DAYS[dayIdx]}${isToday?' ●':''}</div><div class="day-view-date">${d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}</div></div>`+
+    MEALS.map((m,mi)=>`<div class="meal-slot" id="slot_${dk}_${mi}"><div class="meal-type">${m}</div><div class="meal-name" onclick="editMeal('${dk}',${mi})">${esc(getMeal(dk,mi))}</div></div>`).join('');
+  view.innerHTML=''; view.appendChild(card);
 }
 
-// ── Week view ─────────────────────────────────────────────────────
 function renderWeek() {
-  const mon = monday(weekOffset);
-  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-
-  document.getElementById('planTitle').textContent = 'Wochenplan';
-  document.getElementById('weekLabel').textContent =
-    weekOffset ===  0 ? 'Diese Woche' :
-    weekOffset ===  1 ? 'Nächste Woche' :
-    weekOffset === -1 ? 'Letzte Woche'  :
-    dateFmt(mon) + ' – ' + dateFmt(sun);
-
-  const view = document.getElementById('planView');
-  const grid = document.createElement('div');
-  grid.className = 'week-grid';
-
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(mon);
-    d.setDate(mon.getDate() + i);
-    const dk = dateKey(d);
-    const isToday = dk === todayKey();
-
-    const card = document.createElement('div');
-    card.className = 'day-card' + (isToday ? ' today' : '');
-    card.innerHTML =
-      `<div class="day-head">
-        <div class="day-name">${DAYS[i]}${isToday ? ' ●' : ''}</div>
-        <div class="day-date">${dateFmt(d)}</div>
-      </div>` +
-      MEALS.map((m, mi) =>
-        `<div class="meal-slot" id="slot_${dk}_${mi}">
-          <div class="meal-type">${m}</div>
-          <div class="meal-name" onclick="editMeal('${dk}',${mi})">${esc(getMeal(dk, mi))}</div>
-          ${mealIngBtn(dk, mi)}
-        </div>`
-      ).join('');
-
+  const mon=monday(weekOffset), sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  document.getElementById('planTitle').textContent='Wochenplan';
+  document.getElementById('weekLabel').textContent=weekOffset===0?'Diese Woche':weekOffset===1?'Nächste Woche':weekOffset===-1?'Letzte Woche':dateFmt(mon)+' – '+dateFmt(sun);
+  const view=document.getElementById('planView');
+  const grid=document.createElement('div'); grid.className='week-grid';
+  for(let i=0;i<7;i++) {
+    const d=new Date(mon); d.setDate(mon.getDate()+i);
+    const dk=dateKey(d), isToday=dk===todayKey();
+    const card=document.createElement('div'); card.className='day-card'+(isToday?' today':'');
+    card.innerHTML=`<div class="day-head"><div class="day-name">${DAYS[i]}${isToday?' ●':''}</div><div class="day-date">${dateFmt(d)}</div></div>`+
+      MEALS.map((m,mi)=>`<div class="meal-slot" id="slot_${dk}_${mi}"><div class="meal-type">${m}</div><div class="meal-name" onclick="editMeal('${dk}',${mi})">${esc(getMeal(dk,mi))}</div>${mealIngBtn(dk,mi)}</div>`).join('');
     grid.appendChild(card);
   }
-
-  view.innerHTML = '';
-  view.appendChild(grid);
+  view.innerHTML=''; view.appendChild(grid);
 }
 
-// ── Month view ────────────────────────────────────────────────────
 function renderMonth() {
-  const now   = new Date();
-  const year  = now.getFullYear();
-  const month = now.getMonth() + weekOffset;
-  const first = new Date(year, month, 1);
-  const last  = new Date(year, month + 1, 0);
-
-  document.getElementById('planTitle').textContent = 'Monatsplan';
-  document.getElementById('weekLabel').textContent =
-    first.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
-
-  const view = document.getElementById('planView');
-  view.innerHTML = '';
-
-  const hdr = document.createElement('div');
-  hdr.className = 'month-header';
-  DAYS.forEach(n => { hdr.innerHTML += `<div class="month-dname">${n}</div>`; });
-  view.appendChild(hdr);
-
-  const grid = document.createElement('div');
-  grid.className = 'month-grid';
-
-  const startDow = (first.getDay() + 6) % 7;
-  for (let i = 0; i < startDow; i++) {
-    grid.appendChild(monthCell(new Date(year, month, 1 - startDow + i), true));
-  }
-  for (let d = 1; d <= last.getDate(); d++) {
-    grid.appendChild(monthCell(new Date(year, month, d), false));
-  }
-  const total = startDow + last.getDate();
-  const remainder = (7 - (total % 7)) % 7;
-  for (let i = 1; i <= remainder; i++) {
-    grid.appendChild(monthCell(new Date(year, month + 1, i), true));
-  }
-
+  const now=new Date(), year=now.getFullYear(), month=now.getMonth()+weekOffset;
+  const first=new Date(year,month,1), last=new Date(year,month+1,0);
+  document.getElementById('planTitle').textContent='Monatsplan';
+  document.getElementById('weekLabel').textContent=first.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+  const view=document.getElementById('planView'); view.innerHTML='';
+  const hdr=document.createElement('div'); hdr.className='month-header';
+  DAYS.forEach(n=>{hdr.innerHTML+=`<div class="month-dname">${n}</div>`;}); view.appendChild(hdr);
+  const grid=document.createElement('div'); grid.className='month-grid';
+  const startDow=(first.getDay()+6)%7;
+  for(let i=0;i<startDow;i++) grid.appendChild(monthCell(new Date(year,month,1-startDow+i),true));
+  for(let d=1;d<=last.getDate();d++) grid.appendChild(monthCell(new Date(year,month,d),false));
+  const total=startDow+last.getDate(), remainder=(7-(total%7))%7;
+  for(let i=1;i<=remainder;i++) grid.appendChild(monthCell(new Date(year,month+1,i),true));
   view.appendChild(grid);
 }
 
-function monthCell(d, otherMonth) {
-  const dk = dateKey(d);
-  const isToday = dk === todayKey();
-  const cell = document.createElement('div');
-  cell.className = 'month-cell' + (isToday ? ' today' : '') + (otherMonth ? ' other-month' : '');
-  let html = `<div class="month-num">${d.getDate()}${isToday ? '<span class="month-today-badge">Heute</span>' : ''}</div>`;
-  MEALS.forEach((m, mi) => {
-    const val = getMeal(dk, mi);
-    if (val) html += `<div class="month-meal-dot" title="${esc(m)}: ${esc(val)}">· ${esc(val)}</div>`;
-  });
-  cell.innerHTML = html;
-  cell.onclick = () => {
-    const today = new Date(); today.setHours(0,0,0,0);
-    d.setHours(0,0,0,0);
-    weekOffset = Math.round((d - today) / 86400000);
+function monthCell(d,otherMonth) {
+  const dk=dateKey(d), isToday=dk===todayKey();
+  const cell=document.createElement('div');
+  cell.className='month-cell'+(isToday?' today':'')+(otherMonth?' other-month':'');
+  let html=`<div class="month-num">${d.getDate()}${isToday?'<span class="month-today-badge">Heute</span>':''}</div>`;
+  MEALS.forEach((m,mi)=>{const val=getMeal(dk,mi); if(val) html+=`<div class="month-meal-dot" title="${esc(m)}: ${esc(val)}">· ${esc(val)}</div>`;});
+  cell.innerHTML=html;
+  cell.onclick=()=>{
+    const today=new Date(); today.setHours(0,0,0,0); d.setHours(0,0,0,0);
+    weekOffset=Math.round((d-today)/86400000);
     document.getElementById('vWeek').classList.remove('active');
     document.getElementById('vMonth').classList.remove('active');
     document.getElementById('vDay').classList.add('active');
-    currentView = 'day';
-    renderPlan();
+    currentView='day'; renderPlan();
   };
   return cell;
 }
 
-function mealIngBtn(dk, mi) {
-  const rid = (appData.mealRecipes || {})[dk + '_' + mi];
-  if (!rid) return '';
-  const rec = (appData.recipes || []).find(r => r.id === rid);
-  if (!rec || !rec.ingredients.length) return '';
+function mealIngBtn(dk,mi) {
+  const rid=(appData.mealRecipes||{})[dk+'_'+mi];
+  if(!rid) return '';
+  const rec=(appData.recipes||[]).find(r=>r.id===rid);
+  if(!rec||!rec.ingredients.length) return '';
   return `<button class="meal-ing-btn" onclick="addRecipeToShop('${dk}',${mi},event)">🛒 Zutaten zur Einkaufsliste</button>`;
 }
 
-let _ingModalRecipe = null;
-
-function addRecipeToShop(dk, mi, e) {
+let _ingModalRecipe=null;
+function addRecipeToShop(dk,mi,e) {
   e.stopPropagation();
-  const rid = (appData.mealRecipes || {})[dk + '_' + mi];
-  const rec = (appData.recipes || []).find(r => r.id === rid);
-  if (!rec || !rec.ingredients.length) return;
-  _ingModalRecipe = rec;
-  document.getElementById('ingModalTitle').textContent = `Zutaten von „${rec.name}"`;
-  const list = document.getElementById('ingModalList');
-  list.innerHTML = rec.ingredients.map((ing, i) =>
-    `<div class="modal-ing-item">
-      <input type="checkbox" id="ingCb_${i}" checked />
-      <span style="flex:1">${esc(ing.name)}</span>
-      <input type="text" id="ingQtyCb_${i}" class="qty-inp" value="${esc(ing.qty||'')}" placeholder="Menge" />
-    </div>`
+  const rid=(appData.mealRecipes||{})[dk+'_'+mi];
+  const rec=(appData.recipes||[]).find(r=>r.id===rid);
+  if(!rec||!rec.ingredients.length) return;
+  _ingModalRecipe=rec;
+  document.getElementById('ingModalTitle').textContent=`Zutaten von „${rec.name}"`;
+  document.getElementById('ingModalList').innerHTML=rec.ingredients.map((ing,i)=>
+    `<div class="modal-ing-item"><input type="checkbox" id="ingCb_${i}" checked /><span style="flex:1">${esc(ing.name)}</span><input type="text" id="ingQtyCb_${i}" class="qty-inp" value="${esc(ing.qty||'')}" placeholder="Menge" /></div>`
   ).join('');
-  document.getElementById('ingModal').style.display = 'flex';
+  document.getElementById('ingModal').style.display='flex';
 }
-
 function closeIngModal(e) {
-  if (e && e.target !== document.getElementById('ingModal')) return;
-  document.getElementById('ingModal').style.display = 'none';
-  _ingModalRecipe = null;
+  if(e&&e.target!==document.getElementById('ingModal')) return;
+  document.getElementById('ingModal').style.display='none'; _ingModalRecipe=null;
 }
-
 function confirmIngModal() {
-  if (!_ingModalRecipe) return;
-  _ingModalRecipe.ingredients.forEach((ing, i) => {
-    if (document.getElementById(`ingCb_${i}`)?.checked) {
-      const qty = document.getElementById(`ingQtyCb_${i}`)?.value.trim() || ing.qty || '';
-      addToShopping(ing.name, qty);
+  if(!_ingModalRecipe) return;
+  _ingModalRecipe.ingredients.forEach((ing,i)=>{
+    if(document.getElementById(`ingCb_${i}`)?.checked) {
+      const qty=document.getElementById(`ingQtyCb_${i}`)?.value.trim()||ing.qty||'';
+      addToShopping(ing.name,qty);
     }
   });
-  saveData();
-  document.getElementById('ingModal').style.display = 'none';
-  _ingModalRecipe = null;
+  saveData(); document.getElementById('ingModal').style.display='none'; _ingModalRecipe=null;
 }
 
-function editMeal(dk, mi) {
-  const slot = document.getElementById(`slot_${dk}_${mi}`);
-  const nameEl = slot.querySelector('.meal-name');
-  if (slot.querySelector('.meal-edit')) return;
-  nameEl.style.display = 'none';
-  const ingBtn = slot.querySelector('.meal-ing-btn');
-  if (ingBtn) ingBtn.style.display = 'none';
-
-  const row = document.createElement('div');
-  row.className = 'meal-edit';
-  row.innerHTML =
-    `<div class="ac-wrap">
-      <input class="meal-input" id="mealInp_${dk}_${mi}" value="${esc(getMeal(dk, mi))}" placeholder="z.B. Pasta" autocomplete="off" />
-      <div class="ac-dropdown" id="acDrop_${dk}_${mi}" style="display:none"></div>
-    </div>
-    <button class="btn btn-primary btn-sm" onclick="saveMeal('${dk}',${mi},this)">✓</button>`;
+function editMeal(dk,mi) {
+  const slot=document.getElementById(`slot_${dk}_${mi}`);
+  const nameEl=slot.querySelector('.meal-name');
+  if(slot.querySelector('.meal-edit')) return;
+  nameEl.style.display='none';
+  const ingBtn=slot.querySelector('.meal-ing-btn'); if(ingBtn) ingBtn.style.display='none';
+  const row=document.createElement('div'); row.className='meal-edit';
+  row.innerHTML=`<div class="ac-wrap"><input class="meal-input" id="mealInp_${dk}_${mi}" value="${esc(getMeal(dk,mi))}" placeholder="z.B. Pasta" autocomplete="off" /><div class="ac-dropdown" id="acDrop_${dk}_${mi}" style="display:none"></div></div><button class="btn btn-primary btn-sm" onclick="saveMeal('${dk}',${mi},this)">✓</button>`;
   slot.appendChild(row);
-
-  const inp = row.querySelector('input');
-  inp.focus(); inp.select();
-  inp.addEventListener('input', () => showAC(dk, mi, inp.value));
-  inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter')  saveMeal(dk, mi, row.querySelector('button'));
-    if (e.key === 'Escape') cancelEdit(dk, mi);
-  });
+  const inp=row.querySelector('input'); inp.focus(); inp.select();
+  inp.addEventListener('input',()=>showAC(dk,mi,inp.value));
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter') saveMeal(dk,mi,row.querySelector('button')); if(e.key==='Escape') cancelEdit(dk,mi);});
+}
+function showAC(dk,mi,val) {
+  const drop=document.getElementById(`acDrop_${dk}_${mi}`);
+  if(!val.trim()) { drop.style.display='none'; return; }
+  const matches=(appData.recipes||[]).filter(r=>r.name.toLowerCase().includes(val.toLowerCase()));
+  if(!matches.length) { drop.style.display='none'; return; }
+  drop.innerHTML=matches.map(r=>`<div class="ac-item" onmousedown="pickRecipe('${dk}',${mi},'${r.id}')">${esc(r.name)}</div>`).join('');
+  drop.style.display='';
+}
+function pickRecipe(dk,mi,rid) {
+  const rec=(appData.recipes||[]).find(r=>r.id===rid); if(!rec) return;
+  document.getElementById(`mealInp_${dk}_${mi}`).value=rec.name;
+  document.getElementById(`acDrop_${dk}_${mi}`).style.display='none';
+  if(!appData.mealRecipes) appData.mealRecipes={};
+  appData.mealRecipes[dk+'_'+mi]=rid;
+}
+function saveMeal(dk,mi,btn) {
+  const inp=btn.closest('.meal-edit').querySelector('input');
+  const val=inp.value.trim();
+  const rid=(appData.mealRecipes||{})[dk+'_'+mi];
+  if(rid) { const rec=(appData.recipes||[]).find(r=>r.id===rid); if(!rec||rec.name!==val) delete appData.mealRecipes[dk+'_'+mi]; }
+  setMeal(dk,mi,val); renderPlan();
+}
+function cancelEdit(dk,mi) {
+  const slot=document.getElementById(`slot_${dk}_${mi}`);
+  const edit=slot.querySelector('.meal-edit'); if(edit) edit.remove();
+  slot.querySelector('.meal-name').style.display='';
+  const ingBtn=slot.querySelector('.meal-ing-btn'); if(ingBtn) ingBtn.style.display='';
 }
 
-function showAC(dk, mi, val) {
-  const drop = document.getElementById(`acDrop_${dk}_${mi}`);
-  if (!val.trim()) { drop.style.display = 'none'; return; }
-  const matches = (appData.recipes || []).filter(r => r.name.toLowerCase().includes(val.toLowerCase()));
-  if (!matches.length) { drop.style.display = 'none'; return; }
-  drop.innerHTML = matches.map(r =>
-    `<div class="ac-item" onmousedown="pickRecipe('${dk}',${mi},'${r.id}')">${esc(r.name)}</div>`
-  ).join('');
-  drop.style.display = '';
-}
-
-function pickRecipe(dk, mi, rid) {
-  const rec = (appData.recipes || []).find(r => r.id === rid);
-  if (!rec) return;
-  document.getElementById(`mealInp_${dk}_${mi}`).value = rec.name;
-  document.getElementById(`acDrop_${dk}_${mi}`).style.display = 'none';
-  if (!appData.mealRecipes) appData.mealRecipes = {};
-  appData.mealRecipes[dk + '_' + mi] = rid;
-}
-
-function saveMeal(dk, mi, btn) {
-  const inp = btn.closest('.meal-edit').querySelector('input');
-  const val = inp.value.trim();
-  const rid = (appData.mealRecipes || {})[dk + '_' + mi];
-  if (rid) {
-    const rec = (appData.recipes || []).find(r => r.id === rid);
-    if (!rec || rec.name !== val) delete appData.mealRecipes[dk + '_' + mi];
-  }
-  setMeal(dk, mi, val);
-  renderPlan();
-}
-
-function cancelEdit(dk, mi) {
-  const slot = document.getElementById(`slot_${dk}_${mi}`);
-  const edit = slot.querySelector('.meal-edit');
-  if (edit) edit.remove();
-  slot.querySelector('.meal-name').style.display = '';
-  const ingBtn = slot.querySelector('.meal-ing-btn');
-  if (ingBtn) ingBtn.style.display = '';
-}
-
-// ── Shopping list ─────────────────────────────────────────────────
 function renderShopping() {
-  const mon = monday(weekOffset);
-  const fromPlan = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(mon); d.setDate(mon.getDate() + i);
-    const dk = dateKey(d);
-    for (let mi = 0; mi < 3; mi++) {
-      const m = getMeal(dk, mi);
-      if (m) fromPlan.push(m);
-    }
+  const mon=monday(weekOffset), fromPlan=[];
+  for(let i=0;i<7;i++) { const d=new Date(mon); d.setDate(mon.getDate()+i); const dk=dateKey(d); for(let mi=0;mi<3;mi++) { const m=getMeal(dk,mi); if(m) fromPlan.push(m); } }
+  const custom=appData.shopping||[], chk=appData.checked||{}, el=document.getElementById('sList');
+  el.innerHTML='';
+  if(!fromPlan.length&&!custom.length) { el.innerHTML='<div class="empty">Keine Einträge. Trage Mahlzeiten im Wochenplan ein!</div>'; return; }
+  const planActive=fromPlan.map((item,i)=>({item,i})).filter(x=>!chk['p'+x.i]);
+  const planDone=fromPlan.map((item,i)=>({item,i})).filter(x=>!!chk['p'+x.i]);
+  if(planActive.length) {
+    el.innerHTML+='<div class="s-section">Aus dem Wochenplan</div>';
+    planActive.forEach(({item,i})=>{ el.innerHTML+=`<div class="s-item" id="pi_${i}"><input type="checkbox" onchange="togglePlan(${i},this)" /><span class="s-text">${esc(item)}</span></div>`; });
   }
-
-  const custom = appData.shopping || [];
-  const chk    = appData.checked  || {};
-  const el     = document.getElementById('sList');
-  el.innerHTML = '';
-
-  if (!fromPlan.length && !custom.length) {
-    el.innerHTML = '<div class="empty">Keine Einträge. Trage Mahlzeiten im Wochenplan ein!</div>';
-    return;
-  }
-
-  const planActive = fromPlan.map((item, i) => ({ item, i })).filter(x => !chk['p' + x.i]);
-  const planDone   = fromPlan.map((item, i) => ({ item, i })).filter(x => !!chk['p' + x.i]);
-
-  if (planActive.length) {
-    el.innerHTML += '<div class="s-section">Aus dem Wochenplan</div>';
-    planActive.forEach(({ item, i }) => {
-      el.innerHTML += `
-        <div class="s-item" id="pi_${i}">
-          <input type="checkbox" onchange="togglePlan(${i},this)" />
-          <span class="s-text">${esc(item)}</span>
-        </div>`;
-    });
-  }
-
-  const customActive = custom.map((x, i) => ({ ...x, i })).filter(x => !x.done);
-  const customDone   = custom.map((x, i) => ({ ...x, i })).filter(x => x.done);
-
-  el.innerHTML += '<div class="s-section">Eigene Artikel</div>';
-  customActive.forEach(({ name, qty, i }) => {
-    el.innerHTML += `
-      <div class="s-item" id="ci_${i}">
-        <input type="checkbox" onchange="toggleCustom(${i},this)" />
-        <span class="s-text">${qty ? `<b>${esc(qty)}</b> ` : ''}${esc(name)}</span>
-        <button class="s-del" onclick="delCustom(${i})" title="Löschen">✕</button>
-      </div>`;
-  });
-
-  el.innerHTML += `
-    <div class="s-add">
-      <input type="text" id="newItem" placeholder="Artikel …" onkeydown="if(event.key==='Enter')addItem()" />
-      <input type="text" id="newItemQty" class="qty-inp" placeholder="Menge" onkeydown="if(event.key==='Enter')addItem()" />
-      <button class="btn btn-primary btn-sm" onclick="addItem()">+ Hinzufügen</button>
-    </div>`;
-
-  if (planDone.length || customDone.length) {
-    el.innerHTML += '<div class="s-section done-section">Erledigt</div>';
-    planDone.forEach(({ item, i }) => {
-      el.innerHTML += `
-        <div class="s-item done">
-          <input type="checkbox" checked onchange="togglePlan(${i},this)" />
-          <span class="s-text">${esc(item)}</span>
-        </div>`;
-    });
-    customDone.forEach(({ name, qty, i }) => {
-      el.innerHTML += `
-        <div class="s-item done">
-          <input type="checkbox" checked onchange="toggleCustom(${i},this)" />
-          <span class="s-text">${qty ? `<b>${esc(qty)}</b> ` : ''}${esc(name)}</span>
-          <button class="s-del" onclick="delCustom(${i})" title="Löschen">✕</button>
-        </div>`;
-    });
+  const customActive=custom.map((x,i)=>({...x,i})).filter(x=>!x.done);
+  const customDone=custom.map((x,i)=>({...x,i})).filter(x=>x.done);
+  el.innerHTML+='<div class="s-section">Eigene Artikel</div>';
+  customActive.forEach(({name,qty,i})=>{ el.innerHTML+=`<div class="s-item" id="ci_${i}"><input type="checkbox" onchange="toggleCustom(${i},this)" /><span class="s-text">${qty?`<b>${esc(qty)}</b> `:''}${esc(name)}</span><button class="s-del" onclick="delCustom(${i})" title="Löschen">✕</button></div>`; });
+  el.innerHTML+=`<div class="s-add"><input type="text" id="newItem" placeholder="Artikel …" onkeydown="if(event.key==='Enter')addItem()" /><input type="text" id="newItemQty" class="qty-inp" placeholder="Menge" onkeydown="if(event.key==='Enter')addItem()" /><button class="btn btn-primary btn-sm" onclick="addItem()">+ Hinzufügen</button></div>`;
+  if(planDone.length||customDone.length) {
+    el.innerHTML+='<div class="s-section done-section">Erledigt</div>';
+    planDone.forEach(({item,i})=>{ el.innerHTML+=`<div class="s-item done"><input type="checkbox" checked onchange="togglePlan(${i},this)" /><span class="s-text">${esc(item)}</span></div>`; });
+    customDone.forEach(({name,qty,i})=>{ el.innerHTML+=`<div class="s-item done"><input type="checkbox" checked onchange="toggleCustom(${i},this)" /><span class="s-text">${qty?`<b>${esc(qty)}</b> `:''}${esc(name)}</span><button class="s-del" onclick="delCustom(${i})" title="Löschen">✕</button></div>`; });
   }
 }
-
-function togglePlan(i, cb) {
-  if (!appData.checked) appData.checked = {};
-  appData.checked['p' + i] = cb.checked;
-  saveData();
-  renderShopping();
-}
-
-function toggleCustom(i, cb) {
-  appData.shopping[i].done = cb.checked;
-  saveData();
-  renderShopping();
-}
-
-function delCustom(i) {
-  appData.shopping.splice(i, 1);
-  saveData();
-  renderShopping();
-}
-
+function togglePlan(i,cb) { if(!appData.checked) appData.checked={}; appData.checked['p'+i]=cb.checked; saveData(); renderShopping(); }
+function toggleCustom(i,cb) { appData.shopping[i].done=cb.checked; saveData(); renderShopping(); }
+function delCustom(i) { appData.shopping.splice(i,1); saveData(); renderShopping(); }
 function addItem() {
-  const inp    = document.getElementById('newItem');
-  const qtyInp = document.getElementById('newItemQty');
-  const name   = inp.value.trim();
-  if (!name) return;
-  const qty = qtyInp ? qtyInp.value.trim() : '';
-  addToShopping(name, qty);
-  saveData();
-  inp.value = '';
-  if (qtyInp) qtyInp.value = '';
-  renderShopping();
+  const inp=document.getElementById('newItem'), qtyInp=document.getElementById('newItemQty');
+  const name=inp.value.trim(); if(!name) return;
+  addToShopping(name,qtyInp?qtyInp.value.trim():'');
+  saveData(); inp.value=''; if(qtyInp) qtyInp.value=''; renderShopping();
 }
 
-// ── Recipes ───────────────────────────────────────────────────────
-let formIngredients = [];
-
-function uid() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
+let formIngredients=[];
+function uid() { return Math.random().toString(36).slice(2)+Date.now().toString(36); }
 
 function showRecipeForm(recipeId) {
-  formIngredients = [];
-  document.getElementById('recipeEditId').value = '';
-  document.getElementById('rName').value = '';
-  document.getElementById('rDesc').value = '';
-  document.getElementById('recipeFormTitle').textContent = 'Neues Rezept';
-
-  if (recipeId) {
-    const rec = appData.recipes.find(r => r.id === recipeId);
-    if (rec) {
-      document.getElementById('recipeEditId').value = rec.id;
-      document.getElementById('rName').value = rec.name;
-      document.getElementById('rDesc').value = rec.description || '';
-      formIngredients = [...rec.ingredients];
-      document.getElementById('recipeFormTitle').textContent = 'Rezept bearbeiten';
-    }
+  formIngredients=[];
+  document.getElementById('recipeEditId').value='';
+  document.getElementById('rName').value='';
+  document.getElementById('rDesc').value='';
+  document.getElementById('recipeFormTitle').textContent='Neues Rezept';
+  if(recipeId) {
+    const rec=appData.recipes.find(r=>r.id===recipeId);
+    if(rec) { document.getElementById('recipeEditId').value=rec.id; document.getElementById('rName').value=rec.name; document.getElementById('rDesc').value=rec.description||''; formIngredients=[...rec.ingredients]; document.getElementById('recipeFormTitle').textContent='Rezept bearbeiten'; }
   }
-
-  renderIngListEdit();
-  document.getElementById('recipeFormWrap').style.display = '';
-  document.getElementById('rName').focus();
+  renderIngListEdit(); document.getElementById('recipeFormWrap').style.display=''; document.getElementById('rName').focus();
 }
-
-function hideRecipeForm() {
-  document.getElementById('recipeFormWrap').style.display = 'none';
-}
-
+function hideRecipeForm() { document.getElementById('recipeFormWrap').style.display='none'; }
 function renderIngListEdit() {
-  const el = document.getElementById('ingListEdit');
-  el.innerHTML = formIngredients.map((ing, i) =>
-    `<span class="ing-tag-edit">${ing.qty ? esc(ing.qty) + ' ' : ''}${esc(ing.name)}<button onclick="removeIngredient(${i})" title="Entfernen">×</button></span>`
+  document.getElementById('ingListEdit').innerHTML=formIngredients.map((ing,i)=>
+    `<span class="ing-tag-edit">${ing.qty?esc(ing.qty)+' ':''}${esc(ing.name)}<button onclick="removeIngredient(${i})" title="Entfernen">×</button></span>`
   ).join('');
 }
-
-function removeIngredient(i) {
-  formIngredients.splice(i, 1);
-  renderIngListEdit();
-}
-
+function removeIngredient(i) { formIngredients.splice(i,1); renderIngListEdit(); }
 function addIngredientToForm() {
-  const inp    = document.getElementById('ingInput');
-  const qtyInp = document.getElementById('ingQtyInput');
-  const name   = inp.value.trim();
-  if (!name) return;
-  const qty = qtyInp ? qtyInp.value.trim() : '';
-  formIngredients.push({ name, qty });
-  inp.value = '';
-  if (qtyInp) qtyInp.value = '';
-  renderIngListEdit();
-  inp.focus();
+  const inp=document.getElementById('ingInput'), qtyInp=document.getElementById('ingQtyInput');
+  const name=inp.value.trim(); if(!name) return;
+  formIngredients.push({name,qty:qtyInp?qtyInp.value.trim():''});
+  inp.value=''; if(qtyInp) qtyInp.value=''; renderIngListEdit(); inp.focus();
 }
-
 function saveRecipe() {
-  const name = document.getElementById('rName').value.trim();
-  if (!name) { alert('Bitte einen Namen eingeben.'); return; }
-  const desc   = document.getElementById('rDesc').value.trim();
-  const editId = document.getElementById('recipeEditId').value;
-
-  if (!appData.recipes) appData.recipes = [];
-
-  if (editId) {
-    const idx = appData.recipes.findIndex(r => r.id === editId);
-    if (idx !== -1) {
-      appData.recipes[idx] = { id: editId, name, description: desc, ingredients: [...formIngredients] };
-    }
-  } else {
-    appData.recipes.push({ id: uid(), name, description: desc, ingredients: [...formIngredients] });
-  }
-
-  saveData();
-  hideRecipeForm();
-  renderRecipes();
+  const name=document.getElementById('rName').value.trim(); if(!name) { alert('Bitte einen Namen eingeben.'); return; }
+  const desc=document.getElementById('rDesc').value.trim(), editId=document.getElementById('recipeEditId').value;
+  if(!appData.recipes) appData.recipes=[];
+  if(editId) { const idx=appData.recipes.findIndex(r=>r.id===editId); if(idx!==-1) appData.recipes[idx]={id:editId,name,description:desc,ingredients:[...formIngredients]}; }
+  else appData.recipes.push({id:uid(),name,description:desc,ingredients:[...formIngredients]});
+  saveData(); hideRecipeForm(); renderRecipes();
 }
-
 function deleteRecipe(id) {
-  if (!confirm('Rezept wirklich löschen?')) return;
-  appData.recipes = appData.recipes.filter(r => r.id !== id);
-  for (const key in appData.mealRecipes) {
-    if (appData.mealRecipes[key] === id) delete appData.mealRecipes[key];
-  }
-  saveData();
-  renderRecipes();
+  if(!confirm('Rezept wirklich löschen?')) return;
+  appData.recipes=appData.recipes.filter(r=>r.id!==id);
+  for(const key in appData.mealRecipes) { if(appData.mealRecipes[key]===id) delete appData.mealRecipes[key]; }
+  saveData(); renderRecipes();
 }
-
 function renderRecipes() {
-  const grid = document.getElementById('recipeGrid');
-  const recipes = appData.recipes || [];
-
-  if (!recipes.length) {
-    grid.innerHTML = '<div class="empty">Noch keine Rezepte. Klicke auf „+ Neues Rezept".</div>';
-    return;
-  }
-
-  grid.innerHTML = recipes.map(r => `
+  const grid=document.getElementById('recipeGrid'), recipes=appData.recipes||[];
+  if(!recipes.length) { grid.innerHTML='<div class="empty">Noch keine Rezepte. Klicke auf „+ Neues Rezept".</div>'; return; }
+  grid.innerHTML=recipes.map(r=>`
     <div class="recipe-card">
       <div class="recipe-card-name">${esc(r.name)}</div>
-      ${r.description ? `<div class="recipe-card-desc">${esc(r.description)}</div>` : ''}
-      ${r.ingredients.length ? `<div class="ingredient-tags">${r.ingredients.map(i => `<span class="ingredient-tag">${i.qty ? esc(i.qty) + ' ' : ''}${esc(i.name)}</span>`).join('')}</div>` : ''}
+      ${r.description?`<div class="recipe-card-desc">${esc(r.description)}</div>`:''}
+      ${r.ingredients.length?`<div class="ingredient-tags">${r.ingredients.map(i=>`<span class="ingredient-tag">${i.qty?esc(i.qty)+' ':''}${esc(i.name)}</span>`).join('')}</div>`:''}
       <div class="recipe-actions">
         <button class="btn btn-outline btn-sm" onclick="showRecipeForm('${r.id}')">Bearbeiten</button>
         <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${r.id}')">Löschen</button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 </script>
 </body>
