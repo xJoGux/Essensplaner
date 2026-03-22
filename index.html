@@ -108,8 +108,18 @@
     .month-cell.other-month { opacity: .4; }
     .month-num     { font-size: .75rem; font-weight: 700; color: var(--muted); margin-bottom: .25rem; }
     .month-cell.today .month-num { color: var(--primary); }
+    .month-today-badge { font-size: .65rem; font-weight: 700; background: var(--primary); color: #fff; border-radius: 99px; padding: .05rem .4rem; margin-left: .3rem; vertical-align: middle; }
     .month-meal-dot { font-size: .72rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: .1rem; }
     @media (max-width: 600px) { .month-cell { min-height: 55px; } .month-meal-dot { display: none; } }
+
+    /* ── Ingredient modal ────────────────────────────────────── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-box     { background: var(--card); border-radius: 14px; padding: 1.5rem; width: 100%; max-width: 380px; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+    .modal-title   { font-weight: 700; font-size: 1rem; margin-bottom: 1rem; }
+    .modal-ing-list { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1.25rem; max-height: 260px; overflow-y: auto; }
+    .modal-ing-item { display: flex; align-items: center; gap: .65rem; font-size: .9rem; }
+    .modal-ing-item input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--primary); flex-shrink: 0; cursor: pointer; }
+    .modal-actions  { display: flex; gap: .5rem; justify-content: flex-end; }
 
     .day-card   { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
     .day-card.today { border-color: var(--primary); box-shadow: 0 0 0 2px #c7d2fe; }
@@ -330,6 +340,18 @@
           <button class="btn btn-danger btn-sm" onclick="deleteAccount()">Account löschen</button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Ingredient selection modal ────────────────────────────────── -->
+<div id="ingModal" class="modal-overlay" style="display:none" onclick="closeIngModal(event)">
+  <div class="modal-box">
+    <div class="modal-title" id="ingModalTitle">Zutaten auswählen</div>
+    <div class="modal-ing-list" id="ingModalList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeIngModal()">Abbrechen</button>
+      <button class="btn btn-primary btn-sm" style="width:auto" onclick="confirmIngModal()">Zur Einkaufsliste</button>
     </div>
   </div>
 </div>
@@ -699,7 +721,7 @@ function monthCell(d, otherMonth) {
   cell.className = 'month-cell' + (isToday ? ' today' : '') + (otherMonth ? ' other-month' : '');
   cell.title = 'Tag anzeigen';
 
-  let html = `<div class="month-num">${d.getDate()}</div>`;
+  let html = `<div class="month-num">${d.getDate()}${isToday ? '<span class="month-today-badge">Heute</span>' : ''}</div>`;
   MEALS.forEach((m, mi) => {
     const val = getMeal(dk, mi);
     if (val) html += `<div class="month-meal-dot" title="${esc(m)}: ${esc(val)}">· ${esc(val)}</div>`;
@@ -729,18 +751,45 @@ function mealIngBtn(dk, mi) {
   return `<button class="meal-ing-btn" onclick="addRecipeToShop('${dk}',${mi},event)">🛒 Zutaten zur Einkaufsliste</button>`;
 }
 
+let _ingModalRecipe = null;
+
 function addRecipeToShop(dk, mi, e) {
   e.stopPropagation();
   const rid = (appData.mealRecipes || {})[dk + '_' + mi];
   const rec = (appData.recipes || []).find(r => r.id === rid);
-  if (!rec) return;
-  rec.ingredients.forEach(ing => {
+  if (!rec || !rec.ingredients.length) return;
+  _ingModalRecipe = rec;
+
+  document.getElementById('ingModalTitle').textContent = `Zutaten von „${rec.name}"`;
+  const list = document.getElementById('ingModalList');
+  list.innerHTML = rec.ingredients.map((ing, i) =>
+    `<label class="modal-ing-item">
+      <input type="checkbox" id="ingCb_${i}" checked />
+      ${esc(ing)}
+    </label>`
+  ).join('');
+  document.getElementById('ingModal').style.display = 'flex';
+}
+
+function closeIngModal(e) {
+  if (e && e.target !== document.getElementById('ingModal')) return;
+  document.getElementById('ingModal').style.display = 'none';
+  _ingModalRecipe = null;
+}
+
+function confirmIngModal() {
+  if (!_ingModalRecipe) return;
+  const selected = _ingModalRecipe.ingredients.filter((_, i) =>
+    document.getElementById(`ingCb_${i}`)?.checked
+  );
+  selected.forEach(ing => {
     if (!appData.shopping.find(x => x.name === ing)) {
       appData.shopping.push({ name: ing, done: false });
     }
   });
   saveData();
-  alert(`${rec.ingredients.length} Zutat(en) von „${rec.name}" hinzugefügt.`);
+  document.getElementById('ingModal').style.display = 'none';
+  _ingModalRecipe = null;
 }
 
 function editMeal(dk, mi) {
