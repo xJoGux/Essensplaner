@@ -162,6 +162,38 @@
 
     /* ── Loading ─────────────────────────────────────────────── */
     .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; font-size: 1rem; color: var(--muted); }
+
+    /* ── Recipes ─────────────────────────────────────────────── */
+    .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    .recipe-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 1rem; }
+    .recipe-card-name { font-weight: 700; font-size: 1rem; margin-bottom: .25rem; }
+    .recipe-card-desc { font-size: .82rem; color: var(--muted); margin-bottom: .6rem; white-space: pre-wrap; }
+    .ingredient-tags { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .6rem; }
+    .ingredient-tag  { background: #eef2ff; color: var(--primary); font-size: .75rem; padding: .2rem .55rem; border-radius: 99px; font-weight: 600; }
+    [data-theme="dark"] .ingredient-tag { background: #312e81; }
+    .recipe-actions  { display: flex; gap: .4rem; }
+    .recipe-form     { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 1rem; }
+    .recipe-form h3  { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
+    textarea { width: 100%; padding: .6rem .75rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; outline: none; font-family: inherit; resize: vertical; transition: border-color .15s; }
+    textarea:focus { border-color: var(--primary); }
+    .ing-input-row { display: flex; gap: .4rem; margin-bottom: .5rem; }
+    .ing-input-row input { flex: 1; }
+    .ing-list-edit   { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .6rem; }
+    .ing-tag-edit    { display: flex; align-items: center; gap: .25rem; background: #eef2ff; color: var(--primary); font-size: .78rem; padding: .2rem .5rem; border-radius: 99px; font-weight: 600; }
+    [data-theme="dark"] .ing-tag-edit { background: #312e81; }
+    .ing-tag-edit button { background: none; border: none; cursor: pointer; color: var(--primary); font-size: .85rem; line-height: 1; padding: 0; }
+
+    /* ── Autocomplete ────────────────────────────────────────── */
+    .ac-wrap { position: relative; flex: 1; }
+    .ac-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1.5px solid var(--primary); border-radius: 8px; z-index: 200; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+    .ac-item { padding: .45rem .75rem; font-size: .85rem; cursor: pointer; }
+    .ac-item:hover { background: #eef2ff; }
+    [data-theme="dark"] .ac-item:hover { background: #312e81; }
+
+    /* ── Meal slot extras ────────────────────────────────────── */
+    .meal-ing-btn { font-size: .7rem; color: var(--primary); background: none; border: none; cursor: pointer; padding: .1rem .3rem; border-radius: 4px; margin-top: .15rem; display: block; }
+    .meal-ing-btn:hover { background: #eef2ff; }
+    [data-theme="dark"] .meal-ing-btn:hover { background: #312e81; }
   </style>
 </head>
 <body>
@@ -203,6 +235,7 @@
       <div class="nav-links">
         <button class="nav-btn active" id="navPlan" onclick="showPage('plan',this)">Wochenplan</button>
         <button class="nav-btn" id="navShop" onclick="showPage('shopping',this)">Einkaufsliste</button>
+        <button class="nav-btn" id="navRecipes" onclick="showPage('recipes',this)">Rezepte</button>
         <button class="nav-btn" id="navSettings" onclick="showPage('settings',this)">Einstellungen</button>
       </div>
       <div class="nav-user">
@@ -240,6 +273,35 @@
         <button class="btn btn-outline btn-sm" onclick="renderShopping()">↻ Aktualisieren</button>
       </div>
       <div class="s-list" id="sList"></div>
+    </div>
+
+    <!-- Rezepte -->
+    <div id="recipesPage" class="page">
+      <div class="page-header">
+        <div class="page-title">Rezepte</div>
+        <button class="btn btn-primary btn-sm" onclick="showRecipeForm()">+ Neues Rezept</button>
+      </div>
+      <div id="recipeFormWrap" style="display:none">
+        <div class="recipe-form">
+          <h3 id="recipeFormTitle">Neues Rezept</h3>
+          <input type="hidden" id="recipeEditId" />
+          <div class="fg"><label>Name</label><input type="text" id="rName" placeholder="z.B. Spaghetti Bolognese" /></div>
+          <div class="fg"><label>Beschreibung (optional)</label><textarea id="rDesc" rows="3" placeholder="Zubereitung, Tipps …"></textarea></div>
+          <div class="fg">
+            <label>Zutaten</label>
+            <div class="ing-list-edit" id="ingListEdit"></div>
+            <div class="ing-input-row">
+              <input type="text" id="ingInput" placeholder="Zutat hinzufügen …" onkeydown="if(event.key==='Enter'){event.preventDefault();addIngredientToForm()}" />
+              <button class="btn btn-outline btn-sm" onclick="addIngredientToForm()">+ Hinzufügen</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:.5rem">
+            <button class="btn btn-primary btn-sm" style="width:auto" onclick="saveRecipe()">Speichern</button>
+            <button class="btn btn-outline btn-sm" onclick="hideRecipeForm()">Abbrechen</button>
+          </div>
+        </div>
+      </div>
+      <div class="recipe-grid" id="recipeGrid"></div>
     </div>
 
     <!-- Einstellungen -->
@@ -302,7 +364,7 @@ let currentUser = null;
 let currentUid  = null;
 let weekOffset  = 0;   // weeks for week-view, days for day-view, months for month-view
 let currentView = 'week';
-let appData     = { meals: {}, shopping: [], checked: {} };
+let appData     = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
 
 // ── Helpers ──────────────────────────────────────────────────────
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -326,9 +388,9 @@ function userRef() {
 async function loadData() {
   const doc = await userRef().get();
   if (doc.exists) {
-    appData = { meals: {}, shopping: [], checked: {}, ...doc.data() };
+    appData = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {}, ...doc.data() };
   } else {
-    appData = { meals: {}, shopping: [], checked: {} };
+    appData = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
   }
 }
 
@@ -478,6 +540,7 @@ function showPage(name, btn) {
   document.getElementById(name + 'Page').classList.add('active');
   btn.classList.add('active');
   if (name === 'shopping') renderShopping();
+  if (name === 'recipes')  renderRecipes();
   if (name === 'settings') {
     document.getElementById('darkToggle').checked =
       localStorage.getItem('ep_theme') === 'dark';
@@ -571,6 +634,7 @@ function renderWeek() {
         `<div class="meal-slot" id="slot_${dk}_${mi}">
           <div class="meal-type">${m}</div>
           <div class="meal-name" onclick="editMeal('${dk}',${mi})">${esc(getMeal(dk, mi))}</div>
+          ${mealIngBtn(dk, mi)}
         </div>`
       ).join('');
 
@@ -657,29 +721,86 @@ function monthCell(d, otherMonth) {
   return cell;
 }
 
+function mealIngBtn(dk, mi) {
+  const rid = (appData.mealRecipes || {})[dk + '_' + mi];
+  if (!rid) return '';
+  const rec = (appData.recipes || []).find(r => r.id === rid);
+  if (!rec || !rec.ingredients.length) return '';
+  return `<button class="meal-ing-btn" onclick="addRecipeToShop('${dk}',${mi},event)">🛒 Zutaten zur Einkaufsliste</button>`;
+}
+
+function addRecipeToShop(dk, mi, e) {
+  e.stopPropagation();
+  const rid = (appData.mealRecipes || {})[dk + '_' + mi];
+  const rec = (appData.recipes || []).find(r => r.id === rid);
+  if (!rec) return;
+  rec.ingredients.forEach(ing => {
+    if (!appData.shopping.find(x => x.name === ing)) {
+      appData.shopping.push({ name: ing, done: false });
+    }
+  });
+  saveData();
+  alert(`${rec.ingredients.length} Zutat(en) von „${rec.name}" hinzugefügt.`);
+}
+
 function editMeal(dk, mi) {
   const slot = document.getElementById(`slot_${dk}_${mi}`);
   const nameEl = slot.querySelector('.meal-name');
   if (slot.querySelector('.meal-edit')) return;
   nameEl.style.display = 'none';
+  const ingBtn = slot.querySelector('.meal-ing-btn');
+  if (ingBtn) ingBtn.style.display = 'none';
 
   const row = document.createElement('div');
   row.className = 'meal-edit';
   row.innerHTML =
-    `<input class="meal-input" value="${esc(getMeal(dk, mi))}" placeholder="z.B. Pasta" />
-     <button class="btn btn-primary btn-sm" onclick="saveMeal('${dk}',${mi},this)">✓</button>`;
+    `<div class="ac-wrap">
+      <input class="meal-input" id="mealInp_${dk}_${mi}" value="${esc(getMeal(dk, mi))}" placeholder="z.B. Pasta" autocomplete="off" />
+      <div class="ac-dropdown" id="acDrop_${dk}_${mi}" style="display:none"></div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="saveMeal('${dk}',${mi},this)">✓</button>`;
   slot.appendChild(row);
 
   const inp = row.querySelector('input');
   inp.focus(); inp.select();
+  inp.addEventListener('input', () => showAC(dk, mi, inp.value));
   inp.addEventListener('keydown', e => {
     if (e.key === 'Enter')  saveMeal(dk, mi, row.querySelector('button'));
     if (e.key === 'Escape') cancelEdit(dk, mi);
   });
 }
 
+function showAC(dk, mi, val) {
+  const drop = document.getElementById(`acDrop_${dk}_${mi}`);
+  if (!val.trim()) { drop.style.display = 'none'; return; }
+  const matches = (appData.recipes || []).filter(r => r.name.toLowerCase().includes(val.toLowerCase()));
+  if (!matches.length) { drop.style.display = 'none'; return; }
+  drop.innerHTML = matches.map(r =>
+    `<div class="ac-item" onmousedown="pickRecipe('${dk}',${mi},'${r.id}')">${esc(r.name)}</div>`
+  ).join('');
+  drop.style.display = '';
+}
+
+function pickRecipe(dk, mi, rid) {
+  const rec = (appData.recipes || []).find(r => r.id === rid);
+  if (!rec) return;
+  document.getElementById(`mealInp_${dk}_${mi}`).value = rec.name;
+  document.getElementById(`acDrop_${dk}_${mi}`).style.display = 'none';
+  if (!appData.mealRecipes) appData.mealRecipes = {};
+  appData.mealRecipes[dk + '_' + mi] = rid;
+}
+
 function saveMeal(dk, mi, btn) {
-  const val = btn.closest('.meal-edit').querySelector('input').value.trim();
+  const inp = btn.closest('.meal-edit').querySelector('input');
+  const val = inp.value.trim();
+  // If input changed from what was picked via autocomplete, clear recipe link
+  const rid = (appData.mealRecipes || {})[dk + '_' + mi];
+  if (rid) {
+    const rec = (appData.recipes || []).find(r => r.id === rid);
+    if (!rec || rec.name !== val) {
+      delete appData.mealRecipes[dk + '_' + mi];
+    }
+  }
   setMeal(dk, mi, val);
   renderPlan();
 }
@@ -689,6 +810,8 @@ function cancelEdit(dk, mi) {
   const edit = slot.querySelector('.meal-edit');
   if (edit) edit.remove();
   slot.querySelector('.meal-name').style.display = '';
+  const ingBtn = slot.querySelector('.meal-ing-btn');
+  if (ingBtn) ingBtn.style.display = '';
 }
 
 // ── Shopping list ─────────────────────────────────────────────────
@@ -797,6 +920,117 @@ function addItem() {
   saveData();
   inp.value = '';
   renderShopping();
+}
+
+// ── Recipes ───────────────────────────────────────────────────────
+let formIngredients = [];
+
+function uid() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function showRecipeForm(recipeId) {
+  formIngredients = [];
+  document.getElementById('recipeEditId').value = '';
+  document.getElementById('rName').value = '';
+  document.getElementById('rDesc').value = '';
+  document.getElementById('recipeFormTitle').textContent = 'Neues Rezept';
+
+  if (recipeId) {
+    const rec = appData.recipes.find(r => r.id === recipeId);
+    if (rec) {
+      document.getElementById('recipeEditId').value = rec.id;
+      document.getElementById('rName').value = rec.name;
+      document.getElementById('rDesc').value = rec.description || '';
+      formIngredients = [...rec.ingredients];
+      document.getElementById('recipeFormTitle').textContent = 'Rezept bearbeiten';
+    }
+  }
+
+  renderIngListEdit();
+  document.getElementById('recipeFormWrap').style.display = '';
+  document.getElementById('rName').focus();
+}
+
+function hideRecipeForm() {
+  document.getElementById('recipeFormWrap').style.display = 'none';
+}
+
+function renderIngListEdit() {
+  const el = document.getElementById('ingListEdit');
+  el.innerHTML = formIngredients.map((ing, i) =>
+    `<span class="ing-tag-edit">${esc(ing)}<button onclick="removeIngredient(${i})" title="Entfernen">×</button></span>`
+  ).join('');
+}
+
+function removeIngredient(i) {
+  formIngredients.splice(i, 1);
+  renderIngListEdit();
+}
+
+function addIngredientToForm() {
+  const inp = document.getElementById('ingInput');
+  const val = inp.value.trim();
+  if (!val) return;
+  formIngredients.push(val);
+  inp.value = '';
+  renderIngListEdit();
+  inp.focus();
+}
+
+function saveRecipe() {
+  const name = document.getElementById('rName').value.trim();
+  if (!name) { alert('Bitte einen Namen eingeben.'); return; }
+  const desc = document.getElementById('rDesc').value.trim();
+  const editId = document.getElementById('recipeEditId').value;
+
+  if (!appData.recipes) appData.recipes = [];
+
+  if (editId) {
+    const idx = appData.recipes.findIndex(r => r.id === editId);
+    if (idx !== -1) {
+      appData.recipes[idx] = { id: editId, name, description: desc, ingredients: [...formIngredients] };
+    }
+  } else {
+    appData.recipes.push({ id: uid(), name, description: desc, ingredients: [...formIngredients] });
+  }
+
+  saveData();
+  hideRecipeForm();
+  renderRecipes();
+}
+
+function deleteRecipe(id) {
+  if (!confirm('Rezept wirklich löschen?')) return;
+  appData.recipes = appData.recipes.filter(r => r.id !== id);
+  // Remove links from meal plan
+  for (const key in appData.mealRecipes) {
+    if (appData.mealRecipes[key] === id) delete appData.mealRecipes[key];
+  }
+  saveData();
+  renderRecipes();
+}
+
+function renderRecipes() {
+  const grid = document.getElementById('recipeGrid');
+  const recipes = appData.recipes || [];
+
+  if (!recipes.length) {
+    grid.innerHTML = '<div class="empty">Noch keine Rezepte. Klicke auf „+ Neues Rezept".</div>';
+    return;
+  }
+
+  grid.innerHTML = recipes.map(r => `
+    <div class="recipe-card">
+      <div class="recipe-card-name">${esc(r.name)}</div>
+      ${r.description ? `<div class="recipe-card-desc">${esc(r.description)}</div>` : ''}
+      ${r.ingredients.length ? `<div class="ingredient-tags">${r.ingredients.map(i => `<span class="ingredient-tag">${esc(i)}</span>`).join('')}</div>` : ''}
+      <div class="recipe-actions">
+        <button class="btn btn-outline btn-sm" onclick="showRecipeForm('${r.id}')">Bearbeiten</button>
+        <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${r.id}')">Löschen</button>
+      </div>
+    </div>
+  `).join('');
 }
 </script>
 </body>
