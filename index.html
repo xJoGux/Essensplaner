@@ -157,10 +157,16 @@
 
     /* ── Settings ───────────────────────────────────────────── */
     .settings-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1rem; }
-    .settings-row  { display: flex; align-items: center; justify-content: space-between; padding: .9rem 1.25rem; border-bottom: 1px solid var(--border); }
+    .settings-section { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: .55rem 1.25rem; background: var(--bg); border-bottom: 1px solid var(--border); }
+    .settings-row  { display: flex; align-items: center; justify-content: space-between; padding: .9rem 1.25rem; border-bottom: 1px solid var(--border); gap: 1rem; }
     .settings-row:last-child { border-bottom: none; }
-    .settings-label { font-size: .95rem; font-weight: 500; }
+    .settings-label { font-size: .95rem; font-weight: 500; flex-shrink: 0; }
     .settings-sub   { font-size: .8rem; color: var(--muted); margin-top: .15rem; }
+    .settings-value { font-weight: 700; font-size: .95rem; }
+    .settings-pw-wrap { display: flex; align-items: center; gap: .5rem; flex: 1; justify-content: flex-end; }
+    .settings-pw-dots { font-size: 1rem; letter-spacing: 2px; color: var(--text); flex-shrink: 0; }
+    .settings-changepw { padding: .9rem 1.25rem; border-top: 1px solid var(--border); }
+    .settings-changepw .fg:last-of-type { margin-bottom: .75rem; }
     .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
     .toggle input { opacity: 0; width: 0; height: 0; }
     .toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 24px; cursor: pointer; transition: .2s; }
@@ -325,6 +331,31 @@
         <div class="page-title">Einstellungen</div>
       </div>
       <div class="settings-card">
+        <div class="settings-section">Account</div>
+        <div class="settings-row">
+          <div class="settings-label">Benutzername</div>
+          <div class="settings-value" id="settingsUsername"></div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-label">Passwort</div>
+          <div class="settings-pw-wrap">
+            <span class="settings-pw-dots" id="settingsPwDisplay">••••••••••••</span>
+            <button class="btn btn-outline btn-sm" id="settingsPwToggleBtn" onclick="toggleShowPw()">Anzeigen</button>
+            <button class="btn btn-outline btn-sm" onclick="toggleChangePwForm()">Ändern</button>
+          </div>
+        </div>
+        <div id="changePwForm" style="display:none" class="settings-changepw">
+          <div id="changePwErr" class="err"></div>
+          <div class="fg"><label>Neues Passwort</label><input type="password" id="newPw1" placeholder="Neues Passwort (min. 6 Zeichen)" /></div>
+          <div class="fg"><label>Passwort bestätigen</label><input type="password" id="newPw2" placeholder="Wiederholen" onkeydown="if(event.key==='Enter')saveNewPw()" /></div>
+          <div style="display:flex;gap:.5rem">
+            <button class="btn btn-primary btn-sm" style="width:auto" onclick="saveNewPw()">Speichern</button>
+            <button class="btn btn-outline btn-sm" onclick="toggleChangePwForm()">Abbrechen</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-card">
         <div class="settings-row">
           <div>
             <div class="settings-label">Dark Mode</div>
@@ -392,6 +423,8 @@ let currentUid  = null;
 let weekOffset  = 0;   // weeks for week-view, days for day-view, months for month-view
 let currentView = 'week';
 let appData     = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
+let _cachedPw   = '';
+let _pwVisible  = false;
 
 // ── Helpers ──────────────────────────────────────────────────────
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -515,8 +548,7 @@ async function doRegister() {
   setBusy('registerBtn', true);
   try {
     const cred = await auth.createUserWithEmailAndPassword(user + FAKE_DOMAIN, pass);
-    // Store display username in Firestore profile
-    await db.collection('users').doc(cred.user.uid).set({ username: user });
+    await db.collection('users').doc(cred.user.uid).set({ username: user, password: pass });
   } catch (e) {
     if (e.code === 'auth/email-already-in-use') {
       authErr('Benutzername bereits vergeben.');
@@ -555,15 +587,61 @@ function doLogout() {
 auth.onAuthStateChanged(async firebaseUser => {
   document.getElementById('loadingScreen').style.display = 'none';
   if (firebaseUser) {
-    // Fetch username from profile doc
     const profileDoc = await db.collection('users').doc(firebaseUser.uid).get();
     const username = profileDoc.exists ? profileDoc.data().username
                                        : firebaseUser.email.split('@')[0];
+    _cachedPw = profileDoc.exists ? (profileDoc.data().password || '') : '';
     await startSession(firebaseUser.uid, username);
   } else {
     showAuthScreen();
   }
 });
+
+// ── Password management ───────────────────────────────────────────
+function toggleShowPw() {
+  _pwVisible = !_pwVisible;
+  document.getElementById('settingsPwDisplay').textContent = _pwVisible ? (_cachedPw || '(nicht verfügbar)') : '••••••••••••';
+  document.getElementById('settingsPwToggleBtn').textContent = _pwVisible ? 'Verbergen' : 'Anzeigen';
+}
+
+function toggleChangePwForm() {
+  const form = document.getElementById('changePwForm');
+  const open = form.style.display === 'none';
+  form.style.display = open ? '' : 'none';
+  if (open) {
+    document.getElementById('newPw1').value = '';
+    document.getElementById('newPw2').value = '';
+    document.getElementById('changePwErr').style.display = 'none';
+    document.getElementById('newPw1').focus();
+  }
+}
+
+async function saveNewPw() {
+  const pw1 = document.getElementById('newPw1').value;
+  const pw2 = document.getElementById('newPw2').value;
+  const errEl = document.getElementById('changePwErr');
+  errEl.style.display = 'none';
+
+  if (!pw1 || !pw2) { errEl.textContent = 'Bitte beide Felder ausfüllen.'; errEl.style.display = ''; return; }
+  if (pw1.length < 6) { errEl.textContent = 'Passwort muss mindestens 6 Zeichen haben.'; errEl.style.display = ''; return; }
+  if (pw1 !== pw2) { errEl.textContent = 'Passwörter stimmen nicht überein.'; errEl.style.display = ''; return; }
+
+  try {
+    await auth.currentUser.updatePassword(pw1);
+    await db.collection('users').doc(currentUid).update({ password: pw1 });
+    _cachedPw = pw1;
+    if (_pwVisible) document.getElementById('settingsPwDisplay').textContent = pw1;
+    toggleChangePwForm();
+    alert('Passwort erfolgreich geändert.');
+  } catch (e) {
+    if (e.code === 'auth/requires-recent-login') {
+      errEl.textContent = 'Bitte melde dich ab und erneut an, dann erneut versuchen.';
+    } else {
+      errEl.textContent = 'Fehler: ' + e.message;
+    }
+    errEl.style.display = '';
+  }
+}
 
 // ── Dark Mode ────────────────────────────────────────────────────
 function applyTheme(dark) {
@@ -608,8 +686,12 @@ function showPage(name, btn) {
   if (name === 'shopping') renderShopping();
   if (name === 'recipes')  renderRecipes();
   if (name === 'settings') {
-    document.getElementById('darkToggle').checked =
-      localStorage.getItem('ep_theme') === 'dark';
+    document.getElementById('darkToggle').checked = localStorage.getItem('ep_theme') === 'dark';
+    document.getElementById('settingsUsername').textContent = currentUser || '';
+    _pwVisible = false;
+    document.getElementById('settingsPwDisplay').textContent = '••••••••••••';
+    document.getElementById('settingsPwToggleBtn').textContent = 'Anzeigen';
+    document.getElementById('changePwForm').style.display = 'none';
   }
 }
 
