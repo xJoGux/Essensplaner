@@ -193,6 +193,10 @@
     [data-theme="dark"] .ing-tag-edit { background: #312e81; }
     .ing-tag-edit button { background: none; border: none; cursor: pointer; color: var(--primary); font-size: .85rem; line-height: 1; padding: 0; }
 
+    /* ── Quantity input ──────────────────────────────────────── */
+    .qty-inp { width:82px; padding:.25rem .45rem; border:1.5px solid var(--border); border-radius:6px; font-size:.82rem; outline:none; font-family:inherit; flex-shrink:0; }
+    .qty-inp:focus { border-color:var(--primary); }
+
     /* ── Autocomplete ────────────────────────────────────────── */
     .ac-wrap { position: relative; flex: 1; }
     .ac-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1.5px solid var(--primary); border-radius: 8px; z-index: 200; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,.12); }
@@ -301,7 +305,8 @@
             <label>Zutaten</label>
             <div class="ing-list-edit" id="ingListEdit"></div>
             <div class="ing-input-row">
-              <input type="text" id="ingInput" placeholder="Zutat hinzufügen …" onkeydown="if(event.key==='Enter'){event.preventDefault();addIngredientToForm()}" />
+              <input type="text" id="ingInput" placeholder="Zutat …" onkeydown="if(event.key==='Enter'){event.preventDefault();addIngredientToForm()}" />
+              <input type="text" id="ingQtyInput" class="qty-inp" placeholder="Menge (z.B. 200g)" onkeydown="if(event.key==='Enter'){event.preventDefault();addIngredientToForm()}" />
               <button class="btn btn-outline btn-sm" onclick="addIngredientToForm()">+ Hinzufügen</button>
             </div>
           </div>
@@ -411,8 +416,47 @@ async function loadData() {
   const doc = await userRef().get();
   if (doc.exists) {
     appData = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {}, ...doc.data() };
+    // Migrate ingredients: string → { name, qty }
+    appData.recipes = appData.recipes.map(r => ({
+      ...r,
+      ingredients: (r.ingredients || []).map(ing =>
+        typeof ing === 'string' ? { name: ing, qty: '' } : ing
+      )
+    }));
+    // Migrate shopping items: add qty field if missing
+    appData.shopping = appData.shopping.map(item =>
+      typeof item === 'object' ? { qty: '', ...item } : { name: String(item), qty: '', done: false }
+    );
   } else {
     appData = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
+  }
+}
+
+// ── Quantity helpers ──────────────────────────────────────────────
+function parseQty(s) {
+  s = (s || '').trim();
+  const m = s.match(/^(\d+(?:[.,]\d+)?)\s*(.*)/);
+  if (m) return { amount: parseFloat(m[1].replace(',', '.')), unit: m[2].trim().toLowerCase() };
+  return { amount: null, unit: s.toLowerCase() };
+}
+
+function combineQty(qa, qb) {
+  if (!qa) return qb || '';
+  if (!qb) return qa || '';
+  const a = parseQty(qa), b = parseQty(qb);
+  if (a.amount !== null && b.amount !== null && a.unit === b.unit) {
+    const sum = +(a.amount + b.amount).toFixed(4).replace(/\.?0+$/, '');
+    return sum + (a.unit ? ' ' + a.unit : '');
+  }
+  return qa + ' + ' + qb;
+}
+
+function addToShopping(name, qty) {
+  const existing = appData.shopping.find(x => x.name.toLowerCase() === name.toLowerCase());
+  if (existing) {
+    existing.qty = combineQty(existing.qty, qty || '');
+  } else {
+    appData.shopping.push({ name, qty: qty || '', done: false });
   }
 }
 
@@ -763,10 +807,11 @@ function addRecipeToShop(dk, mi, e) {
   document.getElementById('ingModalTitle').textContent = `Zutaten von „${rec.name}"`;
   const list = document.getElementById('ingModalList');
   list.innerHTML = rec.ingredients.map((ing, i) =>
-    `<label class="modal-ing-item">
+    `<div class="modal-ing-item">
       <input type="checkbox" id="ingCb_${i}" checked />
-      ${esc(ing)}
-    </label>`
+      <span style="flex:1">${esc(ing.name)}</span>
+      <input type="text" id="ingQtyCb_${i}" class="qty-inp" value="${esc(ing.qty||'')}" placeholder="Menge" />
+    </div>`
   ).join('');
   document.getElementById('ingModal').style.display = 'flex';
 }
@@ -779,12 +824,10 @@ function closeIngModal(e) {
 
 function confirmIngModal() {
   if (!_ingModalRecipe) return;
-  const selected = _ingModalRecipe.ingredients.filter((_, i) =>
-    document.getElementById(`ingCb_${i}`)?.checked
-  );
-  selected.forEach(ing => {
-    if (!appData.shopping.find(x => x.name === ing)) {
-      appData.shopping.push({ name: ing, done: false });
+  _ingModalRecipe.ingredients.forEach((ing, i) => {
+    if (document.getElementById(`ingCb_${i}`)?.checked) {
+      const qty = document.getElementById(`ingQtyCb_${i}`)?.value.trim() || ing.qty || '';
+      addToShopping(ing.name, qty);
     }
   });
   saveData();
@@ -906,18 +949,19 @@ function renderShopping() {
   const customDone   = custom.map((x, i) => ({ ...x, i })).filter(x => x.done);
 
   el.innerHTML += '<div class="s-section">Eigene Artikel</div>';
-  customActive.forEach(({ name, i }) => {
+  customActive.forEach(({ name, qty, i }) => {
     el.innerHTML += `
       <div class="s-item" id="ci_${i}">
         <input type="checkbox" onchange="toggleCustom(${i},this)" />
-        <span class="s-text">${esc(name)}</span>
+        <span class="s-text">${qty ? `<b>${esc(qty)}</b> ` : ''}${esc(name)}</span>
         <button class="s-del" onclick="delCustom(${i})" title="Löschen">✕</button>
       </div>`;
   });
 
   el.innerHTML += `
     <div class="s-add">
-      <input type="text" id="newItem" placeholder="Artikel hinzufügen …" onkeydown="if(event.key==='Enter')addItem()" />
+      <input type="text" id="newItem" placeholder="Artikel …" onkeydown="if(event.key==='Enter')addItem()" />
+      <input type="text" id="newItemQty" class="qty-inp" placeholder="Menge" onkeydown="if(event.key==='Enter')addItem()" />
       <button class="btn btn-primary btn-sm" onclick="addItem()">+ Hinzufügen</button>
     </div>`;
 
@@ -931,11 +975,11 @@ function renderShopping() {
           <span class="s-text">${esc(item)}</span>
         </div>`;
     });
-    customDone.forEach(({ name, i }) => {
+    customDone.forEach(({ name, qty, i }) => {
       el.innerHTML += `
         <div class="s-item done">
           <input type="checkbox" checked onchange="toggleCustom(${i},this)" />
-          <span class="s-text">${esc(name)}</span>
+          <span class="s-text">${qty ? `<b>${esc(qty)}</b> ` : ''}${esc(name)}</span>
           <button class="s-del" onclick="delCustom(${i})" title="Löschen">✕</button>
         </div>`;
     });
@@ -962,12 +1006,15 @@ function delCustom(i) {
 }
 
 function addItem() {
-  const inp  = document.getElementById('newItem');
-  const name = inp.value.trim();
+  const inp    = document.getElementById('newItem');
+  const qtyInp = document.getElementById('newItemQty');
+  const name   = inp.value.trim();
   if (!name) return;
-  appData.shopping.push({ name, done: false });
+  const qty = qtyInp ? qtyInp.value.trim() : '';
+  addToShopping(name, qty);
   saveData();
   inp.value = '';
+  if (qtyInp) qtyInp.value = '';
   renderShopping();
 }
 
@@ -1008,7 +1055,7 @@ function hideRecipeForm() {
 function renderIngListEdit() {
   const el = document.getElementById('ingListEdit');
   el.innerHTML = formIngredients.map((ing, i) =>
-    `<span class="ing-tag-edit">${esc(ing)}<button onclick="removeIngredient(${i})" title="Entfernen">×</button></span>`
+    `<span class="ing-tag-edit">${ing.qty ? esc(ing.qty) + ' ' : ''}${esc(ing.name)}<button onclick="removeIngredient(${i})" title="Entfernen">×</button></span>`
   ).join('');
 }
 
@@ -1018,11 +1065,14 @@ function removeIngredient(i) {
 }
 
 function addIngredientToForm() {
-  const inp = document.getElementById('ingInput');
-  const val = inp.value.trim();
-  if (!val) return;
-  formIngredients.push(val);
+  const inp    = document.getElementById('ingInput');
+  const qtyInp = document.getElementById('ingQtyInput');
+  const name   = inp.value.trim();
+  if (!name) return;
+  const qty = qtyInp ? qtyInp.value.trim() : '';
+  formIngredients.push({ name, qty });
   inp.value = '';
+  if (qtyInp) qtyInp.value = '';
   renderIngListEdit();
   inp.focus();
 }
@@ -1073,7 +1123,7 @@ function renderRecipes() {
     <div class="recipe-card">
       <div class="recipe-card-name">${esc(r.name)}</div>
       ${r.description ? `<div class="recipe-card-desc">${esc(r.description)}</div>` : ''}
-      ${r.ingredients.length ? `<div class="ingredient-tags">${r.ingredients.map(i => `<span class="ingredient-tag">${esc(i)}</span>`).join('')}</div>` : ''}
+      ${r.ingredients.length ? `<div class="ingredient-tags">${r.ingredients.map(i => `<span class="ingredient-tag">${i.qty ? esc(i.qty) + ' ' : ''}${esc(i.name)}</span>`).join('')}</div>` : ''}
       <div class="recipe-actions">
         <button class="btn btn-outline btn-sm" onclick="showRecipeForm('${r.id}')">Bearbeiten</button>
         <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${r.id}')">Löschen</button>
