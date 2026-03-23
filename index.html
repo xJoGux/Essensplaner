@@ -219,7 +219,10 @@
 <body>
 
 <!-- ── Loading ───────────────────────────────────────────────────── -->
-<div id="loadingScreen" class="loading">Wird geladen …</div>
+<div id="loadingScreen" class="loading" style="flex-direction:column;gap:1rem">
+  <span>Wird geladen …</span>
+  <div id="loadingDebug" style="display:none;max-width:340px;background:#fef2f2;color:#991b1b;border-radius:10px;padding:.75rem 1rem;font-size:.82rem;text-align:center;line-height:1.5"></div>
+</div>
 
 <!-- ── Auth ─────────────────────────────────────────────────────── -->
 <div id="authScreen" class="auth-wrap" style="display:none">
@@ -395,14 +398,14 @@
 
 <!-- ── Firebase SDKs ─────────────────────────────────────────────── -->
 <script>
-window.onerror = function() {
-  const ls = document.getElementById('loadingScreen');
-  if (ls && ls.style.display !== 'none') {
-    ls.style.display = 'none';
-    const a = document.getElementById('authScreen');
-    if (a) a.style.display = 'flex';
-  }
+window.onerror = function(msg, src, line) {
+  const dbg = document.getElementById('loadingDebug');
+  if (dbg) { dbg.textContent = 'Fehler: ' + msg + (src ? ' (' + src.split('/').pop() + ':' + line + ')' : ''); dbg.style.display = 'block'; }
 };
+window.addEventListener('unhandledrejection', function(e) {
+  const dbg = document.getElementById('loadingDebug');
+  if (dbg) { dbg.textContent = 'Fehler: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason)); dbg.style.display = 'block'; }
+});
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -603,7 +606,15 @@ const _loadingTimeout = setTimeout(() => {
     _hideLoading();
     showAuthScreen();
   }
-}, 3000);
+}, 4000);
+// Zeige nach 2s einen Hinweis falls noch geladen wird
+setTimeout(() => {
+  const dbg = document.getElementById('loadingDebug');
+  if (dbg && document.getElementById('loadingScreen').style.display !== 'none') {
+    dbg.textContent = 'Firebase antwortet nicht – bitte Internetverbindung prüfen. Login erscheint gleich …';
+    dbg.style.display = 'block';
+  }
+}, 2000);
 
 auth.onAuthStateChanged(async firebaseUser => {
   clearTimeout(_loadingTimeout);
