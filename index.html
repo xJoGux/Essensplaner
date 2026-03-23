@@ -585,7 +585,15 @@ function doLogout() {
 }
 
 // ── Firebase Auth State ───────────────────────────────────────────
+const _loadingTimeout = setTimeout(() => {
+  if (document.getElementById('loadingScreen').style.display !== 'none') {
+    document.getElementById('loadingScreen').style.display = 'none';
+    showAuthScreen();
+  }
+}, 8000);
+
 auth.onAuthStateChanged(async firebaseUser => {
+  clearTimeout(_loadingTimeout);
   document.getElementById('loadingScreen').style.display = 'none';
   if (firebaseUser) {
     const profileDoc = await db.collection('users').doc(firebaseUser.uid).get();
