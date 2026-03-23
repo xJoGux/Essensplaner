@@ -363,14 +363,14 @@
     </div>
   </div>
 </div>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="<https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js>"></script>
+<script src="<https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js>"></script>
+<script src="<https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js>"></script>
 
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyBqYqgPi_qeSxhmVpeDZcLd8Hl6OotdA_I",
-  authDomain: "memorydeck-af728.firebaseapp.com",
+  authDomain: "<memorydeck-af728.firebaseapp.com>",
   projectId: "memorydeck-af728",
   storageBucket: "memorydeck-af728.firebasestorage.app",
   messagingSenderId: "1077936268943",
@@ -402,7 +402,7 @@ function monday(offset = 0) {
   d.setHours(0, 0, 0, 0);
   return d;
 }
-const dateKey = d => d.toISOString().slice(0, 10);
+const dateKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const dateFmt = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
 const todayKey = () => dateKey(new Date());
 
@@ -455,10 +455,7 @@ function addToShopping(name, qty) {
   }
 }
 
-function saveData() {
-  userRef().set(appData).catch(console.error);
-}
-
+function saveData() { userRef().set(appData).catch(console.error); }
 function getMeal(date, mi)      { return appData.meals[date + '_' + mi] || ''; }
 function setMeal(date, mi, val) { appData.meals[date + '_' + mi] = val; saveData(); }
 
@@ -538,9 +535,7 @@ function showAuthScreen() {
   setBusy('registerBtn', false);
 }
 
-function doLogout() {
-  auth.signOut();
-}
+function doLogout() { auth.signOut(); }
 
 auth.onAuthStateChanged(async firebaseUser => {
   document.getElementById('loadingScreen').style.display = 'none';
@@ -766,6 +761,7 @@ function monthCell(d, otherMonth) {
   const isToday = dk === todayKey();
   const cell = document.createElement('div');
   cell.className = 'month-cell' + (isToday ? ' today' : '') + (otherMonth ? ' other-month' : '');
+  cell.title = 'Tag anzeigen';
   let html = `<div class="month-num">${d.getDate()}${isToday ? '<span class="month-today-badge">Heute</span>' : ''}</div>`;
   MEALS.forEach((m, mi) => {
     const val = getMeal(dk, mi);
@@ -789,7 +785,7 @@ function monthCell(d, otherMonth) {
 function mealIngBtn(dk, mi) {
   const rid = (appData.mealRecipes || {})[dk + '_' + mi];
   if (!rid) return '';
-  const rec = (appData.recipes || []).find(r => r.id === rid);
+  const rec = (appData.recipes || []).find(r => <r.id> === rid);
   if (!rec || !rec.ingredients.length) return '';
   return `<button class="meal-ing-btn" onclick="addRecipeToShop('${dk}',${mi},event)">🛒 Zutaten zur Einkaufsliste</button>`;
 }
@@ -799,7 +795,7 @@ let _ingModalRecipe = null;
 function addRecipeToShop(dk, mi, e) {
   e.stopPropagation();
   const rid = (appData.mealRecipes || {})[dk + '_' + mi];
-  const rec = (appData.recipes || []).find(r => r.id === rid);
+  const rec = (appData.recipes || []).find(r => <r.id> === rid);
   if (!rec || !rec.ingredients.length) return;
   _ingModalRecipe = rec;
   document.getElementById('ingModalTitle').textContent = `Zutaten von „${rec.name}"`;
@@ -864,13 +860,13 @@ function showAC(dk, mi, val) {
   const matches = (appData.recipes || []).filter(r => r.name.toLowerCase().includes(val.toLowerCase()));
   if (!matches.length) { drop.style.display = 'none'; return; }
   drop.innerHTML = matches.map(r =>
-    `<div class="ac-item" onmousedown="pickRecipe('${dk}',${mi},'${r.id}')">${esc(r.name)}</div>`
+    `<div class="ac-item" onmousedown="pickRecipe('${dk}',${mi},'${<r.id>}')">${esc(r.name)}</div>`
   ).join('');
   drop.style.display = '';
 }
 
 function pickRecipe(dk, mi, rid) {
-  const rec = (appData.recipes || []).find(r => r.id === rid);
+  const rec = (appData.recipes || []).find(r => <r.id> === rid);
   if (!rec) return;
   document.getElementById(`mealInp_${dk}_${mi}`).value = rec.name;
   document.getElementById(`acDrop_${dk}_${mi}`).style.display = 'none';
@@ -883,10 +879,8 @@ function saveMeal(dk, mi, btn) {
   const val = inp.value.trim();
   const rid = (appData.mealRecipes || {})[dk + '_' + mi];
   if (rid) {
-    const rec = (appData.recipes || []).find(r => r.id === rid);
-    if (!rec || rec.name !== val) {
-      delete appData.mealRecipes[dk + '_' + mi];
-    }
+    const rec = (appData.recipes || []).find(r => <r.id> === rid);
+    if (!rec || rec.name !== val) delete appData.mealRecipes[dk + '_' + mi];
   }
   setMeal(dk, mi, val);
   renderPlan();
@@ -972,9 +966,9 @@ function showRecipeForm(recipeId) {
   document.getElementById('rDesc').value = '';
   document.getElementById('recipeFormTitle').textContent = 'Neues Rezept';
   if (recipeId) {
-    const rec = appData.recipes.find(r => r.id === recipeId);
+    const rec = appData.recipes.find(r => <r.id> === recipeId);
     if (rec) {
-      document.getElementById('recipeEditId').value = rec.id;
+      document.getElementById('recipeEditId').value = <rec.id>;
       document.getElementById('rName').value = rec.name;
       document.getElementById('rDesc').value = rec.description || '';
       formIngredients = [...rec.ingredients];
@@ -1011,7 +1005,7 @@ function saveRecipe() {
   const editId = document.getElementById('recipeEditId').value;
   if (!appData.recipes) appData.recipes = [];
   if (editId) {
-    const idx = appData.recipes.findIndex(r => r.id === editId);
+    const idx = appData.recipes.findIndex(r => <r.id> === editId);
     if (idx !== -1) appData.recipes[idx] = { id: editId, name, description: desc, ingredients: [...formIngredients] };
   } else {
     appData.recipes.push({ id: uid(), name, description: desc, ingredients: [...formIngredients] });
@@ -1021,7 +1015,7 @@ function saveRecipe() {
 
 function deleteRecipe(id) {
   if (!confirm('Rezept wirklich löschen?')) return;
-  appData.recipes = appData.recipes.filter(r => r.id !== id);
+  appData.recipes = appData.recipes.filter(r => <r.id> !== id);
   for (const key in appData.mealRecipes) {
     if (appData.mealRecipes[key] === id) delete appData.mealRecipes[key];
   }
@@ -1041,8 +1035,8 @@ function renderRecipes() {
       ${r.description ? `<div class="recipe-card-desc">${esc(r.description)}</div>` : ''}
       ${r.ingredients.length ? `<div class="ingredient-tags">${r.ingredients.map(i => `<span class="ingredient-tag">${i.qty ? esc(i.qty) + ' ' : ''}${esc(i.name)}</span>`).join('')}</div>` : ''}
       <div class="recipe-actions">
-        <button class="btn btn-outline btn-sm" onclick="showRecipeForm('${r.id}')">Bearbeiten</button>
-        <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${r.id}')">Löschen</button>
+        <button class="btn btn-outline btn-sm" onclick="showRecipeForm('${<r.id>}')">Bearbeiten</button>
+        <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${<r.id>}')">Löschen</button>
       </div>
     </div>
   `).join('');
