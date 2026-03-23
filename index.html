@@ -394,6 +394,16 @@
 </div>
 
 <!-- ── Firebase SDKs ─────────────────────────────────────────────── -->
+<script>
+window.onerror = function() {
+  const ls = document.getElementById('loadingScreen');
+  if (ls && ls.style.display !== 'none') {
+    ls.style.display = 'none';
+    const a = document.getElementById('authScreen');
+    if (a) a.style.display = 'flex';
+  }
+};
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -585,12 +595,15 @@ function doLogout() {
 }
 
 // ── Firebase Auth State ───────────────────────────────────────────
+function _hideLoading() {
+  document.getElementById('loadingScreen').style.display = 'none';
+}
 const _loadingTimeout = setTimeout(() => {
   if (document.getElementById('loadingScreen').style.display !== 'none') {
-    document.getElementById('loadingScreen').style.display = 'none';
+    _hideLoading();
     showAuthScreen();
   }
-}, 8000);
+}, 3000);
 
 auth.onAuthStateChanged(async firebaseUser => {
   clearTimeout(_loadingTimeout);
