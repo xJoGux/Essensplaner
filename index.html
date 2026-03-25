@@ -396,7 +396,7 @@
   </div>
 </div>
 
-<!-- ── Firebase SDKs ─────────────────────────────────────────────── -->
+<!-- ── Error handler + emergency timeout (vor Firebase, damit es immer läuft) ── -->
 <script>
 window.onerror = function(msg, src, line) {
   const dbg = document.getElementById('loadingDebug');
@@ -406,7 +406,26 @@ window.addEventListener('unhandledrejection', function(e) {
   const dbg = document.getElementById('loadingDebug');
   if (dbg) { dbg.textContent = 'Fehler: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason)); dbg.style.display = 'block'; }
 });
+// Notfall-Timeout: Falls Firebase-Scripts hängen und das Haupt-Script nie läuft
+setTimeout(function() {
+  var ls = document.getElementById('loadingScreen');
+  if (ls && ls.style.display !== 'none') {
+    ls.style.display = 'none';
+    var dbg = document.getElementById('loadingDebug');
+    document.getElementById('authScreen').style.display = 'flex';
+    if (dbg) { dbg.textContent = 'Firebase konnte nicht geladen werden (Timeout). Bitte Internetverbindung prüfen.'; dbg.style.display = 'block'; }
+  }
+}, 8000);
+setTimeout(function() {
+  var ls = document.getElementById('loadingScreen');
+  var dbg = document.getElementById('loadingDebug');
+  if (ls && ls.style.display !== 'none' && dbg) {
+    dbg.textContent = 'Firebase antwortet nicht – bitte Internetverbindung prüfen. Login erscheint gleich …';
+    dbg.style.display = 'block';
+  }
+}, 2000);
 </script>
+<!-- ── Firebase SDKs ─────────────────────────────────────────────── -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -601,23 +620,8 @@ function doLogout() {
 function _hideLoading() {
   document.getElementById('loadingScreen').style.display = 'none';
 }
-const _loadingTimeout = setTimeout(() => {
-  if (document.getElementById('loadingScreen').style.display !== 'none') {
-    _hideLoading();
-    showAuthScreen();
-  }
-}, 4000);
-// Zeige nach 2s einen Hinweis falls noch geladen wird
-setTimeout(() => {
-  const dbg = document.getElementById('loadingDebug');
-  if (dbg && document.getElementById('loadingScreen').style.display !== 'none') {
-    dbg.textContent = 'Firebase antwortet nicht – bitte Internetverbindung prüfen. Login erscheint gleich …';
-    dbg.style.display = 'block';
-  }
-}, 2000);
 
 auth.onAuthStateChanged(async firebaseUser => {
-  clearTimeout(_loadingTimeout);
   document.getElementById('loadingScreen').style.display = 'none';
   if (firebaseUser) {
     const profileDoc = await db.collection('users').doc(firebaseUser.uid).get();
