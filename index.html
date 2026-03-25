@@ -306,7 +306,6 @@
   </div>
 </div>
 
-<!-- Fehlerbehandlung + Notfall-Timeout VOR Firebase (läuft immer) -->
 <script>
 window.onerror = function(msg, src, line) {
   var dbg = document.getElementById('loadingDebug');
@@ -316,7 +315,6 @@ window.addEventListener('unhandledrejection', function(e) {
   var dbg = document.getElementById('loadingDebug');
   if (dbg) { dbg.textContent = 'Fehler: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason)); dbg.style.display = 'block'; }
 });
-// Notfall: Falls Firebase-Scripts hängen, kommt man trotzdem zum Login
 setTimeout(function() {
   var ls = document.getElementById('loadingScreen');
   if (ls && ls.style.display !== 'none') {
@@ -415,14 +413,23 @@ function setBusy(btnId,busy) {
   const btn=document.getElementById(btnId); btn.disabled=busy;
   btn.textContent=busy?'Bitte warten …':(btnId==='loginBtn'?'Anmelden':'Registrieren');
 }
+
 async function doLogin() {
   const user=document.getElementById('lUser').value.trim().toLowerCase(), pass=document.getElementById('lPass').value;
   if(!user||!pass) return authErr('Bitte alle Felder ausfüllen.');
   if(!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
   setBusy('loginBtn',true);
-  try { await auth.signInWithEmailAndPassword(user+FAKE_DOMAIN,pass); }
-  catch(e) { authErr('Benutzername oder Passwort falsch.'); setBusy('loginBtn',false); }
+  const timeout = new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),10000));
+  try {
+    await Promise.race([auth.signInWithEmailAndPassword(user+FAKE_DOMAIN,pass), timeout]);
+  } catch(e) {
+    if(e.message==='timeout') authErr('Keine Verbindung zu Firebase. Bitte Internetverbindung prüfen.');
+    else if(e.code==='auth/user-not-found'||e.code==='auth/wrong-password'||e.code==='auth/invalid-credential') authErr('Benutzername oder Passwort falsch.');
+    else authErr('Fehler: '+e.message);
+    setBusy('loginBtn',false);
+  }
 }
+
 async function doRegister() {
   const user=document.getElementById('rUser').value.trim().toLowerCase();
   const pass=document.getElementById('rPass').value, pass2=document.getElementById('rPass2').value;
@@ -439,6 +446,7 @@ async function doRegister() {
     setBusy('registerBtn',false);
   }
 }
+
 async function startSession(uid,username) {
   currentUid=uid; currentUser=username; await loadData();
   document.getElementById('authScreen').style.display='none';
@@ -453,8 +461,6 @@ function showAuthScreen() {
   setBusy('loginBtn',false); setBusy('registerBtn',false);
 }
 function doLogout() { auth.signOut(); }
-
-function _hideLoading() { document.getElementById('loadingScreen').style.display='none'; }
 
 auth.onAuthStateChanged(async firebaseUser => {
   document.getElementById('loadingScreen').style.display='none';
@@ -495,6 +501,7 @@ async function saveNewPw() {
     errEl.style.display='block';
   }
 }
+
 function applyTheme(dark) { document.documentElement.setAttribute('data-theme',dark?'dark':'light'); localStorage.setItem('ep_theme',dark?'dark':'light'); }
 function toggleDark(dark) { applyTheme(dark); }
 (()=>{ if(localStorage.getItem('ep_theme')==='dark') applyTheme(true); })();
@@ -673,7 +680,7 @@ function renderShopping() {
     el.innerHTML+=`<div class="s-item"><input type="checkbox" onchange="toggleCustom(${i},this)" /><span class="s-text">${qty?`<b>${esc(qty)}</b> `:''}${esc(name)}</span><button class="s-del" onclick="delCustom(${i})">✕</button></div>`;
   });
   el.innerHTML+=`<div class="s-add"><input type="text" id="newItem" placeholder="Artikel …" onkeydown="if(event.key==='Enter')addItem()" /><input type="text" id="newItemQty" class="qty-inp" placeholder="Menge" onkeydown="if(event.key==='Enter')addItem()" /><button class="btn btn-primary btn-sm" onclick="addItem()">+ Hinzufügen</button></div>`;
-  if(planDone.length||custom.filter(x=>x.done).length){
+  if(planDone.length||custom.some(x=>x.done)){
     el.innerHTML+='<div class="s-section done-section">Erledigt</div>';
     planDone.forEach(({item,i})=>{el.innerHTML+=`<div class="s-item done"><input type="checkbox" checked onchange="togglePlan(${i},this)" /><span class="s-text">${esc(item)}</span></div>`;});
     custom.map((x,i)=>({...x,i})).filter(x=>x.done).forEach(({name,qty,i})=>{
@@ -746,3 +753,4 @@ function renderRecipes() {
 </script>
 </body>
 </html>
+´
