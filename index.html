@@ -561,10 +561,22 @@ async function doLogin() {
   if (!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
 
   setBusy('loginBtn', true);
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('timeout')), 10000)
+  );
   try {
-    await auth.signInWithEmailAndPassword(user + FAKE_DOMAIN, pass);
+    await Promise.race([
+      auth.signInWithEmailAndPassword(user + FAKE_DOMAIN, pass),
+      timeout
+    ]);
   } catch (e) {
-    authErr('Benutzername oder Passwort falsch.');
+    if (e.message === 'timeout') {
+      authErr('Keine Verbindung zu Firebase. Bitte Internetverbindung prüfen.');
+    } else if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+      authErr('Benutzername oder Passwort falsch.');
+    } else {
+      authErr('Fehler: ' + e.message);
+    }
     setBusy('loginBtn', false);
   }
 }
