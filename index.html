@@ -334,14 +334,14 @@ setTimeout(function() {
 }, 2000);
 </script>
 
-<script src="<https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js>"></script>
-<script src="<https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js>"></script>
-<script src="<https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js>"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyBqYqgPi_qeSxhmVpeDZcLd8Hl6OotdA_I",
-  authDomain: "<memorydeck-af728.firebaseapp.com>",
+  authDomain: "memorydeck-af728.firebaseapp.com",
   projectId: "memorydeck-af728",
   storageBucket: "memorydeck-af728.firebasestorage.app",
   messagingSenderId: "1077936268943",
@@ -599,13 +599,13 @@ function monthCell(d,otherMonth) {
 }
 function mealIngBtn(dk,mi) {
   const rid=(appData.mealRecipes||{})[dk+'_'+mi]; if(!rid) return '';
-  const rec=(appData.recipes||[]).find(r=><r.id>===rid); if(!rec||!rec.ingredients.length) return '';
+  const rec=(appData.recipes||[]).find(r=>r.id===rid); if(!rec||!rec.ingredients.length) return '';
   return `<button class="meal-ing-btn" onclick="addRecipeToShop('${dk}',${mi},event)">🛒 Zutaten zur Einkaufsliste</button>`;
 }
 let _ingModalRecipe=null;
 function addRecipeToShop(dk,mi,e) {
   e.stopPropagation();
-  const rid=(appData.mealRecipes||{})[dk+'_'+mi], rec=(appData.recipes||[]).find(r=><r.id>===rid);
+  const rid=(appData.mealRecipes||{})[dk+'_'+mi], rec=(appData.recipes||[]).find(r=>r.id===rid);
   if(!rec||!rec.ingredients.length) return;
   _ingModalRecipe=rec;
   document.getElementById('ingModalTitle').textContent=`Zutaten von „${rec.name}"`;
@@ -642,11 +642,11 @@ function showAC(dk,mi,val) {
   if(!val.trim()){drop.style.display='none';return;}
   const matches=(appData.recipes||[]).filter(r=>r.name.toLowerCase().includes(val.toLowerCase()));
   if(!matches.length){drop.style.display='none';return;}
-  drop.innerHTML=matches.map(r=>`<div class="ac-item" onmousedown="pickRecipe('${dk}',${mi},'${<r.id>}')">${esc(r.name)}</div>`).join('');
+  drop.innerHTML=matches.map(r=>`<div class="ac-item" onmousedown="pickRecipe('${dk}',${mi},'${r.id}')">${esc(r.name)}</div>`).join('');
   drop.style.display='';
 }
 function pickRecipe(dk,mi,rid) {
-  const rec=(appData.recipes||[]).find(r=><r.id>===rid); if(!rec) return;
+  const rec=(appData.recipes||[]).find(r=>r.id===rid); if(!rec) return;
   document.getElementById(`mealInp_${dk}_${mi}`).value=rec.name;
   document.getElementById(`acDrop_${dk}_${mi}`).style.display='none';
   if(!appData.mealRecipes) appData.mealRecipes={};
@@ -655,7 +655,7 @@ function pickRecipe(dk,mi,rid) {
 function saveMeal(dk,mi,btn) {
   const inp=btn.closest('.meal-edit').querySelector('input'), val=inp.value.trim();
   const rid=(appData.mealRecipes||{})[dk+'_'+mi];
-  if(rid){const rec=(appData.recipes||[]).find(r=><r.id>===rid); if(!rec||rec.name!==val) delete appData.mealRecipes[dk+'_'+mi];}
+  if(rid){const rec=(appData.recipes||[]).find(r=>r.id===rid); if(!rec||rec.name!==val) delete appData.mealRecipes[dk+'_'+mi];}
   setMeal(dk,mi,val); renderPlan();
 }
 function cancelEdit(dk,mi) {
@@ -704,8 +704,8 @@ function showRecipeForm(recipeId) {
   document.getElementById('rName').value=''; document.getElementById('rDesc').value='';
   document.getElementById('recipeFormTitle').textContent='Neues Rezept';
   if(recipeId){
-    const rec=appData.recipes.find(r=><r.id>===recipeId);
-    if(rec){document.getElementById('recipeEditId').value=<rec.id>; document.getElementById('rName').value=rec.name; document.getElementById('rDesc').value=rec.description||''; formIngredients=[...rec.ingredients]; document.getElementById('recipeFormTitle').textContent='Rezept bearbeiten';}
+    const rec=appData.recipes.find(r=>r.id===recipeId);
+    if(rec){document.getElementById('recipeEditId').value=rec.id; document.getElementById('rName').value=rec.name; document.getElementById('rDesc').value=rec.description||''; formIngredients=[...rec.ingredients]; document.getElementById('recipeFormTitle').textContent='Rezept bearbeiten';}
   }
   renderIngListEdit(); document.getElementById('recipeFormWrap').style.display=''; document.getElementById('rName').focus();
 }
@@ -726,13 +726,13 @@ function saveRecipe() {
   if(!name){alert('Bitte einen Namen eingeben.');return;}
   const desc=document.getElementById('rDesc').value.trim(), editId=document.getElementById('recipeEditId').value;
   if(!appData.recipes) appData.recipes=[];
-  if(editId){const idx=appData.recipes.findIndex(r=><r.id>===editId); if(idx!==-1)appData.recipes[idx]={id:editId,name,description:desc,ingredients:[...formIngredients]};}
+  if(editId){const idx=appData.recipes.findIndex(r=>r.id===editId); if(idx!==-1)appData.recipes[idx]={id:editId,name,description:desc,ingredients:[...formIngredients]};}
   else appData.recipes.push({id:uid(),name,description:desc,ingredients:[...formIngredients]});
   saveData(); hideRecipeForm(); renderRecipes();
 }
 function deleteRecipe(id) {
   if(!confirm('Rezept wirklich löschen?')) return;
-  appData.recipes=appData.recipes.filter(r=><r.id>!==id);
+  appData.recipes=appData.recipes.filter(r=>r.id!==id);
   for(const k in appData.mealRecipes){if(appData.mealRecipes[k]===id)delete appData.mealRecipes[k];}
   saveData(); renderRecipes();
 }
@@ -745,12 +745,11 @@ function renderRecipes() {
       ${r.description?`<div class="recipe-card-desc">${esc(r.description)}</div>`:''}
       ${r.ingredients.length?`<div class="ingredient-tags">${r.ingredients.map(i=>`<span class="ingredient-tag">${i.qty?esc(i.qty)+' ':''}${esc(i.name)}</span>`).join('')}</div>`:''}
       <div class="recipe-actions">
-        <button class="btn btn-outline btn-sm" onclick="showRecipeForm('${<r.id>}')">Bearbeiten</button>
-        <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${<r.id>}')">Löschen</button>
+        <button class="btn btn-outline btn-sm" onclick="showRecipeForm('${r.id}')">Bearbeiten</button>
+        <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${r.id}')">Löschen</button>
       </div>
     </div>`).join('');
 }
 </script>
 </body>
 </html>
-´
