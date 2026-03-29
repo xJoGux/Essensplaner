@@ -214,6 +214,30 @@
     .meal-ing-btn { font-size: .7rem; color: var(--primary); background: none; border: none; cursor: pointer; padding: .1rem .3rem; border-radius: 4px; margin-top: .15rem; display: block; }
     .meal-ing-btn:hover { background: #eef2ff; }
     [data-theme="dark"] .meal-ing-btn:hover { background: #312e81; }
+
+    /* ── Group ───────────────────────────────────────────────── */
+    .group-badge { font-size:.75rem; background:#eef2ff; color:var(--primary); border-radius:99px; padding:.15rem .65rem; font-weight:600; white-space:nowrap; }
+    [data-theme="dark"] .group-badge { background:#312e81; }
+    .role-select { padding:.28rem .45rem; border:1.5px solid var(--border); border-radius:6px; font-size:.8rem; outline:none; font-family:inherit; background:var(--card); color:var(--text); cursor:pointer; }
+    .role-select:focus { border-color:var(--primary); }
+    .member-row { display:flex; align-items:center; justify-content:space-between; padding:.75rem 1.25rem; border-bottom:1px solid var(--border); gap:.75rem; }
+    .member-row:last-child { border-bottom:none; }
+    .member-name { font-size:.95rem; font-weight:500; }
+    .member-role-badge { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:.15rem .5rem; border-radius:99px; }
+    .role-owner  { background:#fef3c7; color:#92400e; }
+    .role-admin  { background:#dbeafe; color:#1e40af; }
+    .role-member { background:#d1fae5; color:#065f46; }
+    .role-viewer { background:var(--bg); color:var(--muted); border:1px solid var(--border); }
+    [data-theme="dark"] .role-owner  { background:#78350f; color:#fde68a; }
+    [data-theme="dark"] .role-admin  { background:#1e3a5f; color:#93c5fd; }
+    [data-theme="dark"] .role-member { background:#064e3b; color:#6ee7b7; }
+    .invite-code { font-size:1.3rem; font-weight:800; letter-spacing:4px; font-family:monospace; color:var(--primary); }
+    .perm-table  { width:100%; border-collapse:collapse; font-size:.82rem; }
+    .perm-table th { text-align:left; padding:.4rem .75rem; color:var(--muted); font-weight:600; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--border); }
+    .perm-table td { padding:.45rem .75rem; border-bottom:1px solid var(--border); }
+    .perm-table tr:last-child td { border-bottom:none; }
+    .perm-check { color:#10b981; font-weight:700; }
+    .perm-cross  { color:var(--muted); }
   </style>
 </head>
 <body>
@@ -260,8 +284,10 @@
         <button class="nav-btn" id="navShop" onclick="showPage('shopping',this)">Einkaufsliste</button>
         <button class="nav-btn" id="navRecipes" onclick="showPage('recipes',this)">Rezepte</button>
         <button class="nav-btn" id="navSettings" onclick="showPage('settings',this)">Einstellungen</button>
+        <button class="nav-btn" id="navGroup" onclick="showPage('group',this)">Gruppe</button>
       </div>
       <div class="nav-user">
+        <span id="navGroupBadge" class="group-badge" style="display:none"></span>
         <span id="navName"></span>
         <button class="nav-out" onclick="doLogout()">Abmelden</button>
       </div>
@@ -381,8 +407,83 @@
         </div>
       </div>
     </div>
-  </div>
-</div>
+
+    <!-- Gruppe -->
+    <div id="groupPage" class="page">
+      <div class="page-header"><div class="page-title">Gruppe</div></div>
+
+      <!-- Kein Mitglied -->
+      <div id="noGroupView">
+        <div class="settings-card">
+          <div class="settings-section">Neue Gruppe erstellen</div>
+          <div style="padding:1rem 1.25rem">
+            <div class="fg"><label>Gruppenname</label><input type="text" id="newGroupName" placeholder="z.B. Familie Müller" /></div>
+            <button class="btn btn-primary btn-sm" style="width:auto" onclick="createGroup()">Gruppe erstellen</button>
+          </div>
+        </div>
+        <div class="settings-card" style="margin-top:1rem">
+          <div class="settings-section">Bestehender Gruppe beitreten</div>
+          <div style="padding:1rem 1.25rem">
+            <div class="fg"><label>Einladungscode</label><input type="text" id="joinCodeInput" placeholder="z.B. ABC123" style="text-transform:uppercase;letter-spacing:2px" /></div>
+            <div id="groupJoinErr" class="err"></div>
+            <button class="btn btn-primary btn-sm" style="width:auto" onclick="joinGroup()">Beitreten</button>
+          </div>
+        </div>
+        <div class="settings-card" style="margin-top:1rem">
+          <div class="settings-section">Rollenübersicht</div>
+          <table class="perm-table">
+            <tr><th>Aktion</th><th>Owner</th><th>Admin</th><th>Mitglied</th><th>Zuschauer</th></tr>
+            <tr><td>Mahlzeiten bearbeiten</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-cross">–</td></tr>
+            <tr><td>Einkaufsliste verwalten</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-cross">–</td></tr>
+            <tr><td>Rezepte hinzufügen/löschen</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-cross">–</td><td class="perm-cross">–</td></tr>
+            <tr><td>Mitglieder einladen</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-cross">–</td><td class="perm-cross">–</td></tr>
+            <tr><td>Rollen vergeben</td><td class="perm-check">✓</td><td>Teilweise</td><td class="perm-cross">–</td><td class="perm-cross">–</td></tr>
+            <tr><td>Gruppe löschen</td><td class="perm-check">✓</td><td class="perm-cross">–</td><td class="perm-cross">–</td><td class="perm-cross">–</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Mitglied einer Gruppe -->
+      <div id="inGroupView" style="display:none">
+        <div class="settings-card">
+          <div class="settings-section">Gruppeninfo</div>
+          <div class="settings-row">
+            <div class="settings-label">Name</div>
+            <div class="settings-value" id="groupNameDisplay"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Deine Rolle</div>
+            <div id="groupRoleDisplay"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Einladungscode</div>
+            <div style="display:flex;align-items:center;gap:.6rem">
+              <span class="invite-code" id="groupInviteCode"></span>
+              <button class="btn btn-outline btn-sm" onclick="copyInviteCode()">Kopieren</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-section">Mitglieder</div>
+          <div id="membersList"></div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-row">
+            <div><div class="settings-label">Gruppe verlassen</div><div class="settings-sub">Kehrt zum persönlichen Plan zurück</div></div>
+            <button class="btn btn-danger btn-sm" onclick="leaveGroup()">Verlassen</button>
+          </div>
+          <div id="deleteGroupRow" class="settings-row" style="display:none">
+            <div><div class="settings-label">Gruppe löschen</div><div class="settings-sub">Löscht Gruppe und alle gemeinsamen Daten unwiderruflich</div></div>
+            <button class="btn btn-danger btn-sm" onclick="deleteGroup()">Löschen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end .main -->
+</div><!-- end #appScreen -->
 
 <!-- ── Ingredient selection modal ────────────────────────────────── -->
 <div id="ingModal" class="modal-overlay" style="display:none" onclick="closeIngModal(event)">
@@ -458,6 +559,9 @@ let currentView = 'week';
 let appData     = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
 let _cachedPw   = '';
 let _pwVisible  = false;
+let currentGroupId   = null;
+let currentGroupRole = null;   // 'owner'|'admin'|'member'|'viewer'
+let currentGroupName = '';
 
 // ── Helpers ──────────────────────────────────────────────────────
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -474,6 +578,7 @@ const dateFmt = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-d
 const todayKey = () => dateKey(new Date());
 
 function userRef() {
+  if (currentGroupId) return db.collection('groups').doc(currentGroupId).collection('data').doc('main');
   return db.collection('users').doc(currentUid).collection('data').doc('main');
 }
 
@@ -607,17 +712,35 @@ async function doRegister() {
 async function startSession(uid, username) {
   currentUid  = uid;
   currentUser = username;
+  // Check group membership
+  const uDoc = await db.collection('users').doc(uid).get();
+  const gid  = uDoc.exists ? uDoc.data().groupId : null;
+  if (gid) {
+    const gDoc = await db.collection('groups').doc(gid).get();
+    if (gDoc.exists && gDoc.data().members && gDoc.data().members[uid]) {
+      currentGroupId   = gid;
+      currentGroupRole = gDoc.data().members[uid].role;
+      currentGroupName = gDoc.data().name;
+    } else {
+      // Group removed or user kicked — clean up stale reference
+      await db.collection('users').doc(uid).update({ groupId: firebase.firestore.FieldValue.delete() });
+    }
+  }
   await loadData();
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('appScreen').style.display  = '';
   document.getElementById('navName').textContent = username;
+  updateGroupBadge();
   renderPlan();
 }
 
 function showAuthScreen() {
-  currentUid  = null;
-  currentUser = null;
-  appData     = { meals: {}, shopping: [], checked: {} };
+  currentUid        = null;
+  currentUser       = null;
+  currentGroupId    = null;
+  currentGroupRole  = null;
+  currentGroupName  = '';
+  appData           = { meals: {}, shopping: [], checked: {} };
   document.getElementById('appScreen').style.display  = 'none';
   document.getElementById('authScreen').style.display = 'flex';
   setBusy('loginBtn', false);
@@ -627,6 +750,11 @@ function showAuthScreen() {
 function doLogout() {
   auth.signOut();
 }
+
+// ── Permissions ───────────────────────────────────────────────────
+function canEdit()          { return !currentGroupId || ['owner','admin','member'].includes(currentGroupRole); }
+function canManageRecipes() { return !currentGroupId || ['owner','admin'].includes(currentGroupRole); }
+function canManageGroup()   { return ['owner','admin'].includes(currentGroupRole); }
 
 // ── Firebase Auth State ───────────────────────────────────────────
 function _hideLoading() {
@@ -738,6 +866,7 @@ function showPage(name, btn) {
   btn.classList.add('active');
   if (name === 'shopping') renderShopping();
   if (name === 'recipes')  renderRecipes();
+  if (name === 'group')    renderGroupPage();
   if (name === 'settings') {
     document.getElementById('darkToggle').checked = localStorage.getItem('ep_theme') === 'dark';
     document.getElementById('settingsUsername').textContent = currentUser || '';
@@ -971,6 +1100,7 @@ function confirmIngModal() {
 }
 
 function editMeal(dk, mi) {
+  if (!canEdit()) return;
   const slot = document.getElementById(`slot_${dk}_${mi}`);
   const nameEl = slot.querySelector('.meal-name');
   if (slot.querySelector('.meal-edit')) return;
@@ -1135,12 +1265,14 @@ function toggleCustom(i, cb) {
 }
 
 function delCustom(i) {
+  if (!canEdit()) return;
   appData.shopping.splice(i, 1);
   saveData();
   renderShopping();
 }
 
 function addItem() {
+  if (!canEdit()) return;
   const inp    = document.getElementById('newItem');
   const qtyInp = document.getElementById('newItemQty');
   const name   = inp.value.trim();
@@ -1161,6 +1293,7 @@ function uid() {
 }
 
 function showRecipeForm(recipeId) {
+  if (!canManageRecipes()) return;
   formIngredients = [];
   document.getElementById('recipeEditId').value = '';
   document.getElementById('rName').value = '';
@@ -1235,6 +1368,7 @@ function saveRecipe() {
 }
 
 function deleteRecipe(id) {
+  if (!canManageRecipes()) return;
   if (!confirm('Rezept wirklich löschen?')) return;
   appData.recipes = appData.recipes.filter(r => r.id !== id);
   // Remove links from meal plan
@@ -1259,12 +1393,183 @@ function renderRecipes() {
       <div class="recipe-card-name">${esc(r.name)}</div>
       ${r.description ? `<div class="recipe-card-desc">${esc(r.description)}</div>` : ''}
       ${r.ingredients.length ? `<div class="ingredient-tags">${r.ingredients.map(i => `<span class="ingredient-tag">${i.qty ? esc(i.qty) + ' ' : ''}${esc(i.name)}</span>`).join('')}</div>` : ''}
-      <div class="recipe-actions">
+      ${canManageRecipes() ? `<div class="recipe-actions">
         <button class="btn btn-outline btn-sm" onclick="showRecipeForm('${r.id}')">Bearbeiten</button>
         <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${r.id}')">Löschen</button>
-      </div>
+      </div>` : ''}
     </div>
   `).join('');
+}
+
+// ── Group management ──────────────────────────────────────────────
+const ROLE_LABELS = { owner:'Owner', admin:'Admin', member:'Mitglied', viewer:'Zuschauer' };
+const ROLE_CLASS  = { owner:'role-owner', admin:'role-admin', member:'role-member', viewer:'role-viewer' };
+
+function updateGroupBadge() {
+  const badge = document.getElementById('navGroupBadge');
+  if (currentGroupId && currentGroupName) {
+    badge.textContent = currentGroupName;
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function createGroup() {
+  const name = document.getElementById('newGroupName').value.trim();
+  if (!name) return alert('Bitte einen Gruppennamen eingeben.');
+  const inviteCode = Math.random().toString(36).slice(2, 8).toUpperCase();
+  const groupRef = db.collection('groups').doc();
+  await groupRef.set({
+    name, inviteCode, createdBy: currentUid,
+    members: { [currentUid]: { username: currentUser, role: 'owner' } }
+  });
+  await db.collection('users').doc(currentUid).update({ groupId: groupRef.id });
+  currentGroupId   = groupRef.id;
+  currentGroupRole = 'owner';
+  currentGroupName = name;
+  appData = { meals:{}, shopping:[], checked:{}, recipes:[], mealRecipes:{} };
+  updateGroupBadge();
+  await renderGroupPage();
+  renderPlan();
+}
+
+async function joinGroup() {
+  const code  = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+  const errEl = document.getElementById('groupJoinErr');
+  errEl.style.display = 'none';
+  if (!code) { errEl.textContent = 'Bitte einen Code eingeben.'; errEl.style.display = 'block'; return; }
+  const snap = await db.collection('groups').where('inviteCode', '==', code).get();
+  if (snap.empty) { errEl.textContent = 'Ungültiger Einladungscode.'; errEl.style.display = 'block'; return; }
+  const gDoc = snap.docs[0];
+  if (gDoc.data().members && gDoc.data().members[currentUid]) {
+    errEl.textContent = 'Du bist bereits in dieser Gruppe.'; errEl.style.display = 'block'; return;
+  }
+  await db.collection('groups').doc(gDoc.id).update({
+    [`members.${currentUid}`]: { username: currentUser, role: 'member' }
+  });
+  await db.collection('users').doc(currentUid).update({ groupId: gDoc.id });
+  currentGroupId   = gDoc.id;
+  currentGroupRole = 'member';
+  currentGroupName = gDoc.data().name;
+  await loadData();
+  updateGroupBadge();
+  await renderGroupPage();
+  renderPlan();
+}
+
+async function leaveGroup() {
+  if (currentGroupRole === 'owner') {
+    const gDoc = await db.collection('groups').doc(currentGroupId).get();
+    const others = Object.keys(gDoc.data().members || {}).filter(u => u !== currentUid);
+    if (others.length > 0) return alert('Du bist der Owner. Übertrage zuerst den Owner-Status oder lösche die Gruppe.');
+  }
+  if (!confirm('Gruppe wirklich verlassen?')) return;
+  await db.collection('groups').doc(currentGroupId).update({
+    [`members.${currentUid}`]: firebase.firestore.FieldValue.delete()
+  });
+  await db.collection('users').doc(currentUid).update({ groupId: firebase.firestore.FieldValue.delete() });
+  currentGroupId = null; currentGroupRole = null; currentGroupName = '';
+  await loadData();
+  updateGroupBadge();
+  await renderGroupPage();
+  renderPlan();
+}
+
+async function deleteGroup() {
+  if (currentGroupRole !== 'owner') return;
+  if (!confirm('Gruppe und alle gemeinsamen Daten wirklich unwiderruflich löschen?')) return;
+  const gDoc = await db.collection('groups').doc(currentGroupId).get();
+  const members = gDoc.data().members || {};
+  const batch = db.batch();
+  for (const uid of Object.keys(members)) {
+    batch.update(db.collection('users').doc(uid), { groupId: firebase.firestore.FieldValue.delete() });
+  }
+  batch.delete(db.collection('groups').doc(currentGroupId).collection('data').doc('main'));
+  batch.delete(db.collection('groups').doc(currentGroupId));
+  await batch.commit();
+  currentGroupId = null; currentGroupRole = null; currentGroupName = '';
+  await loadData();
+  updateGroupBadge();
+  await renderGroupPage();
+  renderPlan();
+}
+
+async function setMemberRole(memberUid, role) {
+  if (!canManageGroup()) return;
+  await db.collection('groups').doc(currentGroupId).update({
+    [`members.${memberUid}.role`]: role
+  });
+  // If owner transfers owner role to someone else, demote self to admin
+  if (role === 'owner' && currentGroupRole === 'owner') {
+    await db.collection('groups').doc(currentGroupId).update({
+      [`members.${currentUid}.role`]: 'admin'
+    });
+    currentGroupRole = 'admin';
+  }
+  await renderGroupPage();
+}
+
+async function removeMember(memberUid) {
+  if (!canManageGroup()) return;
+  if (!confirm('Mitglied wirklich entfernen?')) return;
+  await db.collection('groups').doc(currentGroupId).update({
+    [`members.${memberUid}`]: firebase.firestore.FieldValue.delete()
+  });
+  await db.collection('users').doc(memberUid).update({ groupId: firebase.firestore.FieldValue.delete() });
+  await renderGroupPage();
+}
+
+async function copyInviteCode() {
+  const code = document.getElementById('groupInviteCode').textContent;
+  try { await navigator.clipboard.writeText(code); } catch(e) {}
+  alert('Einladungscode kopiert: ' + code);
+}
+
+async function renderGroupPage() {
+  if (!currentGroupId) {
+    document.getElementById('noGroupView').style.display  = '';
+    document.getElementById('inGroupView').style.display  = 'none';
+    return;
+  }
+  document.getElementById('noGroupView').style.display = 'none';
+  document.getElementById('inGroupView').style.display = '';
+
+  const gDoc = await db.collection('groups').doc(currentGroupId).get();
+  if (!gDoc.exists) return;
+  const gData = gDoc.data();
+
+  document.getElementById('groupNameDisplay').textContent = gData.name;
+  document.getElementById('groupRoleDisplay').innerHTML =
+    `<span class="member-role-badge ${ROLE_CLASS[currentGroupRole]||''}">${ROLE_LABELS[currentGroupRole]||currentGroupRole}</span>`;
+  document.getElementById('groupInviteCode').textContent = gData.inviteCode;
+  document.getElementById('deleteGroupRow').style.display = currentGroupRole === 'owner' ? '' : 'none';
+
+  const members = gData.members || {};
+  document.getElementById('membersList').innerHTML = Object.entries(members).map(([uid, m]) => {
+    const isMe = uid === currentUid;
+    // Owner can change anyone except self; admin can change member/viewer only
+    const editableByMe = !isMe && (
+      currentGroupRole === 'owner' ||
+      (currentGroupRole === 'admin' && m.role !== 'owner' && m.role !== 'admin')
+    );
+    const removableByMe = editableByMe;
+    const availableRoles = currentGroupRole === 'owner'
+      ? ['owner','admin','member','viewer']
+      : ['member','viewer'];
+    return `<div class="member-row">
+      <div>
+        <div class="member-name">${esc(m.username)}${isMe ? ' <span style="color:var(--muted);font-size:.82rem;font-weight:400">(du)</span>' : ''}</div>
+        <span class="member-role-badge ${ROLE_CLASS[m.role]||''}">${ROLE_LABELS[m.role]||m.role}</span>
+      </div>
+      <div style="display:flex;gap:.4rem;align-items:center">
+        ${editableByMe ? `<select class="role-select" onchange="setMemberRole('${uid}',this.value)">
+          ${availableRoles.map(r=>`<option value="${r}"${r===m.role?' selected':''}>${ROLE_LABELS[r]}</option>`).join('')}
+        </select>` : ''}
+        ${removableByMe ? `<button class="btn btn-danger btn-sm" onclick="removeMember('${uid}')">Entfernen</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 }
 </script>
 </body>
