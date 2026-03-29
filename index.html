@@ -218,6 +218,8 @@
     /* ── Group ───────────────────────────────────────────────── */
     .group-badge { font-size:.75rem; background:#eef2ff; color:var(--primary); border-radius:99px; padding:.15rem .65rem; font-weight:600; white-space:nowrap; }
     [data-theme="dark"] .group-badge { background:#312e81; }
+    .context-select { padding:.3rem .6rem; border:1.5px solid var(--border); border-radius:8px; font-size:.82rem; font-weight:600; outline:none; font-family:inherit; background:var(--card); color:var(--text); cursor:pointer; max-width:170px; }
+    .context-select:focus { border-color:var(--primary); }
     .role-select { padding:.28rem .45rem; border:1.5px solid var(--border); border-radius:6px; font-size:.8rem; outline:none; font-family:inherit; background:var(--card); color:var(--text); cursor:pointer; }
     .role-select:focus { border-color:var(--primary); }
     .member-row { display:flex; align-items:center; justify-content:space-between; padding:.75rem 1.25rem; border-bottom:1px solid var(--border); gap:.75rem; }
@@ -287,7 +289,7 @@
         <button class="nav-btn" id="navGroup" onclick="showPage('group',this)">Gruppe</button>
       </div>
       <div class="nav-user">
-        <span id="navGroupBadge" class="group-badge" style="display:none"></span>
+        <select id="contextSelect" class="context-select" style="display:none" onchange="switchContext(this.value)"></select>
         <span id="navName"></span>
         <button class="nav-out" onclick="doLogout()">Abmelden</button>
       </div>
@@ -410,75 +412,42 @@
 
     <!-- Gruppe -->
     <div id="groupPage" class="page">
-      <div class="page-header"><div class="page-title">Gruppe</div></div>
+      <div class="page-header"><div class="page-title">Gruppen</div></div>
 
-      <!-- Kein Mitglied -->
-      <div id="noGroupView">
-        <div class="settings-card">
-          <div class="settings-section">Neue Gruppe erstellen</div>
-          <div style="padding:1rem 1.25rem">
-            <div class="fg"><label>Gruppenname</label><input type="text" id="newGroupName" placeholder="z.B. Familie Müller" /></div>
-            <button class="btn btn-primary btn-sm" style="width:auto" onclick="createGroup()">Gruppe erstellen</button>
-          </div>
-        </div>
-        <div class="settings-card" style="margin-top:1rem">
-          <div class="settings-section">Bestehender Gruppe beitreten</div>
-          <div style="padding:1rem 1.25rem">
-            <div class="fg"><label>Einladungscode</label><input type="text" id="joinCodeInput" placeholder="z.B. ABC123" style="text-transform:uppercase;letter-spacing:2px" /></div>
-            <div id="groupJoinErr" class="err"></div>
-            <button class="btn btn-primary btn-sm" style="width:auto" onclick="joinGroup()">Beitreten</button>
-          </div>
-        </div>
-        <div class="settings-card" style="margin-top:1rem">
-          <div class="settings-section">Rollenübersicht</div>
-          <table class="perm-table">
-            <tr><th>Aktion</th><th>Owner</th><th>Admin</th><th>Mitglied</th><th>Zuschauer</th></tr>
-            <tr><td>Mahlzeiten bearbeiten</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-cross">–</td></tr>
-            <tr><td>Einkaufsliste verwalten</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-cross">–</td></tr>
-            <tr><td>Rezepte hinzufügen/löschen</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-cross">–</td><td class="perm-cross">–</td></tr>
-            <tr><td>Mitglieder einladen</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-cross">–</td><td class="perm-cross">–</td></tr>
-            <tr><td>Rollen vergeben</td><td class="perm-check">✓</td><td>Teilweise</td><td class="perm-cross">–</td><td class="perm-cross">–</td></tr>
-            <tr><td>Gruppe löschen</td><td class="perm-check">✓</td><td class="perm-cross">–</td><td class="perm-cross">–</td><td class="perm-cross">–</td></tr>
-          </table>
+      <!-- Meine Gruppen (dynamisch befüllt) -->
+      <div id="myGroupsList"></div>
+
+      <!-- Neue Gruppe erstellen -->
+      <div class="settings-card" style="margin-top:1rem">
+        <div class="settings-section">Neue Gruppe erstellen</div>
+        <div style="padding:1rem 1.25rem">
+          <div class="fg"><label>Gruppenname</label><input type="text" id="newGroupName" placeholder="z.B. Familie Müller" /></div>
+          <button class="btn btn-primary btn-sm" style="width:auto" onclick="createGroup()">Gruppe erstellen</button>
         </div>
       </div>
 
-      <!-- Mitglied einer Gruppe -->
-      <div id="inGroupView" style="display:none">
-        <div class="settings-card">
-          <div class="settings-section">Gruppeninfo</div>
-          <div class="settings-row">
-            <div class="settings-label">Name</div>
-            <div class="settings-value" id="groupNameDisplay"></div>
-          </div>
-          <div class="settings-row">
-            <div class="settings-label">Deine Rolle</div>
-            <div id="groupRoleDisplay"></div>
-          </div>
-          <div class="settings-row">
-            <div class="settings-label">Einladungscode</div>
-            <div style="display:flex;align-items:center;gap:.6rem">
-              <span class="invite-code" id="groupInviteCode"></span>
-              <button class="btn btn-outline btn-sm" onclick="copyInviteCode()">Kopieren</button>
-            </div>
-          </div>
+      <!-- Gruppe beitreten -->
+      <div class="settings-card" style="margin-top:1rem">
+        <div class="settings-section">Bestehender Gruppe beitreten</div>
+        <div style="padding:1rem 1.25rem">
+          <div class="fg"><label>Einladungscode</label><input type="text" id="joinCodeInput" placeholder="z.B. ABC123" style="text-transform:uppercase;letter-spacing:2px" /></div>
+          <div id="groupJoinErr" class="err"></div>
+          <button class="btn btn-primary btn-sm" style="width:auto" onclick="joinGroup()">Beitreten</button>
         </div>
+      </div>
 
-        <div class="settings-card">
-          <div class="settings-section">Mitglieder</div>
-          <div id="membersList"></div>
-        </div>
-
-        <div class="settings-card">
-          <div class="settings-row">
-            <div><div class="settings-label">Gruppe verlassen</div><div class="settings-sub">Kehrt zum persönlichen Plan zurück</div></div>
-            <button class="btn btn-danger btn-sm" onclick="leaveGroup()">Verlassen</button>
-          </div>
-          <div id="deleteGroupRow" class="settings-row" style="display:none">
-            <div><div class="settings-label">Gruppe löschen</div><div class="settings-sub">Löscht Gruppe und alle gemeinsamen Daten unwiderruflich</div></div>
-            <button class="btn btn-danger btn-sm" onclick="deleteGroup()">Löschen</button>
-          </div>
-        </div>
+      <!-- Rollenübersicht -->
+      <div class="settings-card" style="margin-top:1rem">
+        <div class="settings-section">Rollenübersicht</div>
+        <table class="perm-table">
+          <tr><th>Aktion</th><th>Owner</th><th>Admin</th><th>Mitglied</th><th>Zuschauer</th></tr>
+          <tr><td>Mahlzeiten bearbeiten</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-cross">–</td></tr>
+          <tr><td>Einkaufsliste verwalten</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-cross">–</td></tr>
+          <tr><td>Rezepte hinzufügen/löschen</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-cross">–</td><td class="perm-cross">–</td></tr>
+          <tr><td>Mitglieder einladen</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-cross">–</td><td class="perm-cross">–</td></tr>
+          <tr><td>Rollen vergeben</td><td class="perm-check">✓</td><td>Teilweise</td><td class="perm-cross">–</td><td class="perm-cross">–</td></tr>
+          <tr><td>Gruppe löschen</td><td class="perm-check">✓</td><td class="perm-cross">–</td><td class="perm-cross">–</td><td class="perm-cross">–</td></tr>
+        </table>
       </div>
     </div>
 
@@ -562,6 +531,7 @@ let _pwVisible  = false;
 let currentGroupId   = null;
 let currentGroupRole = null;   // 'owner'|'admin'|'member'|'viewer'
 let currentGroupName = '';
+let userGroups       = [];     // [{ id, name, role }]
 
 // ── Helpers ──────────────────────────────────────────────────────
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -712,25 +682,45 @@ async function doRegister() {
 async function startSession(uid, username) {
   currentUid  = uid;
   currentUser = username;
-  // Check group membership
+
   const uDoc = await db.collection('users').doc(uid).get();
-  const gid  = uDoc.exists ? uDoc.data().groupId : null;
-  if (gid) {
-    const gDoc = await db.collection('groups').doc(gid).get();
-    if (gDoc.exists && gDoc.data().members && gDoc.data().members[uid]) {
-      currentGroupId   = gid;
-      currentGroupRole = gDoc.data().members[uid].role;
-      currentGroupName = gDoc.data().name;
+  let groupIds = [];
+  if (uDoc.exists) {
+    const d = uDoc.data();
+    // Migrate old single groupId → groupIds array
+    if (d.groupId && !d.groupIds) {
+      groupIds = [d.groupId];
+      await db.collection('users').doc(uid).update({
+        groupIds: [d.groupId],
+        groupId: firebase.firestore.FieldValue.delete()
+      });
     } else {
-      // Group removed or user kicked — clean up stale reference
-      await db.collection('users').doc(uid).update({ groupId: firebase.firestore.FieldValue.delete() });
+      groupIds = d.groupIds || [];
     }
   }
+
+  // Load + validate all groups
+  userGroups = [];
+  const validIds = [];
+  for (const gid of groupIds) {
+    const gDoc = await db.collection('groups').doc(gid).get();
+    if (gDoc.exists && gDoc.data().members && gDoc.data().members[uid]) {
+      userGroups.push({ id: gid, name: gDoc.data().name, role: gDoc.data().members[uid].role });
+      validIds.push(gid);
+    }
+  }
+  if (validIds.length !== groupIds.length) {
+    await db.collection('users').doc(uid).update({ groupIds: validIds });
+  }
+
+  // Default: personal context
+  currentGroupId = null; currentGroupRole = null; currentGroupName = '';
+
   await loadData();
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('appScreen').style.display  = '';
   document.getElementById('navName').textContent = username;
-  updateGroupBadge();
+  updateContextSwitcher();
   renderPlan();
 }
 
@@ -740,6 +730,7 @@ function showAuthScreen() {
   currentGroupId    = null;
   currentGroupRole  = null;
   currentGroupName  = '';
+  userGroups        = [];
   appData           = { meals: {}, shopping: [], checked: {} };
   document.getElementById('appScreen').style.display  = 'none';
   document.getElementById('authScreen').style.display = 'flex';
@@ -844,10 +835,14 @@ function toggleDark(dark) {
 async function deleteAccount() {
   if (!confirm('Willst du deinen Account und alle deine Daten wirklich unwiderruflich löschen?')) return;
   try {
-    // Delete Firestore data
+    // Remove from all groups
+    for (const g of userGroups) {
+      await db.collection('groups').doc(g.id).update({
+        [`members.${currentUid}`]: firebase.firestore.FieldValue.delete()
+      });
+    }
     await db.collection('users').doc(currentUid).collection('data').doc('main').delete();
     await db.collection('users').doc(currentUid).delete();
-    // Delete Firebase Auth account
     await auth.currentUser.delete();
   } catch (e) {
     if (e.code === 'auth/requires-recent-login') {
@@ -1405,14 +1400,28 @@ function renderRecipes() {
 const ROLE_LABELS = { owner:'Owner', admin:'Admin', member:'Mitglied', viewer:'Zuschauer' };
 const ROLE_CLASS  = { owner:'role-owner', admin:'role-admin', member:'role-member', viewer:'role-viewer' };
 
-function updateGroupBadge() {
-  const badge = document.getElementById('navGroupBadge');
-  if (currentGroupId && currentGroupName) {
-    badge.textContent = currentGroupName;
-    badge.style.display = '';
+function updateContextSwitcher() {
+  const sel = document.getElementById('contextSelect');
+  if (userGroups.length === 0) { sel.style.display = 'none'; return; }
+  sel.innerHTML = `<option value="">🙋 Persönlich</option>` +
+    userGroups.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('');
+  sel.value = currentGroupId || '';
+  sel.style.display = '';
+}
+
+async function switchContext(val) {
+  if (!val) {
+    currentGroupId = null; currentGroupRole = null; currentGroupName = '';
   } else {
-    badge.style.display = 'none';
+    const g = userGroups.find(g => g.id === val);
+    if (g) { currentGroupId = g.id; currentGroupRole = g.role; currentGroupName = g.name; }
   }
+  await loadData();
+  renderPlan();
+  const ap = document.querySelector('.page.active');
+  if (ap && ap.id === 'shoppingPage') renderShopping();
+  if (ap && ap.id === 'recipesPage')  renderRecipes();
+  if (ap && ap.id === 'groupPage')    renderGroupPage();
 }
 
 async function createGroup() {
@@ -1424,12 +1433,14 @@ async function createGroup() {
     name, inviteCode, createdBy: currentUid,
     members: { [currentUid]: { username: currentUser, role: 'owner' } }
   });
-  await db.collection('users').doc(currentUid).update({ groupId: groupRef.id });
-  currentGroupId   = groupRef.id;
-  currentGroupRole = 'owner';
-  currentGroupName = name;
+  await db.collection('users').doc(currentUid).update({
+    groupIds: firebase.firestore.FieldValue.arrayUnion(groupRef.id)
+  });
+  userGroups.push({ id: groupRef.id, name, role: 'owner' });
+  currentGroupId = groupRef.id; currentGroupRole = 'owner'; currentGroupName = name;
   appData = { meals:{}, shopping:[], checked:{}, recipes:[], mealRecipes:{} };
-  updateGroupBadge();
+  document.getElementById('newGroupName').value = '';
+  updateContextSwitcher();
   await renderGroupPage();
   renderPlan();
 }
@@ -1442,134 +1453,166 @@ async function joinGroup() {
   const snap = await db.collection('groups').where('inviteCode', '==', code).get();
   if (snap.empty) { errEl.textContent = 'Ungültiger Einladungscode.'; errEl.style.display = 'block'; return; }
   const gDoc = snap.docs[0];
-  if (gDoc.data().members && gDoc.data().members[currentUid]) {
+  if ((gDoc.data().members && gDoc.data().members[currentUid]) || userGroups.find(g => g.id === gDoc.id)) {
     errEl.textContent = 'Du bist bereits in dieser Gruppe.'; errEl.style.display = 'block'; return;
   }
   await db.collection('groups').doc(gDoc.id).update({
     [`members.${currentUid}`]: { username: currentUser, role: 'member' }
   });
-  await db.collection('users').doc(currentUid).update({ groupId: gDoc.id });
-  currentGroupId   = gDoc.id;
-  currentGroupRole = 'member';
-  currentGroupName = gDoc.data().name;
+  await db.collection('users').doc(currentUid).update({
+    groupIds: firebase.firestore.FieldValue.arrayUnion(gDoc.id)
+  });
+  userGroups.push({ id: gDoc.id, name: gDoc.data().name, role: 'member' });
+  currentGroupId = gDoc.id; currentGroupRole = 'member'; currentGroupName = gDoc.data().name;
   await loadData();
-  updateGroupBadge();
+  document.getElementById('joinCodeInput').value = '';
+  updateContextSwitcher();
   await renderGroupPage();
   renderPlan();
 }
 
-async function leaveGroup() {
-  if (currentGroupRole === 'owner') {
-    const gDoc = await db.collection('groups').doc(currentGroupId).get();
+async function leaveGroup(groupId) {
+  const g = userGroups.find(g => g.id === groupId);
+  if (!g) return;
+  if (g.role === 'owner') {
+    const gDoc = await db.collection('groups').doc(groupId).get();
     const others = Object.keys(gDoc.data().members || {}).filter(u => u !== currentUid);
     if (others.length > 0) return alert('Du bist der Owner. Übertrage zuerst den Owner-Status oder lösche die Gruppe.');
   }
   if (!confirm('Gruppe wirklich verlassen?')) return;
-  await db.collection('groups').doc(currentGroupId).update({
+  await db.collection('groups').doc(groupId).update({
     [`members.${currentUid}`]: firebase.firestore.FieldValue.delete()
   });
-  await db.collection('users').doc(currentUid).update({ groupId: firebase.firestore.FieldValue.delete() });
-  currentGroupId = null; currentGroupRole = null; currentGroupName = '';
-  await loadData();
-  updateGroupBadge();
+  await db.collection('users').doc(currentUid).update({
+    groupIds: firebase.firestore.FieldValue.arrayRemove(groupId)
+  });
+  userGroups = userGroups.filter(g => g.id !== groupId);
+  if (currentGroupId === groupId) {
+    currentGroupId = null; currentGroupRole = null; currentGroupName = '';
+    await loadData();
+  }
+  updateContextSwitcher();
   await renderGroupPage();
   renderPlan();
 }
 
-async function deleteGroup() {
-  if (currentGroupRole !== 'owner') return;
+async function deleteGroup(groupId) {
+  const g = userGroups.find(g => g.id === groupId);
+  if (!g || g.role !== 'owner') return;
   if (!confirm('Gruppe und alle gemeinsamen Daten wirklich unwiderruflich löschen?')) return;
-  const gDoc = await db.collection('groups').doc(currentGroupId).get();
+  const gDoc = await db.collection('groups').doc(groupId).get();
   const members = gDoc.data().members || {};
   const batch = db.batch();
   for (const uid of Object.keys(members)) {
-    batch.update(db.collection('users').doc(uid), { groupId: firebase.firestore.FieldValue.delete() });
+    batch.update(db.collection('users').doc(uid), {
+      groupIds: firebase.firestore.FieldValue.arrayRemove(groupId)
+    });
   }
-  batch.delete(db.collection('groups').doc(currentGroupId).collection('data').doc('main'));
-  batch.delete(db.collection('groups').doc(currentGroupId));
+  batch.delete(db.collection('groups').doc(groupId).collection('data').doc('main'));
+  batch.delete(db.collection('groups').doc(groupId));
   await batch.commit();
-  currentGroupId = null; currentGroupRole = null; currentGroupName = '';
-  await loadData();
-  updateGroupBadge();
+  userGroups = userGroups.filter(g => g.id !== groupId);
+  if (currentGroupId === groupId) {
+    currentGroupId = null; currentGroupRole = null; currentGroupName = '';
+    await loadData();
+  }
+  updateContextSwitcher();
   await renderGroupPage();
   renderPlan();
 }
 
-async function setMemberRole(memberUid, role) {
-  if (!canManageGroup()) return;
-  await db.collection('groups').doc(currentGroupId).update({
-    [`members.${memberUid}.role`]: role
-  });
-  // If owner transfers owner role to someone else, demote self to admin
-  if (role === 'owner' && currentGroupRole === 'owner') {
-    await db.collection('groups').doc(currentGroupId).update({
-      [`members.${currentUid}.role`]: 'admin'
-    });
-    currentGroupRole = 'admin';
+async function setMemberRole(groupId, memberUid, role) {
+  const g = userGroups.find(g => g.id === groupId);
+  if (!g || !['owner','admin'].includes(g.role)) return;
+  await db.collection('groups').doc(groupId).update({ [`members.${memberUid}.role`]: role });
+  // Owner transfers ownership → demote self to admin
+  if (role === 'owner' && g.role === 'owner') {
+    await db.collection('groups').doc(groupId).update({ [`members.${currentUid}.role`]: 'admin' });
+    g.role = 'admin';
+    if (currentGroupId === groupId) currentGroupRole = 'admin';
   }
   await renderGroupPage();
 }
 
-async function removeMember(memberUid) {
-  if (!canManageGroup()) return;
+async function removeMember(groupId, memberUid) {
+  const g = userGroups.find(g => g.id === groupId);
+  if (!g || !['owner','admin'].includes(g.role)) return;
   if (!confirm('Mitglied wirklich entfernen?')) return;
-  await db.collection('groups').doc(currentGroupId).update({
+  await db.collection('groups').doc(groupId).update({
     [`members.${memberUid}`]: firebase.firestore.FieldValue.delete()
   });
-  await db.collection('users').doc(memberUid).update({ groupId: firebase.firestore.FieldValue.delete() });
+  await db.collection('users').doc(memberUid).update({
+    groupIds: firebase.firestore.FieldValue.arrayRemove(groupId)
+  });
   await renderGroupPage();
 }
 
-async function copyInviteCode() {
-  const code = document.getElementById('groupInviteCode').textContent;
+async function copyInviteCode(code) {
   try { await navigator.clipboard.writeText(code); } catch(e) {}
   alert('Einladungscode kopiert: ' + code);
 }
 
 async function renderGroupPage() {
-  if (!currentGroupId) {
-    document.getElementById('noGroupView').style.display  = '';
-    document.getElementById('inGroupView').style.display  = 'none';
+  const container = document.getElementById('myGroupsList');
+  if (userGroups.length === 0) {
+    container.innerHTML = '<div class="empty" style="background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:1rem">Du bist noch in keiner Gruppe.</div>';
     return;
   }
-  document.getElementById('noGroupView').style.display = 'none';
-  document.getElementById('inGroupView').style.display = '';
 
-  const gDoc = await db.collection('groups').doc(currentGroupId).get();
-  if (!gDoc.exists) return;
-  const gData = gDoc.data();
+  let html = '';
+  for (const g of userGroups) {
+    const gDoc = await db.collection('groups').doc(g.id).get();
+    if (!gDoc.exists) continue;
+    const gData    = gDoc.data();
+    const isActive = currentGroupId === g.id;
+    const canManage = ['owner','admin'].includes(g.role);
 
-  document.getElementById('groupNameDisplay').textContent = gData.name;
-  document.getElementById('groupRoleDisplay').innerHTML =
-    `<span class="member-role-badge ${ROLE_CLASS[currentGroupRole]||''}">${ROLE_LABELS[currentGroupRole]||currentGroupRole}</span>`;
-  document.getElementById('groupInviteCode').textContent = gData.inviteCode;
-  document.getElementById('deleteGroupRow').style.display = currentGroupRole === 'owner' ? '' : 'none';
+    const membersHtml = Object.entries(gData.members || {}).map(([mUid, m]) => {
+      const isMe = mUid === currentUid;
+      const editable = !isMe && (g.role === 'owner' || (g.role === 'admin' && m.role !== 'owner' && m.role !== 'admin'));
+      const roles = g.role === 'owner' ? ['owner','admin','member','viewer'] : ['member','viewer'];
+      return `<div class="member-row">
+        <div>
+          <div class="member-name">${esc(m.username)}${isMe ? ' <span style="color:var(--muted);font-size:.82rem;font-weight:400">(du)</span>' : ''}</div>
+          <span class="member-role-badge ${ROLE_CLASS[m.role]||''}">${ROLE_LABELS[m.role]||m.role}</span>
+        </div>
+        <div style="display:flex;gap:.4rem;align-items:center">
+          ${editable ? `<select class="role-select" onchange="setMemberRole('${g.id}','${mUid}',this.value)">
+            ${roles.map(r=>`<option value="${r}"${r===m.role?' selected':''}>${ROLE_LABELS[r]}</option>`).join('')}
+          </select>
+          <button class="btn btn-danger btn-sm" onclick="removeMember('${g.id}','${mUid}')">Entfernen</button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
 
-  const members = gData.members || {};
-  document.getElementById('membersList').innerHTML = Object.entries(members).map(([uid, m]) => {
-    const isMe = uid === currentUid;
-    // Owner can change anyone except self; admin can change member/viewer only
-    const editableByMe = !isMe && (
-      currentGroupRole === 'owner' ||
-      (currentGroupRole === 'admin' && m.role !== 'owner' && m.role !== 'admin')
-    );
-    const removableByMe = editableByMe;
-    const availableRoles = currentGroupRole === 'owner'
-      ? ['owner','admin','member','viewer']
-      : ['member','viewer'];
-    return `<div class="member-row">
-      <div>
-        <div class="member-name">${esc(m.username)}${isMe ? ' <span style="color:var(--muted);font-size:.82rem;font-weight:400">(du)</span>' : ''}</div>
-        <span class="member-role-badge ${ROLE_CLASS[m.role]||''}">${ROLE_LABELS[m.role]||m.role}</span>
+    html += `<div class="settings-card" style="margin-bottom:1rem">
+      <div class="settings-section" style="display:flex;justify-content:space-between;align-items:center">
+        <span>${esc(gData.name)}</span>
+        <span class="member-role-badge ${ROLE_CLASS[g.role]||''}">${ROLE_LABELS[g.role]||g.role}</span>
       </div>
-      <div style="display:flex;gap:.4rem;align-items:center">
-        ${editableByMe ? `<select class="role-select" onchange="setMemberRole('${uid}',this.value)">
-          ${availableRoles.map(r=>`<option value="${r}"${r===m.role?' selected':''}>${ROLE_LABELS[r]}</option>`).join('')}
-        </select>` : ''}
-        ${removableByMe ? `<button class="btn btn-danger btn-sm" onclick="removeMember('${uid}')">Entfernen</button>` : ''}
+      <div class="settings-row">
+        <div><div class="settings-label">Aktiver Kontext</div><div class="settings-sub">Daten die du gerade bearbeitest</div></div>
+        <button class="btn ${isActive ? 'btn-primary' : 'btn-outline'} btn-sm" style="width:auto" onclick="switchContext('${g.id}');updateContextSwitcher()">
+          ${isActive ? '✓ Aktiv' : 'Wechseln'}
+        </button>
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">Einladungscode</div>
+        <div style="display:flex;align-items:center;gap:.6rem">
+          <span class="invite-code">${esc(gData.inviteCode)}</span>
+          <button class="btn btn-outline btn-sm" onclick="copyInviteCode('${esc(gData.inviteCode)}')">Kopieren</button>
+        </div>
+      </div>
+      <div class="settings-section" style="font-size:.72rem">Mitglieder</div>
+      ${membersHtml}
+      <div class="settings-row" style="gap:.5rem">
+        <div><div class="settings-label">Gruppe verlassen</div><div class="settings-sub">Kehrt zum persönlichen Plan zurück</div></div>
+        <button class="btn btn-danger btn-sm" onclick="leaveGroup('${g.id}')">Verlassen</button>
+        ${g.role === 'owner' ? `<button class="btn btn-danger btn-sm" onclick="deleteGroup('${g.id}')">Löschen</button>` : ''}
       </div>
     </div>`;
-  }).join('');
+  }
+  container.innerHTML = html;
 }
 </script>
 </body>
