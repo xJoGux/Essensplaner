@@ -454,6 +454,19 @@
   </div><!-- end .main -->
 </div><!-- end #appScreen -->
 
+<!-- ── Meal edit popup ────────────────────────────────────────────── -->
+<div id="mealEditPopup" style="display:none;position:fixed;z-index:300;background:var(--card);border:2px solid var(--primary);border-radius:12px;padding:.875rem;box-shadow:0 8px 28px rgba(0,0,0,.25);min-width:260px;max-width:320px">
+  <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.5rem" id="mealEditPopupLabel"></div>
+  <div class="ac-wrap" style="margin-bottom:.6rem">
+    <input id="mealEditInput" style="width:100%;padding:.5rem .75rem;border:1.5px solid var(--primary);border-radius:8px;font-size:.95rem;outline:none;font-family:inherit;background:var(--card);color:var(--text)" placeholder="z.B. Pasta" autocomplete="off" />
+    <div class="ac-dropdown" id="mealEditAC" style="display:none"></div>
+  </div>
+  <div style="display:flex;gap:.4rem">
+    <button class="btn btn-primary btn-sm" style="width:auto;flex:1" onclick="saveMealFromPopup()">&#x2713; Speichern</button>
+    <button class="btn btn-outline btn-sm" onclick="closeMealEditPopup()">Abbrechen</button>
+  </div>
+</div>
+
 <!-- ── Ingredient selection modal ────────────────────────────────── -->
 <div id="ingModal" class="modal-overlay" style="display:none" onclick="closeIngModal(event)">
   <div class="modal-box">
@@ -1094,76 +1107,86 @@ function confirmIngModal() {
   _ingModalRecipe = null;
 }
 
+let _editDk = null, _editMi = null;
+
 function editMeal(dk, mi) {
   if (!canEdit()) return;
-  const slot = document.getElementById(`slot_${dk}_${mi}`);
-  const nameEl = slot.querySelector('.meal-name');
-  if (slot.querySelector('.meal-edit')) return;
-  nameEl.style.display = 'none';
-  const ingBtn = slot.querySelector('.meal-ing-btn');
-  if (ingBtn) ingBtn.style.display = 'none';
+  _editDk = dk; _editMi = mi;
 
-  const row = document.createElement('div');
-  row.className = 'meal-edit';
-  row.innerHTML =
-    `<div class="ac-wrap">
-      <input class="meal-input" id="mealInp_${dk}_${mi}" value="${esc(getMeal(dk, mi))}" placeholder="z.B. Pasta" autocomplete="off" />
-      <div class="ac-dropdown" id="acDrop_${dk}_${mi}" style="display:none"></div>
-    </div>
-    <button class="btn btn-primary btn-sm" style="width:auto;flex-shrink:0" onclick="saveMeal('${dk}',${mi},this)">✓</button>`;
-  slot.appendChild(row);
+  const slot   = document.getElementById('slot_' + dk + '_' + mi);
+  const popup  = document.getElementById('mealEditPopup');
+  const inp    = document.getElementById('mealEditInput');
+  const ac     = document.getElementById('mealEditAC');
 
-  const inp = row.querySelector('input');
-  inp.focus(); inp.select();
-  inp.addEventListener('input', () => showAC(dk, mi, inp.value));
-  inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter')  saveMeal(dk, mi, row.querySelector('button'));
-    if (e.key === 'Escape') cancelEdit(dk, mi);
+  document.getElementById('mealEditPopupLabel').textContent = MEALS[mi];
+  inp.value = getMeal(dk, mi);
+  ac.style.display = 'none';
+  popup.style.display = 'block';
+
+  // Position popup near slot, adjusted to stay on screen
+  const rect = slot.getBoundingClientRect();
+  popup.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 340)) + 'px';
+  popup.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
+
+  requestAnimationFrame(() => {
+    const ph = popup.offsetHeight;
+    if (rect.bottom + ph + 6 > window.innerHeight) {
+      popup.style.top = (rect.top + window.scrollY - ph - 6) + 'px';
+    }
+    inp.focus(); inp.select();
   });
 }
 
-function showAC(dk, mi, val) {
-  const drop = document.getElementById(`acDrop_${dk}_${mi}`);
+document.addEventListener('DOMContentLoaded', function() {
+  const inp = document.getElementById('mealEditInput');
+  inp.addEventListener('input',   () => showMealEditAC(inp.value));
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter')  saveMealFromPopup();
+    if (e.key === 'Escape') closeMealEditPopup();
+  });
+  document.addEventListener('mousedown', function(e) {
+    const popup = document.getElementById('mealEditPopup');
+    if (popup.style.display !== 'none' && !popup.contains(e.target) && !e.target.classList.contains('meal-name')) {
+      closeMealEditPopup();
+    }
+  });
+});
+
+function showMealEditAC(val) {
+  const drop = document.getElementById('mealEditAC');
   if (!val.trim()) { drop.style.display = 'none'; return; }
   const matches = (appData.recipes || []).filter(r => r.name.toLowerCase().includes(val.toLowerCase()));
   if (!matches.length) { drop.style.display = 'none'; return; }
   drop.innerHTML = matches.map(r =>
-    `<div class="ac-item" onmousedown="pickRecipe('${dk}',${mi},'${r.id}')">${esc(r.name)}</div>`
+    '<div class="ac-item" onmousedown="pickMealEditRecipe(\'' + r.id + '\')">' + esc(r.name) + '</div>'
   ).join('');
   drop.style.display = '';
 }
 
-function pickRecipe(dk, mi, rid) {
-  const rec = (appData.recipes || []).find(r => r.id === rid);
-  if (!rec) return;
-  document.getElementById(`mealInp_${dk}_${mi}`).value = rec.name;
-  document.getElementById(`acDrop_${dk}_${mi}`).style.display = 'none';
+function pickMealEditRecipe(rid) {
+  const rec = (appData.recipes || []).find(r => r.id === rid); if (!rec) return;
+  document.getElementById('mealEditInput').value = rec.name;
+  document.getElementById('mealEditAC').style.display = 'none';
   if (!appData.mealRecipes) appData.mealRecipes = {};
-  appData.mealRecipes[dk + '_' + mi] = rid;
+  appData.mealRecipes[_editDk + '_' + _editMi] = rid;
 }
 
-function saveMeal(dk, mi, btn) {
-  const inp = btn.closest('.meal-edit').querySelector('input');
-  const val = inp.value.trim();
-  // If input changed from what was picked via autocomplete, clear recipe link
-  const rid = (appData.mealRecipes || {})[dk + '_' + mi];
+function saveMealFromPopup() {
+  if (_editDk === null) return;
+  const val = document.getElementById('mealEditInput').value.trim();
+  const rid = (appData.mealRecipes || {})[_editDk + '_' + _editMi];
   if (rid) {
     const rec = (appData.recipes || []).find(r => r.id === rid);
-    if (!rec || rec.name !== val) {
-      delete appData.mealRecipes[dk + '_' + mi];
-    }
+    if (!rec || rec.name !== val) delete appData.mealRecipes[_editDk + '_' + _editMi];
   }
-  setMeal(dk, mi, val);
+  setMeal(_editDk, _editMi, val);
+  closeMealEditPopup();
   renderPlan();
 }
 
-function cancelEdit(dk, mi) {
-  const slot = document.getElementById(`slot_${dk}_${mi}`);
-  const edit = slot.querySelector('.meal-edit');
-  if (edit) edit.remove();
-  slot.querySelector('.meal-name').style.display = '';
-  const ingBtn = slot.querySelector('.meal-ing-btn');
-  if (ingBtn) ingBtn.style.display = '';
+function closeMealEditPopup() {
+  document.getElementById('mealEditPopup').style.display = 'none';
+  _editDk = null; _editMi = null;
 }
 
 // ── Shopping list ─────────────────────────────────────────────────
