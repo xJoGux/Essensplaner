@@ -5,196 +5,173 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Essensplaner</title>
   <style>
-    :root {
-      --primary: #4f46e5;
-      --primary-dark: #4338ca;
-      --bg: #f9fafb;
-      --card: #ffffff;
-      --border: #e5e7eb;
-      --text: #111827;
-      --muted: #6b7280;
-      --danger: #ef4444;
-    }
-    [data-theme="dark"] {
-      --primary: #818cf8;
-      --primary-dark: #6366f1;
-      --bg: #111827;
-      --card: #1f2937;
-      --border: #374151;
-      --text: #f9fafb;
-      --muted: #9ca3af;
-      --danger: #f87171;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-    .auth-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; }
-    .auth-card { background: var(--card); border-radius: 14px; box-shadow: 0 4px 24px rgba(0,0,0,.09); padding: 2rem; width: 100%; max-width: 400px; }
-    .auth-logo { font-size: 1.6rem; font-weight: 800; color: var(--primary); margin-bottom: .25rem; }
-    .auth-sub  { color: var(--muted); font-size: .9rem; margin-bottom: 1.5rem; }
-    .auth-tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
-    .auth-tab  { flex: 1; padding: .5rem; border: none; background: var(--bg); border-radius: 8px; cursor: pointer; font-size: .9rem; font-weight: 600; color: var(--muted); transition: .15s; }
-    .auth-tab.active { background: var(--primary); color: #fff; }
-    .fg { margin-bottom: 1rem; }
-    label { display: block; font-size: .82rem; font-weight: 600; color: var(--muted); margin-bottom: .35rem; }
-    input[type="text"], input[type="password"] { width: 100%; padding: .6rem .75rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .95rem; outline: none; transition: border-color .15s; font-family: inherit; }
-    input:focus { border-color: var(--primary); }
-    .err { display: none; color: var(--danger); font-size: .85rem; background: #fef2f2; padding: .5rem .75rem; border-radius: 6px; margin-bottom: 1rem; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; padding: .6rem 1.2rem; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; transition: .15s; font-family: inherit; }
-    .btn-primary { background: var(--primary); color: #fff; width: 100%; }
-    .btn-primary:hover { background: var(--primary-dark); }
-    .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
-    .btn-sm  { padding: .35rem .75rem; font-size: .8rem; }
-    .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
-    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-    nav { background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-    .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 60px; }
-    .nav-logo  { font-weight: 800; font-size: 1.1rem; color: var(--primary); }
-    .nav-links { display: flex; gap: .25rem; }
-    .nav-btn   { padding: .4rem .85rem; border-radius: 8px; border: none; background: none; color: var(--muted); font-size: .9rem; font-weight: 500; cursor: pointer; transition: .15s; }
-    .nav-btn:hover  { background: var(--bg); }
-    .nav-btn.active { background: #eef2ff; color: var(--primary); }
-    .nav-user  { display: flex; align-items: center; gap: .75rem; font-size: .9rem; color: var(--muted); }
-    .nav-out   { background: none; border: none; color: var(--muted); cursor: pointer; font-size: .85rem; text-decoration: underline; }
-    .nav-out:hover { color: var(--danger); }
-    .main  { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
-    .page  { display: none; }
-    .page.active { display: block; }
-    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-    .page-title  { font-size: 1.25rem; font-weight: 700; }
-    .view-switch { display: flex; gap: .25rem; background: var(--bg); border-radius: 10px; padding: .2rem; border: 1px solid var(--border); }
-    .view-btn    { padding: .3rem .75rem; border-radius: 7px; border: none; background: none; font-size: .82rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: .15s; }
-    .view-btn.active { background: var(--primary); color: #fff; }
-    .week-nav   { display: flex; gap: .5rem; align-items: center; }
-    .week-label { font-size: .9rem; color: var(--muted); min-width: 190px; text-align: center; }
-    .week-grid  { display: grid; grid-template-columns: repeat(7, 1fr); gap: .75rem; }
-    @media (max-width: 900px) { .week-grid { grid-template-columns: repeat(2,1fr); } }
-    @media (max-width: 500px) { .week-grid { grid-template-columns: 1fr; } }
-    .day-view-card { background: var(--card); border-radius: 14px; border: 1px solid var(--border); max-width: 480px; overflow: hidden; }
-    .day-view-card.today { border-color: var(--primary); box-shadow: 0 0 0 2px #c7d2fe; }
-    .day-view-head { padding: .9rem 1.25rem; background: #6366f1; color: #fff; }
-    .day-view-card.today .day-view-head { background: var(--primary); }
-    .day-view-name { font-weight: 700; font-size: 1.1rem; }
-    .day-view-date { font-size: .85rem; opacity: .85; }
-    .month-grid    { display: grid; grid-template-columns: repeat(7, 1fr); gap: .4rem; }
-    .month-header  { display: grid; grid-template-columns: repeat(7, 1fr); gap: .4rem; margin-bottom: .3rem; }
-    .month-dname   { text-align: center; font-size: .72rem; font-weight: 700; color: var(--muted); padding: .25rem 0; text-transform: uppercase; }
-    .month-cell    { background: var(--card); border: 1px solid var(--border); border-radius: 8px; min-height: 80px; padding: .35rem .4rem; cursor: pointer; transition: border-color .15s; }
-    .month-cell:hover { border-color: var(--primary); }
-    .month-cell.today { border-color: var(--primary); box-shadow: 0 0 0 2px #c7d2fe; }
-    .month-cell.other-month { opacity: .4; }
-    .month-num     { font-size: .75rem; font-weight: 700; color: var(--muted); margin-bottom: .25rem; }
-    .month-cell.today .month-num { color: var(--primary); }
-    .month-today-badge { font-size: .65rem; font-weight: 700; background: var(--primary); color: #fff; border-radius: 99px; padding: .05rem .4rem; margin-left: .3rem; vertical-align: middle; }
-    .month-meal-dot { font-size: .72rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: .1rem; }
-    @media (max-width: 600px) { .month-cell { min-height: 55px; } .month-meal-dot { display: none; } }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-    .modal-box     { background: var(--card); border-radius: 14px; padding: 1.5rem; width: 100%; max-width: 380px; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
-    .modal-title   { font-weight: 700; font-size: 1rem; margin-bottom: 1rem; }
-    .modal-ing-list { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1.25rem; max-height: 260px; overflow-y: auto; }
-    .modal-ing-item { display: flex; align-items: center; gap: .65rem; font-size: .9rem; }
-    .modal-ing-item input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--primary); flex-shrink: 0; cursor: pointer; }
-    .modal-actions  { display: flex; gap: .5rem; justify-content: flex-end; }
-    .day-card   { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
-    .day-card.today { border-color: var(--primary); box-shadow: 0 0 0 2px #c7d2fe; }
-    .day-head   { padding: .55rem .875rem; background: #6366f1; color: #fff; }
-    .day-card.today .day-head { background: var(--primary); }
-    .day-name   { font-weight: 700; font-size: .85rem; }
-    .day-date   { font-size: .72rem; opacity: .85; }
-    .meal-slot  { padding: .55rem .875rem; border-bottom: 1px solid var(--border); min-height: 52px; }
-    .meal-slot:last-child { border-bottom: none; }
-    .meal-type  { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: .2rem; }
-    .meal-name  { font-size: .85rem; cursor: pointer; min-height: 1.2em; }
-    .meal-name:empty::before { content: '+ Mahlzeit'; color: #aaa; font-size: .8rem; }
-    .meal-name:hover { color: var(--primary); }
-    .meal-edit  { display: flex; gap: .3rem; }
-    .meal-input { flex: 1; padding: .25rem .5rem; border: 1.5px solid var(--primary); border-radius: 6px; font-size: .85rem; outline: none; font-family: inherit; min-width: 0; }
-    .s-list  { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
-    .s-section { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: .45rem 1rem; background: var(--bg); border-bottom: 1px solid var(--border); }
-    .s-item  { display: flex; align-items: center; gap: .75rem; padding: .7rem 1rem; border-bottom: 1px solid var(--border); }
-    .s-item:last-of-type { border-bottom: none; }
-    .s-item.done .s-text { text-decoration: line-through; color: var(--muted); }
-    .s-section.done-section { color: var(--muted); opacity: .7; }
-    .s-item input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--primary); flex-shrink: 0; cursor: pointer; }
-    .s-text  { flex: 1; font-size: .9rem; }
-    .s-del   { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 1rem; padding: .2rem .35rem; border-radius: 4px; }
-    .s-del:hover { color: var(--danger); background: #fef2f2; }
-    .s-add   { display: flex; gap: .5rem; padding: .75rem 1rem; background: var(--bg); border-top: 1px solid var(--border); }
-    .s-add input { flex: 1; padding: .5rem .75rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; outline: none; font-family: inherit; }
-    .s-add input:focus { border-color: var(--primary); }
-    .s-add .btn { width: auto; flex-shrink: 0; }
-    .empty   { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .9rem; }
-    .settings-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1rem; }
-    .settings-section { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: .55rem 1.25rem; background: var(--bg); border-bottom: 1px solid var(--border); }
-    .settings-row  { display: flex; align-items: center; justify-content: space-between; padding: .9rem 1.25rem; border-bottom: 1px solid var(--border); gap: 1rem; }
-    .settings-row:last-child { border-bottom: none; }
-    .settings-label { font-size: .95rem; font-weight: 500; flex-shrink: 0; }
-    .settings-sub   { font-size: .8rem; color: var(--muted); margin-top: .15rem; }
-    .settings-value { font-weight: 700; font-size: .95rem; }
-    .settings-pw-wrap { display: flex; align-items: center; gap: .5rem; flex: 1; justify-content: flex-end; }
-    .settings-pw-dots { font-size: 1rem; letter-spacing: 2px; color: var(--text); flex-shrink: 0; }
-    .settings-changepw { padding: .9rem 1.25rem; border-top: 1px solid var(--border); }
-    .settings-changepw .fg:last-of-type { margin-bottom: .75rem; }
-    .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
-    .toggle input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 24px; cursor: pointer; transition: .2s; }
-    .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
-    .toggle input:checked + .toggle-slider { background: var(--primary); }
-    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
-    .btn-danger { background: var(--danger); color: #fff; }
-    .btn-danger:hover { opacity: .88; }
-    .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; font-size: 1rem; color: var(--muted); }
-    .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-    .recipe-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 1rem; }
-    .recipe-card-name { font-weight: 700; font-size: 1rem; margin-bottom: .25rem; }
-    .recipe-card-desc { font-size: .82rem; color: var(--muted); margin-bottom: .6rem; white-space: pre-wrap; }
-    .ingredient-tags { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .6rem; }
-    .ingredient-tag  { background: #eef2ff; color: var(--primary); font-size: .75rem; padding: .2rem .55rem; border-radius: 99px; font-weight: 600; }
-    [data-theme="dark"] .ingredient-tag { background: #312e81; }
-    .recipe-actions  { display: flex; gap: .4rem; }
-    .recipe-form     { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 1rem; }
-    .recipe-form h3  { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
-    textarea { width: 100%; padding: .6rem .75rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; outline: none; font-family: inherit; resize: vertical; transition: border-color .15s; }
-    textarea:focus { border-color: var(--primary); }
-    .ing-input-row { display: flex; gap: .4rem; margin-bottom: .5rem; }
-    .ing-input-row input { flex: 1; }
-    .ing-list-edit   { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .6rem; }
-    .ing-tag-edit    { display: flex; align-items: center; gap: .25rem; background: #eef2ff; color: var(--primary); font-size: .78rem; padding: .2rem .5rem; border-radius: 99px; font-weight: 600; }
-    [data-theme="dark"] .ing-tag-edit { background: #312e81; }
-    .ing-tag-edit button { background: none; border: none; cursor: pointer; color: var(--primary); font-size: .85rem; line-height: 1; padding: 0; }
-    .qty-inp { width:82px; padding:.25rem .45rem; border:1.5px solid var(--border); border-radius:6px; font-size:.82rem; outline:none; font-family:inherit; flex-shrink:0; }
-    .qty-inp:focus { border-color:var(--primary); }
-    .ac-wrap { position: relative; flex: 1; min-width: 0; }
-    .ac-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1.5px solid var(--primary); border-radius: 8px; z-index: 200; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,.12); }
-    .ac-item { padding: .45rem .75rem; font-size: .85rem; cursor: pointer; }
-    .ac-item:hover { background: #eef2ff; }
-    [data-theme="dark"] .ac-item:hover { background: #312e81; }
-    .meal-ing-btn { font-size: .7rem; color: var(--primary); background: none; border: none; cursor: pointer; padding: .1rem .3rem; border-radius: 4px; margin-top: .15rem; display: block; }
-    .meal-ing-btn:hover { background: #eef2ff; }
-    [data-theme="dark"] .meal-ing-btn:hover { background: #312e81; }
-    .group-badge { font-size:.75rem; background:#eef2ff; color:var(--primary); border-radius:99px; padding:.15rem .65rem; font-weight:600; white-space:nowrap; }
-    [data-theme="dark"] .group-badge { background:#312e81; }
-    .context-select { padding:.3rem .6rem; border:1.5px solid var(--border); border-radius:8px; font-size:.82rem; font-weight:600; outline:none; font-family:inherit; background:var(--card); color:var(--text); cursor:pointer; max-width:170px; }
-    .context-select:focus { border-color:var(--primary); }
-    .role-select { padding:.28rem .45rem; border:1.5px solid var(--border); border-radius:6px; font-size:.8rem; outline:none; font-family:inherit; background:var(--card); color:var(--text); cursor:pointer; }
-    .role-select:focus { border-color:var(--primary); }
-    .member-row { display:flex; align-items:center; justify-content:space-between; padding:.75rem 1.25rem; border-bottom:1px solid var(--border); gap:.75rem; }
-    .member-row:last-child { border-bottom:none; }
-    .member-name { font-size:.95rem; font-weight:500; }
-    .member-role-badge { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:.15rem .5rem; border-radius:99px; }
-    .role-owner  { background:#fef3c7; color:#92400e; }
-    .role-admin  { background:#dbeafe; color:#1e40af; }
-    .role-member { background:#d1fae5; color:#065f46; }
-    .role-viewer { background:var(--bg); color:var(--muted); border:1px solid var(--border); }
-    [data-theme="dark"] .role-owner  { background:#78350f; color:#fde68a; }
-    [data-theme="dark"] .role-admin  { background:#1e3a5f; color:#93c5fd; }
-    [data-theme="dark"] .role-member { background:#064e3b; color:#6ee7b7; }
-    .invite-code { font-size:1.3rem; font-weight:800; letter-spacing:4px; font-family:monospace; color:var(--primary); }
-    .perm-table  { width:100%; border-collapse:collapse; font-size:.82rem; }
-    .perm-table th { text-align:left; padding:.4rem .75rem; color:var(--muted); font-weight:600; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--border); }
-    .perm-table td { padding:.45rem .75rem; border-bottom:1px solid var(--border); }
-    .perm-table tr:last-child td { border-bottom:none; }
-    .perm-check { color:#10b981; font-weight:700; }
-    .perm-cross  { color:var(--muted); }
+    :root{--primary:#4f46e5;--primary-dark:#4338ca;--bg:#f9fafb;--card:#ffffff;--border:#e5e7eb;--text:#111827;--muted:#6b7280;--danger:#ef4444}
+    [data-theme="dark"]{--primary:#818cf8;--primary-dark:#6366f1;--bg:#111827;--card:#1f2937;--border:#374151;--text:#f9fafb;--muted:#9ca3af;--danger:#f87171}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    .auth-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+    .auth-card{background:var(--card);border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.09);padding:2rem;width:100%;max-width:400px}
+    .auth-logo{font-size:1.6rem;font-weight:800;color:var(--primary);margin-bottom:.25rem}
+    .auth-sub{color:var(--muted);font-size:.9rem;margin-bottom:1.5rem}
+    .auth-tabs{display:flex;gap:.5rem;margin-bottom:1.5rem}
+    .auth-tab{flex:1;padding:.5rem;border:none;background:var(--bg);border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:600;color:var(--muted);transition:.15s}
+    .auth-tab.active{background:var(--primary);color:#fff}
+    .fg{margin-bottom:1rem}
+    label{display:block;font-size:.82rem;font-weight:600;color:var(--muted);margin-bottom:.35rem}
+    input[type="text"],input[type="password"]{width:100%;padding:.6rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.95rem;outline:none;transition:border-color .15s;font-family:inherit}
+    input:focus{border-color:var(--primary)}
+    .err{display:none;color:var(--danger);font-size:.85rem;background:#fef2f2;padding:.5rem .75rem;border-radius:6px;margin-bottom:1rem}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.6rem 1.2rem;border:none;border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer;transition:.15s;font-family:inherit}
+    .btn-primary{background:var(--primary);color:#fff;width:100%}
+    .btn-primary:hover{background:var(--primary-dark)}
+    .btn-primary:disabled{opacity:.6;cursor:not-allowed}
+    .btn-sm{padding:.35rem .75rem;font-size:.8rem}
+    .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+    .btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+    .btn-danger{background:var(--danger);color:#fff}
+    .btn-danger:hover{opacity:.88}
+    nav{background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+    .nav-inner{max-width:1100px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:60px}
+    .nav-logo{font-weight:800;font-size:1.1rem;color:var(--primary)}
+    .nav-links{display:flex;gap:.25rem}
+    .nav-btn{padding:.4rem .85rem;border-radius:8px;border:none;background:none;color:var(--muted);font-size:.9rem;font-weight:500;cursor:pointer;transition:.15s}
+    .nav-btn:hover{background:var(--bg)}
+    .nav-btn.active{background:#eef2ff;color:var(--primary)}
+    .nav-user{display:flex;align-items:center;gap:.75rem;font-size:.9rem;color:var(--muted)}
+    .nav-out{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;text-decoration:underline}
+    .nav-out:hover{color:var(--danger)}
+    .main{max-width:1100px;margin:0 auto;padding:1.5rem}
+    .page{display:none}
+    .page.active{display:block}
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+    .page-title{font-size:1.25rem;font-weight:700}
+    .view-switch{display:flex;gap:.25rem;background:var(--bg);border-radius:10px;padding:.2rem;border:1px solid var(--border)}
+    .view-btn{padding:.3rem .75rem;border-radius:7px;border:none;background:none;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;transition:.15s}
+    .view-btn.active{background:var(--primary);color:#fff}
+    .week-nav{display:flex;gap:.5rem;align-items:center}
+    .week-label{font-size:.9rem;color:var(--muted);min-width:190px;text-align:center}
+    .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.75rem}
+    @media(max-width:900px){.week-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:500px){.week-grid{grid-template-columns:1fr}}
+    .day-view-card{background:var(--card);border-radius:14px;border:1px solid var(--border);max-width:480px;overflow:hidden}
+    .day-view-card.today{border-color:var(--primary);box-shadow:0 0 0 2px #c7d2fe}
+    .day-view-head{padding:.9rem 1.25rem;background:#6366f1;color:#fff}
+    .day-view-card.today .day-view-head{background:var(--primary)}
+    .day-view-name{font-weight:700;font-size:1.1rem}
+    .day-view-date{font-size:.85rem;opacity:.85}
+    .month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem}
+    .month-header{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;margin-bottom:.3rem}
+    .month-dname{text-align:center;font-size:.72rem;font-weight:700;color:var(--muted);padding:.25rem 0;text-transform:uppercase}
+    .month-cell{background:var(--card);border:1px solid var(--border);border-radius:8px;min-height:80px;padding:.35rem .4rem;cursor:pointer;transition:border-color .15s}
+    .month-cell:hover{border-color:var(--primary)}
+    .month-cell.today{border-color:var(--primary);box-shadow:0 0 0 2px #c7d2fe}
+    .month-cell.other-month{opacity:.4}
+    .month-num{font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:.25rem}
+    .month-cell.today .month-num{color:var(--primary)}
+    .month-today-badge{font-size:.65rem;font-weight:700;background:var(--primary);color:#fff;border-radius:99px;padding:.05rem .4rem;margin-left:.3rem;vertical-align:middle}
+    .month-meal-dot{font-size:.72rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.1rem}
+    @media(max-width:600px){.month-cell{min-height:55px}.month-meal-dot{display:none}}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem}
+    .modal-box{background:var(--card);border-radius:14px;padding:1.5rem;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+    .modal-title{font-weight:700;font-size:1rem;margin-bottom:1rem}
+    .modal-ing-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.25rem;max-height:260px;overflow-y:auto}
+    .modal-ing-item{display:flex;align-items:center;gap:.65rem;font-size:.9rem}
+    .modal-ing-item input[type="checkbox"]{width:17px;height:17px;accent-color:var(--primary);flex-shrink:0;cursor:pointer}
+    .modal-actions{display:flex;gap:.5rem;justify-content:flex-end}
+    .day-card{background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden}
+    .day-card.today{border-color:var(--primary);box-shadow:0 0 0 2px #c7d2fe}
+    .day-head{padding:.55rem .875rem;background:#6366f1;color:#fff}
+    .day-card.today .day-head{background:var(--primary)}
+    .day-name{font-weight:700;font-size:.85rem}
+    .day-date{font-size:.72rem;opacity:.85}
+    .meal-slot{padding:.55rem .875rem;border-bottom:1px solid var(--border);min-height:52px}
+    .meal-slot:last-child{border-bottom:none}
+    .meal-type{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.2rem}
+    .meal-name{font-size:.85rem;cursor:pointer;min-height:1.2em}
+    .meal-name:empty::before{content:'+ Mahlzeit';color:#aaa;font-size:.8rem}
+    .meal-name:hover{color:var(--primary)}
+    .meal-edit{display:flex;gap:.3rem}
+    .meal-input{flex:1;padding:.25rem .5rem;border:1.5px solid var(--primary);border-radius:6px;font-size:.85rem;outline:none;font-family:inherit;min-width:0}
+    .s-list{background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden}
+    .s-section{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:.45rem 1rem;background:var(--bg);border-bottom:1px solid var(--border)}
+    .s-item{display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;border-bottom:1px solid var(--border)}
+    .s-item:last-of-type{border-bottom:none}
+    .s-item.done .s-text{text-decoration:line-through;color:var(--muted)}
+    .s-section.done-section{color:var(--muted);opacity:.7}
+    .s-item input[type="checkbox"]{width:17px;height:17px;accent-color:var(--primary);flex-shrink:0;cursor:pointer}
+    .s-text{flex:1;font-size:.9rem}
+    .s-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;padding:.2rem .35rem;border-radius:4px}
+    .s-del:hover{color:var(--danger);background:#fef2f2}
+    .s-add{display:flex;gap:.5rem;padding:.75rem 1rem;background:var(--bg);border-top:1px solid var(--border)}
+    .s-add input{flex:1;padding:.5rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;outline:none;font-family:inherit}
+    .s-add input:focus{border-color:var(--primary)}
+    .s-add .btn{width:auto;flex-shrink:0}
+    .empty{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:.9rem}
+    .settings-card{background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden;margin-bottom:1rem}
+    .settings-section{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:.55rem 1.25rem;background:var(--bg);border-bottom:1px solid var(--border)}
+    .settings-row{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.25rem;border-bottom:1px solid var(--border);gap:1rem}
+    .settings-row:last-child{border-bottom:none}
+    .settings-label{font-size:.95rem;font-weight:500;flex-shrink:0}
+    .settings-sub{font-size:.8rem;color:var(--muted);margin-top:.15rem}
+    .settings-pw-wrap{display:flex;align-items:center;gap:.5rem;flex:1;justify-content:flex-end}
+    .settings-changepw{padding:.9rem 1.25rem;border-top:1px solid var(--border)}
+    .toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+    .toggle input{opacity:0;width:0;height:0}
+    .toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:24px;cursor:pointer;transition:.2s}
+    .toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+    .toggle input:checked+.toggle-slider{background:var(--primary)}
+    .toggle input:checked+.toggle-slider::before{transform:translateX(20px)}
+    .loading{display:flex;align-items:center;justify-content:center;min-height:100vh;font-size:1rem;color:var(--muted)}
+    .recipe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+    .recipe-card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:1rem}
+    .recipe-card-name{font-weight:700;font-size:1rem;margin-bottom:.25rem}
+    .recipe-card-desc{font-size:.82rem;color:var(--muted);margin-bottom:.6rem;white-space:pre-wrap}
+    .ingredient-tags{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.6rem}
+    .ingredient-tag{background:#eef2ff;color:var(--primary);font-size:.75rem;padding:.2rem .55rem;border-radius:99px;font-weight:600}
+    [data-theme="dark"] .ingredient-tag{background:#312e81}
+    .recipe-actions{display:flex;gap:.4rem}
+    .recipe-form{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:1.25rem;margin-bottom:1rem}
+    .recipe-form h3{font-size:1rem;font-weight:700;margin-bottom:1rem}
+    textarea{width:100%;padding:.6rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;outline:none;font-family:inherit;resize:vertical;transition:border-color .15s}
+    textarea:focus{border-color:var(--primary)}
+    .ing-input-row{display:flex;gap:.4rem;margin-bottom:.5rem}
+    .ing-input-row input{flex:1}
+    .ing-list-edit{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.6rem}
+    .ing-tag-edit{display:flex;align-items:center;gap:.25rem;background:#eef2ff;color:var(--primary);font-size:.78rem;padding:.2rem .5rem;border-radius:99px;font-weight:600}
+    [data-theme="dark"] .ing-tag-edit{background:#312e81}
+    .ing-tag-edit button{background:none;border:none;cursor:pointer;color:var(--primary);font-size:.85rem;line-height:1;padding:0}
+    .qty-inp{width:82px;padding:.25rem .45rem;border:1.5px solid var(--border);border-radius:6px;font-size:.82rem;outline:none;font-family:inherit;flex-shrink:0}
+    .qty-inp:focus{border-color:var(--primary)}
+    .ac-wrap{position:relative;flex:1;min-width:0}
+    .ac-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1.5px solid var(--primary);border-radius:8px;z-index:200;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+    .ac-item{padding:.45rem .75rem;font-size:.85rem;cursor:pointer}
+    .ac-item:hover{background:#eef2ff}
+    [data-theme="dark"] .ac-item:hover{background:#312e81}
+    .meal-ing-btn{font-size:.7rem;color:var(--primary);background:none;border:none;cursor:pointer;padding:.1rem .3rem;border-radius:4px;margin-top:.15rem;display:block}
+    .meal-ing-btn:hover{background:#eef2ff}
+    [data-theme="dark"] .meal-ing-btn:hover{background:#312e81}
+    .context-select{padding:.3rem .6rem;border:1.5px solid var(--border);border-radius:8px;font-size:.82rem;font-weight:600;outline:none;font-family:inherit;background:var(--card);color:var(--text);cursor:pointer;max-width:170px}
+    .context-select:focus{border-color:var(--primary)}
+    .role-select{padding:.28rem .45rem;border:1.5px solid var(--border);border-radius:6px;font-size:.8rem;outline:none;font-family:inherit;background:var(--card);color:var(--text);cursor:pointer}
+    .role-select:focus{border-color:var(--primary)}
+    .member-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.25rem;border-bottom:1px solid var(--border);gap:.75rem}
+    .member-row:last-child{border-bottom:none}
+    .member-name{font-size:.95rem;font-weight:500}
+    .member-role-badge{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:.15rem .5rem;border-radius:99px}
+    .role-owner{background:#fef3c7;color:#92400e}
+    .role-admin{background:#dbeafe;color:#1e40af}
+    .role-member{background:#d1fae5;color:#065f46}
+    .role-viewer{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+    [data-theme="dark"] .role-owner{background:#78350f;color:#fde68a}
+    [data-theme="dark"] .role-admin{background:#1e3a5f;color:#93c5fd}
+    [data-theme="dark"] .role-member{background:#064e3b;color:#6ee7b7}
+    .invite-code{font-size:1.3rem;font-weight:800;letter-spacing:4px;font-family:monospace;color:var(--primary)}
+    .perm-table{width:100%;border-collapse:collapse;font-size:.82rem}
+    .perm-table th{text-align:left;padding:.4rem .75rem;color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)}
+    .perm-table td{padding:.45rem .75rem;border-bottom:1px solid var(--border)}
+    .perm-table tr:last-child td{border-bottom:none}
+    .perm-check{color:#10b981;font-weight:700}
+    .perm-cross{color:var(--muted)}
   </style>
 </head>
 <body>
@@ -207,21 +184,21 @@
 <div id="authScreen" class="auth-wrap" style="display:none">
   <div class="auth-card">
     <div class="auth-logo">Essensplaner</div>
-    <div class="auth-sub">Plane deine Mahlzeiten für die Woche</div>
+    <div class="auth-sub">Plane deine Mahlzeiten f&#252;r die Woche</div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="showTab('login')">Anmelden</button>
       <button class="auth-tab" onclick="showTab('register')">Registrieren</button>
     </div>
     <div id="authErr" class="err"></div>
     <div id="loginForm">
-      <div class="fg"><label>Benutzername</label><input type="text" id="lUser" placeholder="dein_name" /></div>
-      <div class="fg"><label>Passwort</label><input type="password" id="lPass" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" onkeydown="if(event.key==='Enter')doLogin()" /></div>
+      <div class="fg"><label>Benutzername</label><input type="text" id="lUser" placeholder="dein_name"/></div>
+      <div class="fg"><label>Passwort</label><input type="password" id="lPass" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" onkeydown="if(event.key==='Enter')doLogin()"/></div>
       <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Anmelden</button>
     </div>
     <div id="regForm" style="display:none">
-      <div class="fg"><label>Benutzername</label><input type="text" id="rUser" placeholder="dein_name" /></div>
-      <div class="fg"><label>Passwort</label><input type="password" id="rPass" placeholder="min. 6 Zeichen" /></div>
-      <div class="fg"><label>Passwort bestätigen</label><input type="password" id="rPass2" placeholder="Wiederholen" onkeydown="if(event.key==='Enter')doRegister()" /></div>
+      <div class="fg"><label>Benutzername</label><input type="text" id="rUser" placeholder="dein_name"/></div>
+      <div class="fg"><label>Passwort</label><input type="password" id="rPass" placeholder="min. 6 Zeichen"/></div>
+      <div class="fg"><label>Passwort best&#228;tigen</label><input type="password" id="rPass2" placeholder="Wiederholen" onkeydown="if(event.key==='Enter')doRegister()"/></div>
       <button class="btn btn-primary" id="registerBtn" onclick="doRegister()">Registrieren</button>
     </div>
   </div>
@@ -279,16 +256,16 @@
       <div id="recipeFormWrap" style="display:none">
         <div class="recipe-form">
           <h3 id="recipeFormTitle">Neues Rezept</h3>
-          <input type="hidden" id="recipeEditId" />
-          <div class="fg"><label>Name</label><input type="text" id="rName" placeholder="z.B. Spaghetti Bolognese" /></div>
+          <input type="hidden" id="recipeEditId"/>
+          <div class="fg"><label>Name</label><input type="text" id="rName" placeholder="z.B. Spaghetti Bolognese"/></div>
           <div class="fg"><label>Beschreibung (optional)</label><textarea id="rDesc" rows="3" placeholder="Zubereitung, Tipps ..."></textarea></div>
           <div class="fg">
             <label>Zutaten</label>
             <div class="ing-list-edit" id="ingListEdit"></div>
             <div class="ing-input-row">
-              <input type="text" id="ingInput" placeholder="Zutat ..." onkeydown="if(event.key==='Enter'){event.preventDefault();addIngredientToForm()}" />
-              <input type="text" id="ingQtyInput" class="qty-inp" placeholder="Menge" onkeydown="if(event.key==='Enter'){event.preventDefault();addIngredientToForm()}" />
-              <button class="btn btn-outline btn-sm" onclick="addIngredientToForm()">+ Hinzufügen</button>
+              <input type="text" id="ingInput" placeholder="Zutat ..." onkeydown="if(event.key==='Enter'){event.preventDefault();addIngredientToForm()}"/>
+              <input type="text" id="ingQtyInput" class="qty-inp" placeholder="Menge" onkeydown="if(event.key==='Enter'){event.preventDefault();addIngredientToForm()}"/>
+              <button class="btn btn-outline btn-sm" onclick="addIngredientToForm()">+ Hinzuf&#252;gen</button>
             </div>
           </div>
           <div style="display:flex;gap:.5rem">
@@ -305,21 +282,21 @@
         <div class="settings-section">Account</div>
         <div class="settings-row">
           <div class="settings-label">Benutzername</div>
-          <div class="settings-value" id="settingsUsername"></div>
+          <div id="settingsUsername" style="font-weight:700"></div>
         </div>
         <div class="settings-row">
           <div class="settings-label">Passwort</div>
-          <div class="settings-pw-wrap">
-            <span class="settings-pw-dots" id="settingsPwDisplay">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
+          <div style="display:flex;align-items:center;gap:.5rem;flex:1;justify-content:flex-end">
+            <span id="settingsPwDisplay" style="font-size:1rem;letter-spacing:2px">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
             <button class="btn btn-outline btn-sm" id="settingsPwToggleBtn" onclick="toggleShowPw()">Anzeigen</button>
-            <button class="btn btn-outline btn-sm" onclick="toggleChangePwForm()">Ändern</button>
+            <button class="btn btn-outline btn-sm" onclick="toggleChangePwForm()">&#196;ndern</button>
           </div>
         </div>
-        <div id="changePwForm" style="display:none" class="settings-changepw">
+        <div id="changePwForm" style="display:none;padding:.9rem 1.25rem;border-top:1px solid var(--border)">
           <div id="changePwErr" class="err"></div>
-          <div class="fg"><label>Aktuelles Passwort</label><input type="password" id="currentPw" placeholder="Aktuelles Passwort" /></div>
-          <div class="fg"><label>Neues Passwort</label><input type="password" id="newPw1" placeholder="Neues Passwort (min. 6 Zeichen)" /></div>
-          <div class="fg"><label>Passwort bestätigen</label><input type="password" id="newPw2" placeholder="Wiederholen" onkeydown="if(event.key==='Enter')saveNewPw()" /></div>
+          <div class="fg"><label>Aktuelles Passwort</label><input type="password" id="currentPw" placeholder="Aktuelles Passwort"/></div>
+          <div class="fg"><label>Neues Passwort</label><input type="password" id="newPw1" placeholder="Neues Passwort (min. 6 Zeichen)"/></div>
+          <div class="fg"><label>Passwort best&#228;tigen</label><input type="password" id="newPw2" placeholder="Wiederholen" onkeydown="if(event.key==='Enter')saveNewPw()"/></div>
           <div style="display:flex;gap:.5rem">
             <button class="btn btn-primary btn-sm" style="width:auto" onclick="saveNewPw()">Speichern</button>
             <button class="btn btn-outline btn-sm" onclick="toggleChangePwForm()">Abbrechen</button>
@@ -328,23 +305,14 @@
       </div>
       <div class="settings-card">
         <div class="settings-row">
-          <div>
-            <div class="settings-label">Dark Mode</div>
-            <div class="settings-sub">Dunkles Farbschema verwenden</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="darkToggle" onchange="toggleDark(this.checked)" />
-            <span class="toggle-slider"></span>
-          </label>
+          <div><div style="font-size:.95rem;font-weight:500">Dark Mode</div><div style="font-size:.8rem;color:var(--muted);margin-top:.15rem">Dunkles Farbschema verwenden</div></div>
+          <label class="toggle"><input type="checkbox" id="darkToggle" onchange="toggleDark(this.checked)"/><span class="toggle-slider"></span></label>
         </div>
       </div>
       <div class="settings-card">
         <div class="settings-row">
-          <div>
-            <div class="settings-label">Account löschen</div>
-            <div class="settings-sub">Löscht deinen Account und alle Daten unwiderruflich</div>
-          </div>
-          <button class="btn btn-danger btn-sm" onclick="deleteAccount()">Account löschen</button>
+          <div><div style="font-size:.95rem;font-weight:500">Account l&#246;schen</div><div style="font-size:.8rem;color:var(--muted);margin-top:.15rem">L&#246;scht deinen Account unwiderruflich</div></div>
+          <button class="btn btn-danger btn-sm" onclick="deleteAccount()">Account l&#246;schen</button>
         </div>
       </div>
     </div>
@@ -354,28 +322,28 @@
       <div class="settings-card" style="margin-top:1rem">
         <div class="settings-section">Neue Gruppe erstellen</div>
         <div style="padding:1rem 1.25rem">
-          <div class="fg"><label>Gruppenname</label><input type="text" id="newGroupName" placeholder="z.B. Familie Müller" /></div>
+          <div class="fg"><label>Gruppenname</label><input type="text" id="newGroupName" placeholder="z.B. Familie M&#252;ller"/></div>
           <button class="btn btn-primary btn-sm" style="width:auto" onclick="createGroup()">Gruppe erstellen</button>
         </div>
       </div>
       <div class="settings-card" style="margin-top:1rem">
         <div class="settings-section">Bestehender Gruppe beitreten</div>
         <div style="padding:1rem 1.25rem">
-          <div class="fg"><label>Einladungscode</label><input type="text" id="joinCodeInput" placeholder="z.B. ABC123" style="text-transform:uppercase;letter-spacing:2px" /></div>
+          <div class="fg"><label>Einladungscode</label><input type="text" id="joinCodeInput" placeholder="z.B. ABC123" style="text-transform:uppercase;letter-spacing:2px"/></div>
           <div id="groupJoinErr" class="err"></div>
           <button class="btn btn-primary btn-sm" style="width:auto" onclick="joinGroup()">Beitreten</button>
         </div>
       </div>
       <div class="settings-card" style="margin-top:1rem">
-        <div class="settings-section">Rollenübersicht</div>
+        <div class="settings-section">Rolenübersicht</div>
         <table class="perm-table">
           <tr><th>Aktion</th><th>Owner</th><th>Admin</th><th>Mitglied</th><th>Zuschauer</th></tr>
           <tr><td>Mahlzeiten bearbeiten</td><td class="perm-check">&#10003;</td><td class="perm-check">&#10003;</td><td class="perm-check">&#10003;</td><td class="perm-cross">-</td></tr>
           <tr><td>Einkaufsliste verwalten</td><td class="perm-check">&#10003;</td><td class="perm-check">&#10003;</td><td class="perm-check">&#10003;</td><td class="perm-cross">-</td></tr>
-          <tr><td>Rezepte hinzufügen/löschen</td><td class="perm-check">&#10003;</td><td class="perm-check">&#10003;</td><td class="perm-cross">-</td><td class="perm-cross">-</td></tr>
+          <tr><td>Rezepte hinzuf&#252;gen/l&#246;schen</td><td class="perm-check">&#10003;</td><td class="perm-check">&#10003;</td><td class="perm-cross">-</td><td class="perm-cross">-</td></tr>
           <tr><td>Mitglieder einladen</td><td class="perm-check">&#10003;</td><td class="perm-check">&#10003;</td><td class="perm-cross">-</td><td class="perm-cross">-</td></tr>
           <tr><td>Rollen vergeben</td><td class="perm-check">&#10003;</td><td>Teilweise</td><td class="perm-cross">-</td><td class="perm-cross">-</td></tr>
-          <tr><td>Gruppe löschen</td><td class="perm-check">&#10003;</td><td class="perm-cross">-</td><td class="perm-cross">-</td><td class="perm-cross">-</td></tr>
+          <tr><td>Gruppe l&#246;schen</td><td class="perm-check">&#10003;</td><td class="perm-cross">-</td><td class="perm-cross">-</td><td class="perm-cross">-</td></tr>
         </table>
       </div>
     </div>
@@ -384,7 +352,7 @@
 
 <div id="ingModal" class="modal-overlay" style="display:none" onclick="closeIngModal(event)">
   <div class="modal-box">
-    <div class="modal-title" id="ingModalTitle">Zutaten auswählen</div>
+    <div class="modal-title" id="ingModalTitle">Zutaten ausw&#228;hlen</div>
     <div class="modal-ing-list" id="ingModalList"></div>
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" onclick="closeIngModal()">Abbrechen</button>
@@ -394,650 +362,380 @@
 </div>
 
 <script>
-window.onerror = function(msg, src, line) {
-  var dbg = document.getElementById('loadingDebug');
-  if (dbg) { dbg.textContent = 'Fehler: ' + msg + (src ? ' (' + src.split('/').pop() + ':' + line + ')' : ''); dbg.style.display = 'block'; }
-};
-window.addEventListener('unhandledrejection', function(e) {
-  var dbg = document.getElementById('loadingDebug');
-  if (dbg) { dbg.textContent = 'Fehler: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason)); dbg.style.display = 'block'; }
-});
-setTimeout(function() {
-  var ls = document.getElementById('loadingScreen');
-  if (ls && ls.style.display !== 'none') {
-    ls.style.display = 'none';
-    document.getElementById('authScreen').style.display = 'flex';
-    var dbg = document.getElementById('loadingDebug');
-    if (dbg) { dbg.textContent = 'Firebase Timeout. Bitte Internetverbindung prüfen.'; dbg.style.display = 'block'; }
-  }
-}, 8000);
-setTimeout(function() {
-  var ls = document.getElementById('loadingScreen');
-  var dbg = document.getElementById('loadingDebug');
-  if (ls && ls.style.display !== 'none' && dbg) {
-    dbg.textContent = 'Firebase antwortet nicht – bitte Internetverbindung prüfen. Login erscheint gleich ...';
-    dbg.style.display = 'block';
-  }
-}, 2000);
+window.onerror=function(msg,src,line){var d=document.getElementById('loadingDebug');if(d){d.textContent='Fehler: '+msg+(src?' ('+src.split('/').pop()+':'+line+')':'');d.style.display='block';}};
+window.addEventListener('unhandledrejection',function(e){var d=document.getElementById('loadingDebug');if(d){d.textContent='Fehler: '+(e.reason&&e.reason.message?e.reason.message:String(e.reason));d.style.display='block';}});
+setTimeout(function(){var ls=document.getElementById('loadingScreen');if(ls&&ls.style.display!=='none'){ls.style.display='none';document.getElementById('authScreen').style.display='flex';}},8000);
+setTimeout(function(){var ls=document.getElementById('loadingScreen'),d=document.getElementById('loadingDebug');if(ls&&ls.style.display!=='none'&&d){d.textContent='Firebase antwortet nicht - bitte Internetverbindung prüfen...';d.style.display='block';}},2000);
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script>
-var firebaseConfig = {
-  apiKey: "AIzaSyBqYqgPi_qeSxhmVpeDZcLd8Hl6OotdA_I",
-  authDomain: "memorydeck-af728.firebaseapp.com",
-  projectId: "memorydeck-af728",
-  storageBucket: "memorydeck-af728.firebasestorage.app",
-  messagingSenderId: "1077936268943",
-  appId: "1:1077936268943:web:9bf39e8a18f3f79068b2fa"
-};
-firebase.initializeApp(firebaseConfig);
-var auth = firebase.auth();
-var db   = firebase.firestore();
+firebase.initializeApp({apiKey:"AIzaSyBqYqgPi_qeSxhmVpeDZcLd8Hl6OotdA_I",authDomain:"memorydeck-af728.firebaseapp.com",projectId:"memorydeck-af728",storageBucket:"memorydeck-af728.firebasestorage.app",messagingSenderId:"1077936268943",appId:"1:1077936268943:web:9bf39e8a18f3f79068b2fa"});
+var auth=firebase.auth(),db=firebase.firestore();
+var DAYS=['Mo','Di','Mi','Do','Fr','Sa','So'];
+var MEALS=['Fr\u00fchst\u00fcck','Mittagessen','Abendessen'];
+var FAKE_DOMAIN='@essensplaner.app';
+var currentUser=null,currentUid=null,weekOffset=0,currentView='week';
+var appData={meals:{},shopping:[],checked:{},recipes:[],mealRecipes:{}};
+var _cachedPw='',_pwVisible=false;
+var currentGroupId=null,currentGroupRole=null,currentGroupName='',userGroups=[];
 
-var DAYS  = ['Mo','Di','Mi','Do','Fr','Sa','So'];
-var MEALS = ['Fruehstueck','Mittagessen','Abendessen'];
-var FAKE_DOMAIN = '@essensplaner.app';
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function monday(o){o=o||0;var d=new Date(),dow=d.getDay();d.setDate(d.getDate()+(dow===0?-6:1-dow)+o*7);d.setHours(0,0,0,0);return d;}
+function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function dateFmt(d){return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});}
+function todayKey(){return dateKey(new Date());}
+function userRef(){return currentGroupId?db.collection('groups').doc(currentGroupId).collection('data').doc('main'):db.collection('users').doc(currentUid).collection('data').doc('main');}
 
-var currentUser      = null;
-var currentUid       = null;
-var weekOffset       = 0;
-var currentView      = 'week';
-var appData          = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
-var _cachedPw        = '';
-var _pwVisible       = false;
-var currentGroupId   = null;
-var currentGroupRole = null;
-var currentGroupName = '';
-var userGroups       = [];
-
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function monday(offset) {
-  offset = offset || 0;
-  var d = new Date();
-  var dow = d.getDay();
-  d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow) + offset * 7);
-  d.setHours(0, 0, 0, 0);
-  return d;
+async function loadData(){
+  var doc=await userRef().get();
+  if(doc.exists){
+    appData=Object.assign({meals:{},shopping:[],checked:{},recipes:[],mealRecipes:{}},doc.data());
+    appData.recipes=appData.recipes.map(function(r){return Object.assign({},r,{ingredients:(r.ingredients||[]).map(function(i){return typeof i==='string'?{name:i,qty:''}:i;})});});
+    appData.shopping=appData.shopping.map(function(x){return typeof x==='object'?Object.assign({qty:''},x):{name:String(x),qty:'',done:false};});
+  }else{appData={meals:{},shopping:[],checked:{},recipes:[],mealRecipes:{}};}
 }
-function dateKey(d) {
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-}
-function dateFmt(d) { return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }); }
-function todayKey() { return dateKey(new Date()); }
+function parseQty(s){s=(s||'').trim();var m=s.match(/^(\d+(?:[.,]\d+)?)\s*(.*)/);if(m)return{amount:parseFloat(m[1].replace(',','.')),unit:m[2].trim().toLowerCase()};return{amount:null,unit:s.toLowerCase()};}
+function combineQty(qa,qb){if(!qa)return qb||'';if(!qb)return qa||'';var a=parseQty(qa),b=parseQty(qb);if(a.amount!==null&&b.amount!==null&&a.unit===b.unit){var s=+(a.amount+b.amount).toFixed(4).replace(/\.?0+$/,'');return s+(a.unit?' '+a.unit:'');}return qa+' + '+qb;}
+function addToShopping(name,qty){var ex=appData.shopping.find(function(x){return x.name.toLowerCase()===name.toLowerCase();});if(ex){ex.qty=combineQty(ex.qty,qty||'');}else{appData.shopping.push({name:name,qty:qty||'',done:false});}}
+function saveData(){userRef().set(appData).catch(console.error);}
+function getMeal(date,mi){return appData.meals[date+'_'+mi]||'';}
+function setMeal(date,mi,val){appData.meals[date+'_'+mi]=val;saveData();}
 
-function userRef() {
-  if (currentGroupId) return db.collection('groups').doc(currentGroupId).collection('data').doc('main');
-  return db.collection('users').doc(currentUid).collection('data').doc('main');
-}
+function showTab(tab){document.getElementById('loginForm').style.display=tab==='login'?'':'none';document.getElementById('regForm').style.display=tab==='register'?'':'none';document.getElementById('authErr').style.display='none';document.querySelectorAll('.auth-tab').forEach(function(el,i){el.classList.toggle('active',i===(tab==='login'?0:1));});}
+function authErr(msg){var el=document.getElementById('authErr');el.textContent=msg;el.style.display='block';}
+function setBusy(id,busy){var btn=document.getElementById(id);btn.disabled=busy;btn.textContent=busy?'Bitte warten ...':(id==='loginBtn'?'Anmelden':'Registrieren');}
 
-async function loadData() {
-  var doc = await userRef().get();
-  if (doc.exists) {
-    appData = Object.assign({ meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} }, doc.data());
-    appData.recipes = appData.recipes.map(function(r) {
-      return Object.assign({}, r, { ingredients: (r.ingredients || []).map(function(ing) { return typeof ing === 'string' ? { name: ing, qty: '' } : ing; }) });
-    });
-    appData.shopping = appData.shopping.map(function(item) {
-      return typeof item === 'object' ? Object.assign({ qty: '' }, item) : { name: String(item), qty: '', done: false };
-    });
-  } else {
-    appData = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
+async function doLogin(){
+  var user=document.getElementById('lUser').value.trim().toLowerCase();
+  var pass=document.getElementById('lPass').value;
+  if(!user||!pass)return authErr('Bitte alle Felder ausf\u00fcllen.');
+  if(!/^[a-z0-9_]+$/.test(user))return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
+  setBusy('loginBtn',true);
+  var timeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},10000);});
+  try{await Promise.race([auth.signInWithEmailAndPassword(user+FAKE_DOMAIN,pass),timeout]);}
+  catch(e){
+    if(e.message==='timeout')authErr('Keine Verbindung. Bitte Internetverbindung pr\u00fcfen.');
+    else if(e.code==='auth/user-not-found'||e.code==='auth/wrong-password'||e.code==='auth/invalid-credential')authErr('Benutzername oder Passwort falsch.');
+    else authErr('Fehler: '+e.message);
+    setBusy('loginBtn',false);
   }
 }
-
-function parseQty(s) {
-  s = (s || '').trim();
-  var m = s.match(/^(\d+(?:[.,]\d+)?)\s*(.*)/);
-  if (m) return { amount: parseFloat(m[1].replace(',','.')), unit: m[2].trim().toLowerCase() };
-  return { amount: null, unit: s.toLowerCase() };
-}
-function combineQty(qa, qb) {
-  if (!qa) return qb || '';
-  if (!qb) return qa || '';
-  var a = parseQty(qa), b = parseQty(qb);
-  if (a.amount !== null && b.amount !== null && a.unit === b.unit) {
-    var sum = +(a.amount + b.amount).toFixed(4).replace(/\.?0+$/, '');
-    return sum + (a.unit ? ' ' + a.unit : '');
-  }
-  return qa + ' + ' + qb;
-}
-function addToShopping(name, qty) {
-  var existing = appData.shopping.find(function(x) { return x.name.toLowerCase() === name.toLowerCase(); });
-  if (existing) { existing.qty = combineQty(existing.qty, qty || ''); }
-  else { appData.shopping.push({ name: name, qty: qty || '', done: false }); }
-}
-function saveData() { userRef().set(appData).catch(console.error); }
-function getMeal(date, mi) { return appData.meals[date + '_' + mi] || ''; }
-function setMeal(date, mi, val) { appData.meals[date + '_' + mi] = val; saveData(); }
-
-function showTab(tab) {
-  document.getElementById('loginForm').style.display = tab === 'login' ? '' : 'none';
-  document.getElementById('regForm').style.display   = tab === 'register' ? '' : 'none';
-  document.getElementById('authErr').style.display   = 'none';
-  document.querySelectorAll('.auth-tab').forEach(function(el, i) { el.classList.toggle('active', i === (tab === 'login' ? 0 : 1)); });
-}
-function authErr(msg) { var el = document.getElementById('authErr'); el.textContent = msg; el.style.display = 'block'; }
-function setBusy(btnId, busy) {
-  var btn = document.getElementById(btnId);
-  btn.disabled = busy;
-  btn.textContent = busy ? 'Bitte warten ...' : (btnId === 'loginBtn' ? 'Anmelden' : 'Registrieren');
+async function doRegister(){
+  var user=document.getElementById('rUser').value.trim().toLowerCase();
+  var pass=document.getElementById('rPass').value,pass2=document.getElementById('rPass2').value;
+  if(!user||!pass||!pass2)return authErr('Bitte alle Felder ausf\u00fcllen.');
+  if(!/^[a-z0-9_]+$/.test(user))return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
+  if(pass!==pass2)return authErr('Passw\u00f6rter stimmen nicht \u00fcberein.');
+  if(pass.length<6)return authErr('Passwort muss mindestens 6 Zeichen haben.');
+  setBusy('registerBtn',true);
+  try{var cred=await auth.createUserWithEmailAndPassword(user+FAKE_DOMAIN,pass);await db.collection('users').doc(cred.user.uid).set({username:user,password:pass});}
+  catch(e){authErr(e.code==='auth/email-already-in-use'?'Benutzername bereits vergeben.':'Fehler: '+e.message);setBusy('registerBtn',false);}
 }
 
-async function doLogin() {
-  var user = document.getElementById('lUser').value.trim().toLowerCase();
-  var pass = document.getElementById('lPass').value;
-  if (!user || !pass) return authErr('Bitte alle Felder ausfüllen.');
-  if (!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
-  setBusy('loginBtn', true);
-  var timeout = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 10000); });
-  try {
-    await Promise.race([auth.signInWithEmailAndPassword(user + FAKE_DOMAIN, pass), timeout]);
-  } catch(e) {
-    if (e.message === 'timeout') { authErr('Keine Verbindung zu Firebase. Bitte Internetverbindung prüfen.'); }
-    else if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') { authErr('Benutzername oder Passwort falsch.'); }
-    else { authErr('Fehler: ' + e.message); }
-    setBusy('loginBtn', false);
-  }
-}
-
-async function doRegister() {
-  var user  = document.getElementById('rUser').value.trim().toLowerCase();
-  var pass  = document.getElementById('rPass').value;
-  var pass2 = document.getElementById('rPass2').value;
-  if (!user || !pass || !pass2) return authErr('Bitte alle Felder ausfüllen.');
-  if (!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
-  if (pass !== pass2) return authErr('Passwörter stimmen nicht überein.');
-  if (pass.length < 6) return authErr('Passwort muss mindestens 6 Zeichen haben.');
-  setBusy('registerBtn', true);
-  try {
-    var cred = await auth.createUserWithEmailAndPassword(user + FAKE_DOMAIN, pass);
-    await db.collection('users').doc(cred.user.uid).set({ username: user, password: pass });
-  } catch(e) {
-    authErr(e.code === 'auth/email-already-in-use' ? 'Benutzername bereits vergeben.' : 'Fehler: ' + e.message);
-    setBusy('registerBtn', false);
-  }
-}
-
-async function startSession(uid, username) {
-  currentUid  = uid;
-  currentUser = username;
-  var uDoc = await db.collection('users').doc(uid).get();
-  var groupIds = [];
-  if (uDoc.exists) {
-    var d = uDoc.data();
-    if (d.groupId && !d.groupIds) {
-      groupIds = [d.groupId];
-      await db.collection('users').doc(uid).update({ groupIds: [d.groupId], groupId: firebase.firestore.FieldValue.delete() });
-    } else { groupIds = d.groupIds || []; }
-  }
-  userGroups = [];
-  var validIds = [];
-  for (var i = 0; i < groupIds.length; i++) {
-    var gDoc = await db.collection('groups').doc(groupIds[i]).get();
-    if (gDoc.exists && gDoc.data().members && gDoc.data().members[uid]) {
-      userGroups.push({ id: groupIds[i], name: gDoc.data().name, role: gDoc.data().members[uid].role });
-      validIds.push(groupIds[i]);
-    }
-  }
-  if (validIds.length !== groupIds.length) await db.collection('users').doc(uid).update({ groupIds: validIds });
-  currentGroupId = null; currentGroupRole = null; currentGroupName = '';
+async function startSession(uid,username){
+  currentUid=uid;currentUser=username;
+  var uDoc=await db.collection('users').doc(uid).get(),groupIds=[];
+  if(uDoc.exists){var d=uDoc.data();if(d.groupId&&!d.groupIds){groupIds=[d.groupId];await db.collection('users').doc(uid).update({groupIds:[d.groupId],groupId:firebase.firestore.FieldValue.delete()});}else{groupIds=d.groupIds||[];}}
+  userGroups=[];var validIds=[];
+  for(var i=0;i<groupIds.length;i++){var gDoc=await db.collection('groups').doc(groupIds[i]).get();if(gDoc.exists&&gDoc.data().members&&gDoc.data().members[uid]){userGroups.push({id:groupIds[i],name:gDoc.data().name,role:gDoc.data().members[uid].role});validIds.push(groupIds[i]);}}
+  if(validIds.length!==groupIds.length)await db.collection('users').doc(uid).update({groupIds:validIds});
+  currentGroupId=null;currentGroupRole=null;currentGroupName='';
   await loadData();
-  document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('appScreen').style.display  = '';
-  document.getElementById('navName').textContent = username;
-  updateContextSwitcher();
-  renderPlan();
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('appScreen').style.display='';
+  document.getElementById('navName').textContent=username;
+  updateContextSwitcher();renderPlan();
 }
-
-function showAuthScreen() {
-  currentUid = null; currentUser = null; currentGroupId = null; currentGroupRole = null; currentGroupName = ''; userGroups = [];
-  appData = { meals: {}, shopping: [], checked: {} };
-  document.getElementById('appScreen').style.display  = 'none';
-  document.getElementById('authScreen').style.display = 'flex';
-  setBusy('loginBtn', false); setBusy('registerBtn', false);
+function showAuthScreen(){
+  currentUid=null;currentUser=null;currentGroupId=null;currentGroupRole=null;currentGroupName='';userGroups=[];
+  appData={meals:{},shopping:[],checked:{}};
+  document.getElementById('appScreen').style.display='none';
+  document.getElementById('authScreen').style.display='flex';
+  setBusy('loginBtn',false);setBusy('registerBtn',false);
 }
-function doLogout() { auth.signOut(); }
+function doLogout(){auth.signOut();}
+function canEdit(){return!currentGroupId||['owner','admin','member'].indexOf(currentGroupRole)!==-1;}
+function canManageRecipes(){return!currentGroupId||['owner','admin'].indexOf(currentGroupRole)!==-1;}
+function canManageGroup(){return['owner','admin'].indexOf(currentGroupRole)!==-1;}
 
-function canEdit()          { return !currentGroupId || ['owner','admin','member'].indexOf(currentGroupRole) !== -1; }
-function canManageRecipes() { return !currentGroupId || ['owner','admin'].indexOf(currentGroupRole) !== -1; }
-function canManageGroup()   { return ['owner','admin'].indexOf(currentGroupRole) !== -1; }
-
-auth.onAuthStateChanged(async function(firebaseUser) {
-  document.getElementById('loadingScreen').style.display = 'none';
-  if (firebaseUser) {
-    var profileDoc = await db.collection('users').doc(firebaseUser.uid).get();
-    var username = profileDoc.exists ? profileDoc.data().username : firebaseUser.email.split('@')[0];
-    _cachedPw = profileDoc.exists ? (profileDoc.data().password || '') : '';
-    await startSession(firebaseUser.uid, username);
-  } else { showAuthScreen(); }
+auth.onAuthStateChanged(async function(fu){
+  document.getElementById('loadingScreen').style.display='none';
+  if(fu){
+    var pd=await db.collection('users').doc(fu.uid).get();
+    var username=pd.exists?pd.data().username:fu.email.split('@')[0];
+    _cachedPw=pd.exists?(pd.data().password||''):'';
+    await startSession(fu.uid,username);
+  }else{showAuthScreen();}
 });
 
-function toggleShowPw() {
-  _pwVisible = !_pwVisible;
-  document.getElementById('settingsPwDisplay').textContent = _pwVisible ? (_cachedPw || '(nicht verfügbar)') : '############';
-  document.getElementById('settingsPwToggleBtn').textContent = _pwVisible ? 'Verbergen' : 'Anzeigen';
-}
-function toggleChangePwForm() {
-  var form = document.getElementById('changePwForm');
-  var open = form.style.display === 'none';
-  form.style.display = open ? '' : 'none';
-  if (open) { document.getElementById('currentPw').value = ''; document.getElementById('newPw1').value = ''; document.getElementById('newPw2').value = ''; document.getElementById('changePwErr').style.display = 'none'; document.getElementById('currentPw').focus(); }
-}
-async function saveNewPw() {
-  var currentPw = document.getElementById('currentPw').value;
-  var pw1 = document.getElementById('newPw1').value;
-  var pw2 = document.getElementById('newPw2').value;
-  var errEl = document.getElementById('changePwErr');
-  errEl.style.display = 'none';
-  if (!currentPw || !pw1 || !pw2) { errEl.textContent = 'Bitte alle Felder ausfüllen.'; errEl.style.display = 'block'; return; }
-  if (pw1.length < 6) { errEl.textContent = 'Passwort muss mindestens 6 Zeichen haben.'; errEl.style.display = 'block'; return; }
-  if (pw1 !== pw2) { errEl.textContent = 'Passwörter stimmen nicht überein.'; errEl.style.display = 'block'; return; }
-  try {
-    var credential = firebase.auth.EmailAuthProvider.credential(currentUser + FAKE_DOMAIN, currentPw);
-    await auth.currentUser.reauthenticateWithCredential(credential);
-    await auth.currentUser.updatePassword(pw1);
-    await db.collection('users').doc(currentUid).update({ password: pw1 });
-    _cachedPw = pw1;
-    if (_pwVisible) document.getElementById('settingsPwDisplay').textContent = pw1;
-    toggleChangePwForm();
-    alert('Passwort erfolgreich geändert.');
-  } catch(e) {
-    errEl.textContent = (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') ? 'Aktuelles Passwort ist falsch.' : 'Fehler: ' + e.message;
-    errEl.style.display = 'block';
-  }
+function toggleShowPw(){_pwVisible=!_pwVisible;document.getElementById('settingsPwDisplay').textContent=_pwVisible?(_cachedPw||'(nicht verf\u00fcgbar)'):'############';document.getElementById('settingsPwToggleBtn').textContent=_pwVisible?'Verbergen':'Anzeigen';}
+function toggleChangePwForm(){var f=document.getElementById('changePwForm'),open=f.style.display==='none';f.style.display=open?'':'none';if(open){document.getElementById('currentPw').value='';document.getElementById('newPw1').value='';document.getElementById('newPw2').value='';document.getElementById('changePwErr').style.display='none';document.getElementById('currentPw').focus();}}
+async function saveNewPw(){
+  var cp=document.getElementById('currentPw').value,p1=document.getElementById('newPw1').value,p2=document.getElementById('newPw2').value,errEl=document.getElementById('changePwErr');
+  errEl.style.display='none';
+  if(!cp||!p1||!p2){errEl.textContent='Bitte alle Felder ausf\u00fcllen.';errEl.style.display='block';return;}
+  if(p1.length<6){errEl.textContent='Passwort muss mindestens 6 Zeichen haben.';errEl.style.display='block';return;}
+  if(p1!==p2){errEl.textContent='Passw\u00f6rter stimmen nicht \u00fcberein.';errEl.style.display='block';return;}
+  try{
+    var cred=firebase.auth.EmailAuthProvider.credential(currentUser+FAKE_DOMAIN,cp);
+    await auth.currentUser.reauthenticateWithCredential(cred);
+    await auth.currentUser.updatePassword(p1);
+    await db.collection('users').doc(currentUid).update({password:p1});
+    _cachedPw=p1;if(_pwVisible)document.getElementById('settingsPwDisplay').textContent=p1;
+    toggleChangePwForm();alert('Passwort erfolgreich ge\u00e4ndert.');
+  }catch(e){errEl.textContent=(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential')?'Aktuelles Passwort ist falsch.':'Fehler: '+e.message;errEl.style.display='block';}
 }
 
-function applyTheme(dark) { document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light'); localStorage.setItem('ep_theme', dark ? 'dark' : 'light'); }
-function toggleDark(dark) { applyTheme(dark); }
-(function() { if (localStorage.getItem('ep_theme') === 'dark') applyTheme(true); })();
+function applyTheme(dark){document.documentElement.setAttribute('data-theme',dark?'dark':'light');localStorage.setItem('ep_theme',dark?'dark':'light');}
+function toggleDark(dark){applyTheme(dark);}
+(function(){if(localStorage.getItem('ep_theme')==='dark')applyTheme(true);})();
 
-async function deleteAccount() {
-  if (!confirm('Willst du deinen Account wirklich unwiderruflich löschen?')) return;
-  try {
-    for (var i = 0; i < userGroups.length; i++) {
-      var upd = {}; upd['members.' + currentUid] = firebase.firestore.FieldValue.delete();
-      await db.collection('groups').doc(userGroups[i].id).update(upd);
-    }
+async function deleteAccount(){
+  if(!confirm('Willst du deinen Account wirklich unwiderruflich l\u00f6schen?'))return;
+  try{
+    for(var i=0;i<userGroups.length;i++){var u={};u['members.'+currentUid]=firebase.firestore.FieldValue.delete();await db.collection('groups').doc(userGroups[i].id).update(u);}
     await db.collection('users').doc(currentUid).collection('data').doc('main').delete();
     await db.collection('users').doc(currentUid).delete();
     await auth.currentUser.delete();
-  } catch(e) {
-    alert(e.code === 'auth/requires-recent-login' ? 'Bitte melde dich ab und erneut an.' : 'Fehler: ' + e.message);
-  }
+  }catch(e){alert(e.code==='auth/requires-recent-login'?'Bitte melde dich ab und erneut an.':'Fehler: '+e.message);}
 }
 
-function showPage(name, btn) {
-  document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
-  document.querySelectorAll('.nav-btn').forEach(function(el) { el.classList.remove('active'); });
-  document.getElementById(name + 'Page').classList.add('active');
-  btn.classList.add('active');
-  if (name === 'shopping') renderShopping();
-  if (name === 'recipes')  renderRecipes();
-  if (name === 'group')    renderGroupPage();
-  if (name === 'settings') {
-    document.getElementById('darkToggle').checked = localStorage.getItem('ep_theme') === 'dark';
-    document.getElementById('settingsUsername').textContent = currentUser || '';
-    _pwVisible = false;
-    document.getElementById('settingsPwDisplay').textContent = '############';
-    document.getElementById('settingsPwToggleBtn').textContent = 'Anzeigen';
-    document.getElementById('changePwForm').style.display = 'none';
-  }
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(function(el){el.classList.remove('active');});
+  document.querySelectorAll('.nav-btn').forEach(function(el){el.classList.remove('active');});
+  document.getElementById(name+'Page').classList.add('active');btn.classList.add('active');
+  if(name==='shopping')renderShopping();
+  if(name==='recipes')renderRecipes();
+  if(name==='group')renderGroupPage();
+  if(name==='settings'){document.getElementById('darkToggle').checked=localStorage.getItem('ep_theme')==='dark';document.getElementById('settingsUsername').textContent=currentUser||'';_pwVisible=false;document.getElementById('settingsPwDisplay').textContent='############';document.getElementById('settingsPwToggleBtn').textContent='Anzeigen';document.getElementById('changePwForm').style.display='none';}
 }
+function setView(v){currentView=v;weekOffset=0;['day','week','month'].forEach(function(x){document.getElementById('v'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('active',x===v);});renderPlan();}
+function changeOffset(dir){weekOffset+=dir;renderPlan();}
+function renderPlan(){if(currentView==='week')renderWeek();else if(currentView==='day')renderDay();else renderMonth();}
 
-function setView(v) {
-  currentView = v; weekOffset = 0;
-  ['day','week','month'].forEach(function(x) { document.getElementById('v' + x.charAt(0).toUpperCase() + x.slice(1)).classList.toggle('active', x === v); });
-  renderPlan();
+function renderDay(){
+  var d=new Date();d.setDate(d.getDate()+weekOffset);d.setHours(0,0,0,0);
+  var dk=dateKey(d),isToday=dk===todayKey(),dayIdx=(d.getDay()+6)%7;
+  document.getElementById('planTitle').textContent='Tagesplan';
+  document.getElementById('weekLabel').textContent=weekOffset===0?'Heute':weekOffset===1?'Morgen':weekOffset===-1?'Gestern':DAYS[dayIdx]+', '+dateFmt(d);
+  var view=document.getElementById('planView'),card=document.createElement('div');
+  card.className='day-view-card'+(isToday?' today':'');
+  card.innerHTML='<div class="day-view-head"><div class="day-view-name">'+DAYS[dayIdx]+(isToday?' &#9679;':'')+'</div><div class="day-view-date">'+d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})+'</div></div>'+
+    MEALS.map(function(m,mi){return '<div class="meal-slot" id="slot_'+dk+'_'+mi+'"><div class="meal-type">'+m+'</div><div class="meal-name" onclick="editMeal(\''+dk+'\','+mi+')">'+esc(getMeal(dk,mi))+'</div></div>';}).join('');
+  view.innerHTML='';view.appendChild(card);
 }
-function changeOffset(dir) { weekOffset += dir; renderPlan(); }
-function renderPlan() { if (currentView === 'week') renderWeek(); else if (currentView === 'day') renderDay(); else renderMonth(); }
-
-function renderDay() {
-  var d = new Date(); d.setDate(d.getDate() + weekOffset); d.setHours(0,0,0,0);
-  var dk = dateKey(d); var isToday = dk === todayKey(); var dayIdx = (d.getDay() + 6) % 7;
-  document.getElementById('planTitle').textContent = 'Tagesplan';
-  document.getElementById('weekLabel').textContent = weekOffset === 0 ? 'Heute' : weekOffset === 1 ? 'Morgen' : weekOffset === -1 ? 'Gestern' : DAYS[dayIdx] + ', ' + dateFmt(d);
-  var view = document.getElementById('planView');
-  var card = document.createElement('div');
-  card.className = 'day-view-card' + (isToday ? ' today' : '');
-  card.innerHTML = '<div class="day-view-head"><div class="day-view-name">' + DAYS[dayIdx] + (isToday ? ' &#9679;' : '') + '</div><div class="day-view-date">' + d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}) + '</div></div>' +
-    MEALS.map(function(m, mi) { return '<div class="meal-slot" id="slot_' + dk + '_' + mi + '"><div class="meal-type">' + m + '</div><div class="meal-name" onclick="editMeal(\'' + dk + '\',' + mi + ')">' + esc(getMeal(dk, mi)) + '</div></div>'; }).join('');
-  view.innerHTML = ''; view.appendChild(card);
-}
-
-function renderWeek() {
-  var mon = monday(weekOffset); var sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-  document.getElementById('planTitle').textContent = 'Wochenplan';
-  document.getElementById('weekLabel').textContent = weekOffset === 0 ? 'Diese Woche' : weekOffset === 1 ? 'Naechste Woche' : weekOffset === -1 ? 'Letzte Woche' : dateFmt(mon) + ' - ' + dateFmt(sun);
-  var view = document.getElementById('planView'); var grid = document.createElement('div'); grid.className = 'week-grid';
-  for (var i = 0; i < 7; i++) {
-    var d = new Date(mon); d.setDate(mon.getDate() + i); var dk = dateKey(d); var isToday = dk === todayKey();
-    var card = document.createElement('div'); card.className = 'day-card' + (isToday ? ' today' : '');
-    card.innerHTML = '<div class="day-head"><div class="day-name">' + DAYS[i] + (isToday ? ' &#9679;' : '') + '</div><div class="day-date">' + dateFmt(d) + '</div></div>' +
-      MEALS.map(function(m, mi) { return '<div class="meal-slot" id="slot_' + dk + '_' + mi + '"><div class="meal-type">' + m + '</div><div class="meal-name" onclick="editMeal(\'' + dk + '\',' + mi + ')">' + esc(getMeal(dk, mi)) + '</div>' + mealIngBtn(dk, mi) + '</div>'; }).join('');
+function renderWeek(){
+  var mon=monday(weekOffset),sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  document.getElementById('planTitle').textContent='Wochenplan';
+  document.getElementById('weekLabel').textContent=weekOffset===0?'Diese Woche':weekOffset===1?'N\u00e4chste Woche':weekOffset===-1?'Letzte Woche':dateFmt(mon)+' \u2013 '+dateFmt(sun);
+  var view=document.getElementById('planView'),grid=document.createElement('div');grid.className='week-grid';
+  for(var i=0;i<7;i++){
+    var d=new Date(mon);d.setDate(mon.getDate()+i);var dk=dateKey(d),isToday=dk===todayKey();
+    var card=document.createElement('div');card.className='day-card'+(isToday?' today':'');
+    var idx=i;
+    card.innerHTML='<div class="day-head"><div class="day-name">'+DAYS[i]+(isToday?' &#9679;':'')+'</div><div class="day-date">'+dateFmt(d)+'</div></div>'+
+      MEALS.map(function(m,mi){return '<div class="meal-slot" id="slot_'+dk+'_'+mi+'"><div class="meal-type">'+m+'</div><div class="meal-name" onclick="editMeal(\''+dk+'\','+mi+')">'+esc(getMeal(dk,mi))+'</div>'+mealIngBtn(dk,mi)+'</div>';}).join('');
     grid.appendChild(card);
   }
-  view.innerHTML = ''; view.appendChild(grid);
+  view.innerHTML='';view.appendChild(grid);
 }
-
-function renderMonth() {
-  var now = new Date(); var year = now.getFullYear(); var month = now.getMonth() + weekOffset;
-  var first = new Date(year, month, 1); var last = new Date(year, month + 1, 0);
-  document.getElementById('planTitle').textContent = 'Monatsplan';
-  document.getElementById('weekLabel').textContent = first.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
-  var view = document.getElementById('planView'); view.innerHTML = '';
-  var hdr = document.createElement('div'); hdr.className = 'month-header';
-  DAYS.forEach(function(n) { hdr.innerHTML += '<div class="month-dname">' + n + '</div>'; }); view.appendChild(hdr);
-  var grid = document.createElement('div'); grid.className = 'month-grid';
-  var startDow = (first.getDay() + 6) % 7;
-  for (var i = 0; i < startDow; i++) { grid.appendChild(monthCell(new Date(year, month, 1 - startDow + i), true)); }
-  for (var d = 1; d <= last.getDate(); d++) { grid.appendChild(monthCell(new Date(year, month, d), false)); }
-  var total = startDow + last.getDate(); var remainder = (7 - (total % 7)) % 7;
-  for (var j = 1; j <= remainder; j++) { grid.appendChild(monthCell(new Date(year, month + 1, j), true)); }
+function renderMonth(){
+  var now=new Date(),year=now.getFullYear(),month=now.getMonth()+weekOffset;
+  var first=new Date(year,month,1),last=new Date(year,month+1,0);
+  document.getElementById('planTitle').textContent='Monatsplan';
+  document.getElementById('weekLabel').textContent=first.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+  var view=document.getElementById('planView');view.innerHTML='';
+  var hdr=document.createElement('div');hdr.className='month-header';
+  DAYS.forEach(function(n){hdr.innerHTML+='<div class="month-dname">'+n+'</div>';});view.appendChild(hdr);
+  var grid=document.createElement('div');grid.className='month-grid';
+  var startDow=(first.getDay()+6)%7;
+  for(var i=0;i<startDow;i++)grid.appendChild(monthCell(new Date(year,month,1-startDow+i),true));
+  for(var d=1;d<=last.getDate();d++)grid.appendChild(monthCell(new Date(year,month,d),false));
+  var total=startDow+last.getDate(),rem=(7-(total%7))%7;
+  for(var j=1;j<=rem;j++)grid.appendChild(monthCell(new Date(year,month+1,j),true));
   view.appendChild(grid);
 }
-
-function monthCell(d, otherMonth) {
-  var dk = dateKey(d); var isToday = dk === todayKey();
-  var cell = document.createElement('div');
-  cell.className = 'month-cell' + (isToday ? ' today' : '') + (otherMonth ? ' other-month' : '');
-  var html = '<div class="month-num">' + d.getDate() + (isToday ? '<span class="month-today-badge">Heute</span>' : '') + '</div>';
-  MEALS.forEach(function(m, mi) { var val = getMeal(dk, mi); if (val) html += '<div class="month-meal-dot">' + esc(val) + '</div>'; });
-  cell.innerHTML = html;
-  cell.onclick = function() {
-    var today = new Date(); today.setHours(0,0,0,0); d.setHours(0,0,0,0);
-    weekOffset = Math.round((d - today) / 86400000);
-    ['vWeek','vMonth'].forEach(function(id) { document.getElementById(id).classList.remove('active'); });
-    document.getElementById('vDay').classList.add('active'); currentView = 'day'; renderPlan();
-  };
+function monthCell(d,otherMonth){
+  var dk=dateKey(d),isToday=dk===todayKey();
+  var cell=document.createElement('div');cell.className='month-cell'+(isToday?' today':'')+(otherMonth?' other-month':'');
+  var html='<div class="month-num">'+d.getDate()+(isToday?'<span class="month-today-badge">Heute</span>':'')+'</div>';
+  MEALS.forEach(function(m,mi){var val=getMeal(dk,mi);if(val)html+='<div class="month-meal-dot">'+esc(val)+'</div>';});
+  cell.innerHTML=html;
+  cell.onclick=function(){var today=new Date();today.setHours(0,0,0,0);d.setHours(0,0,0,0);weekOffset=Math.round((d-today)/86400000);document.getElementById('vWeek').classList.remove('active');document.getElementById('vMonth').classList.remove('active');document.getElementById('vDay').classList.add('active');currentView='day';renderPlan();};
   return cell;
 }
+function mealIngBtn(dk,mi){var rid=(appData.mealRecipes||{})[dk+'_'+mi];if(!rid)return'';var rec=(appData.recipes||[]).find(function(r){return r.id===rid;});if(!rec||!rec.ingredients.length)return'';return'<button class="meal-ing-btn" onclick="addRecipeToShop(\''+dk+'\','+mi+',event)">Zutaten zur Einkaufsliste</button>';}
 
-function mealIngBtn(dk, mi) {
-  var rid = (appData.mealRecipes || {})[dk + '_' + mi];
-  if (!rid) return '';
-  var rec = (appData.recipes || []).find(function(r) { return r.id === rid; });
-  if (!rec || !rec.ingredients.length) return '';
-  return '<button class="meal-ing-btn" onclick="addRecipeToShop(\'' + dk + '\',' + mi + ',event)">Zutaten zur Einkaufsliste</button>';
+var _ingModalRecipe=null;
+function addRecipeToShop(dk,mi,e){
+  e.stopPropagation();var rid=(appData.mealRecipes||{})[dk+'_'+mi];var rec=(appData.recipes||[]).find(function(r){return r.id===rid;});
+  if(!rec||!rec.ingredients.length)return;_ingModalRecipe=rec;
+  document.getElementById('ingModalTitle').textContent='Zutaten von "'+rec.name+'"';
+  document.getElementById('ingModalList').innerHTML=rec.ingredients.map(function(ing,i){return'<div class="modal-ing-item"><input type="checkbox" id="ingCb_'+i+'" checked/><span style="flex:1">'+esc(ing.name)+'</span><input type="text" id="ingQtyCb_'+i+'" class="qty-inp" value="'+esc(ing.qty||'')+'" placeholder="Menge"/></div>';}).join('');
+  document.getElementById('ingModal').style.display='flex';
 }
-
-var _ingModalRecipe = null;
-function addRecipeToShop(dk, mi, e) {
-  e.stopPropagation();
-  var rid = (appData.mealRecipes || {})[dk + '_' + mi];
-  var rec = (appData.recipes || []).find(function(r) { return r.id === rid; });
-  if (!rec || !rec.ingredients.length) return;
-  _ingModalRecipe = rec;
-  document.getElementById('ingModalTitle').textContent = 'Zutaten von "' + rec.name + '"';
-  document.getElementById('ingModalList').innerHTML = rec.ingredients.map(function(ing, i) {
-    return '<div class="modal-ing-item"><input type="checkbox" id="ingCb_' + i + '" checked /><span style="flex:1">' + esc(ing.name) + '</span><input type="text" id="ingQtyCb_' + i + '" class="qty-inp" value="' + esc(ing.qty||'') + '" placeholder="Menge" /></div>';
-  }).join('');
-  document.getElementById('ingModal').style.display = 'flex';
-}
-function closeIngModal(e) {
-  if (e && e.target !== document.getElementById('ingModal')) return;
-  document.getElementById('ingModal').style.display = 'none'; _ingModalRecipe = null;
-}
-function confirmIngModal() {
-  if (!_ingModalRecipe) return;
-  _ingModalRecipe.ingredients.forEach(function(ing, i) {
-    var cb = document.getElementById('ingCb_' + i);
-    if (cb && cb.checked) { var qty = document.getElementById('ingQtyCb_' + i); addToShopping(ing.name, qty ? qty.value.trim() : ing.qty || ''); }
-  });
-  saveData(); document.getElementById('ingModal').style.display = 'none'; _ingModalRecipe = null;
+function closeIngModal(e){if(e&&e.target!==document.getElementById('ingModal'))return;document.getElementById('ingModal').style.display='none';_ingModalRecipe=null;}
+function confirmIngModal(){
+  if(!_ingModalRecipe)return;
+  _ingModalRecipe.ingredients.forEach(function(ing,i){var cb=document.getElementById('ingCb_'+i);if(cb&&cb.checked){var q=document.getElementById('ingQtyCb_'+i);addToShopping(ing.name,q?q.value.trim():ing.qty||'');}});
+  saveData();document.getElementById('ingModal').style.display='none';_ingModalRecipe=null;
 }
 
-function editMeal(dk, mi) {
-  if (!canEdit()) return;
-  var slot = document.getElementById('slot_' + dk + '_' + mi);
-  var nameEl = slot.querySelector('.meal-name');
-  if (slot.querySelector('.meal-edit')) return;
-  nameEl.style.display = 'none';
-  var ingBtn = slot.querySelector('.meal-ing-btn'); if (ingBtn) ingBtn.style.display = 'none';
-  var row = document.createElement('div'); row.className = 'meal-edit';
-  row.innerHTML = '<div class="ac-wrap"><input class="meal-input" id="mealInp_' + dk + '_' + mi + '" value="' + esc(getMeal(dk, mi)) + '" placeholder="z.B. Pasta" autocomplete="off" /><div class="ac-dropdown" id="acDrop_' + dk + '_' + mi + '" style="display:none"></div></div><button class="btn btn-primary btn-sm" style="width:auto;flex-shrink:0" onclick="saveMeal(\'' + dk + '\',' + mi + ',this)">&#10003;</button>';
+function editMeal(dk,mi){
+  if(!canEdit())return;var slot=document.getElementById('slot_'+dk+'_'+mi);var nameEl=slot.querySelector('.meal-name');
+  if(slot.querySelector('.meal-edit'))return;nameEl.style.display='none';var ingBtn=slot.querySelector('.meal-ing-btn');if(ingBtn)ingBtn.style.display='none';
+  var row=document.createElement('div');row.className='meal-edit';
+  row.innerHTML='<div class="ac-wrap"><input class="meal-input" id="mealInp_'+dk+'_'+mi+'" value="'+esc(getMeal(dk,mi))+'" placeholder="z.B. Pasta" autocomplete="off"/><div class="ac-dropdown" id="acDrop_'+dk+'_'+mi+'" style="display:none"></div></div><button class="btn btn-primary btn-sm" style="width:auto;flex-shrink:0" onclick="saveMeal(\''+dk+'\','+mi+',this)">&#10003;</button>';
   slot.appendChild(row);
-  var inp = row.querySelector('input'); inp.focus(); inp.select();
-  inp.addEventListener('input', function() { showAC(dk, mi, inp.value); });
-  inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') saveMeal(dk, mi, row.querySelector('button')); if (e.key === 'Escape') cancelEdit(dk, mi); });
+  var inp=row.querySelector('input');inp.focus();inp.select();
+  inp.addEventListener('input',function(){showAC(dk,mi,inp.value);});
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter')saveMeal(dk,mi,row.querySelector('button'));if(e.key==='Escape')cancelEdit(dk,mi);});
 }
-function showAC(dk, mi, val) {
-  var drop = document.getElementById('acDrop_' + dk + '_' + mi);
-  if (!val.trim()) { drop.style.display = 'none'; return; }
-  var matches = (appData.recipes || []).filter(function(r) { return r.name.toLowerCase().indexOf(val.toLowerCase()) !== -1; });
-  if (!matches.length) { drop.style.display = 'none'; return; }
-  drop.innerHTML = matches.map(function(r) { return '<div class="ac-item" onmousedown="pickRecipe(\'' + dk + '\',' + mi + ',\'' + r.id + '\')">' + esc(r.name) + '</div>'; }).join('');
-  drop.style.display = '';
+function showAC(dk,mi,val){
+  var drop=document.getElementById('acDrop_'+dk+'_'+mi);if(!val.trim()){drop.style.display='none';return;}
+  var matches=(appData.recipes||[]).filter(function(r){return r.name.toLowerCase().indexOf(val.toLowerCase())!==-1;});
+  if(!matches.length){drop.style.display='none';return;}
+  drop.innerHTML=matches.map(function(r){return'<div class="ac-item" onmousedown="pickRecipe(\''+dk+'\','+mi+',\''+r.id+'\')">'+esc(r.name)+'</div>';}).join('');
+  drop.style.display='';
 }
-function pickRecipe(dk, mi, rid) {
-  var rec = (appData.recipes || []).find(function(r) { return r.id === rid; });
-  if (!rec) return;
-  document.getElementById('mealInp_' + dk + '_' + mi).value = rec.name;
-  document.getElementById('acDrop_' + dk + '_' + mi).style.display = 'none';
-  if (!appData.mealRecipes) appData.mealRecipes = {};
-  appData.mealRecipes[dk + '_' + mi] = rid;
-}
-function saveMeal(dk, mi, btn) {
-  var inp = btn.closest('.meal-edit').querySelector('input'); var val = inp.value.trim();
-  var rid = (appData.mealRecipes || {})[dk + '_' + mi];
-  if (rid) { var rec = (appData.recipes || []).find(function(r) { return r.id === rid; }); if (!rec || rec.name !== val) delete appData.mealRecipes[dk + '_' + mi]; }
-  setMeal(dk, mi, val); renderPlan();
-}
-function cancelEdit(dk, mi) {
-  var slot = document.getElementById('slot_' + dk + '_' + mi);
-  var edit = slot.querySelector('.meal-edit'); if (edit) edit.remove();
-  slot.querySelector('.meal-name').style.display = '';
-  var ingBtn = slot.querySelector('.meal-ing-btn'); if (ingBtn) ingBtn.style.display = '';
-}
+function pickRecipe(dk,mi,rid){var rec=(appData.recipes||[]).find(function(r){return r.id===rid;});if(!rec)return;document.getElementById('mealInp_'+dk+'_'+mi).value=rec.name;document.getElementById('acDrop_'+dk+'_'+mi).style.display='none';if(!appData.mealRecipes)appData.mealRecipes={};appData.mealRecipes[dk+'_'+mi]=rid;}
+function saveMeal(dk,mi,btn){var inp=btn.closest('.meal-edit').querySelector('input'),val=inp.value.trim();var rid=(appData.mealRecipes||{})[dk+'_'+mi];if(rid){var rec=(appData.recipes||[]).find(function(r){return r.id===rid;});if(!rec||rec.name!==val)delete appData.mealRecipes[dk+'_'+mi];}setMeal(dk,mi,val);renderPlan();}
+function cancelEdit(dk,mi){var slot=document.getElementById('slot_'+dk+'_'+mi),edit=slot.querySelector('.meal-edit');if(edit)edit.remove();slot.querySelector('.meal-name').style.display='';var ingBtn=slot.querySelector('.meal-ing-btn');if(ingBtn)ingBtn.style.display='';}
 
-function renderShopping() {
-  var custom = appData.shopping || []; var el = document.getElementById('sList'); el.innerHTML = '';
-  if (!custom.length) {
-    el.innerHTML = '<div class="empty">Keine Eintraege. Fuege Artikel hinzu oder nutze den Zutaten-Button im Wochenplan.</div>';
-  } else {
-    var active = custom.map(function(x,i){return Object.assign({},x,{i:i});}).filter(function(x){return !x.done;});
-    var done   = custom.map(function(x,i){return Object.assign({},x,{i:i});}).filter(function(x){return x.done;});
-    if (active.length) {
-      el.innerHTML += '<div class="s-section">Einkaufsliste</div>';
-      active.forEach(function(item) { el.innerHTML += '<div class="s-item" id="ci_' + item.i + '"><input type="checkbox" onchange="toggleCustom(' + item.i + ',this)" /><span class="s-text">' + (item.qty ? '<b>' + esc(item.qty) + '</b> ' : '') + esc(item.name) + '</span><button class="s-del" onclick="delCustom(' + item.i + ')" title="Loeschen">&#10005;</button></div>'; });
-    }
-    if (done.length) {
-      el.innerHTML += '<div class="s-section done-section">Erledigt</div>';
-      done.forEach(function(item) { el.innerHTML += '<div class="s-item done"><input type="checkbox" checked onchange="toggleCustom(' + item.i + ',this)" /><span class="s-text">' + (item.qty ? '<b>' + esc(item.qty) + '</b> ' : '') + esc(item.name) + '</span><button class="s-del" onclick="delCustom(' + item.i + ')" title="Loeschen">&#10005;</button></div>'; });
-    }
+function renderShopping(){
+  var custom=appData.shopping||[],el=document.getElementById('sList');el.innerHTML='';
+  if(!custom.length){el.innerHTML='<div class="empty">Keine Eintr\u00e4ge. F\u00fcge Artikel hinzu oder nutze den Zutaten-Button im Wochenplan.</div>';}
+  else{
+    var active=custom.map(function(x,i){return Object.assign({},x,{i:i});}).filter(function(x){return!x.done;});
+    var done=custom.map(function(x,i){return Object.assign({},x,{i:i});}).filter(function(x){return x.done;});
+    if(active.length){el.innerHTML+='<div class="s-section">Einkaufsliste</div>';active.forEach(function(item){el.innerHTML+='<div class="s-item"><input type="checkbox" onchange="toggleCustom('+item.i+',this)"/><span class="s-text">'+(item.qty?'<b>'+esc(item.qty)+'</b> ':'')+esc(item.name)+'</span><button class="s-del" onclick="delCustom('+item.i+')">&#10005;</button></div>';});}
+    if(done.length){el.innerHTML+='<div class="s-section done-section">Erledigt</div>';done.forEach(function(item){el.innerHTML+='<div class="s-item done"><input type="checkbox" checked onchange="toggleCustom('+item.i+',this)"/><span class="s-text">'+(item.qty?'<b>'+esc(item.qty)+'</b> ':'')+esc(item.name)+'</span><button class="s-del" onclick="delCustom('+item.i+')">&#10005;</button></div>';});}
   }
-  el.innerHTML += '<div class="s-add"><input type="text" id="newItem" placeholder="Artikel ..." onkeydown="if(event.key===\'Enter\')addItem()" /><input type="text" id="newItemQty" class="qty-inp" placeholder="Menge" onkeydown="if(event.key===\'Enter\')addItem()" /><button class="btn btn-primary btn-sm" onclick="addItem()">+ Hinzufügen</button></div>';
+  el.innerHTML+='<div class="s-add"><input type="text" id="newItem" placeholder="Artikel ..." onkeydown="if(event.key===\'Enter\')addItem()"/><input type="text" id="newItemQty" class="qty-inp" placeholder="Menge" onkeydown="if(event.key===\'Enter\')addItem()"/><button class="btn btn-primary btn-sm" onclick="addItem()">+ Hinzuf\u00fcgen</button></div>';
 }
-function toggleCustom(i, cb) { appData.shopping[i].done = cb.checked; saveData(); renderShopping(); }
-function delCustom(i) { if (!canEdit()) return; appData.shopping.splice(i, 1); saveData(); renderShopping(); }
-function addItem() {
-  if (!canEdit()) return;
-  var inp = document.getElementById('newItem'); var qtyInp = document.getElementById('newItemQty');
-  var name = inp.value.trim(); if (!name) return;
-  addToShopping(name, qtyInp ? qtyInp.value.trim() : '');
-  saveData(); inp.value = ''; if (qtyInp) qtyInp.value = ''; renderShopping();
+function toggleCustom(i,cb){appData.shopping[i].done=cb.checked;saveData();renderShopping();}
+function delCustom(i){if(!canEdit())return;appData.shopping.splice(i,1);saveData();renderShopping();}
+function addItem(){if(!canEdit())return;var inp=document.getElementById('newItem'),qtyInp=document.getElementById('newItemQty'),name=inp.value.trim();if(!name)return;addToShopping(name,qtyInp?qtyInp.value.trim():'');saveData();inp.value='';if(qtyInp)qtyInp.value='';renderShopping();}
+
+var formIngredients=[];
+function genId(){return Math.random().toString(36).slice(2)+Date.now().toString(36);}
+function showRecipeForm(recipeId){
+  if(!canManageRecipes())return;formIngredients=[];document.getElementById('recipeEditId').value='';document.getElementById('rName').value='';document.getElementById('rDesc').value='';document.getElementById('recipeFormTitle').textContent='Neues Rezept';
+  if(recipeId){var rec=appData.recipes.find(function(r){return r.id===recipeId;});if(rec){document.getElementById('recipeEditId').value=rec.id;document.getElementById('rName').value=rec.name;document.getElementById('rDesc').value=rec.description||'';formIngredients=rec.ingredients.slice();document.getElementById('recipeFormTitle').textContent='Rezept bearbeiten';}}
+  renderIngListEdit();document.getElementById('recipeFormWrap').style.display='';document.getElementById('rName').focus();
+}
+function hideRecipeForm(){document.getElementById('recipeFormWrap').style.display='none';}
+function renderIngListEdit(){document.getElementById('ingListEdit').innerHTML=formIngredients.map(function(ing,i){return'<span class="ing-tag-edit">'+(ing.qty?esc(ing.qty)+' ':'')+esc(ing.name)+'<button onclick="removeIngredient('+i+')" title="Entfernen">x</button></span>';}).join('');}
+function removeIngredient(i){formIngredients.splice(i,1);renderIngListEdit();}
+function addIngredientToForm(){var inp=document.getElementById('ingInput'),qtyInp=document.getElementById('ingQtyInput'),name=inp.value.trim();if(!name)return;formIngredients.push({name:name,qty:qtyInp?qtyInp.value.trim():''});inp.value='';if(qtyInp)qtyInp.value='';renderIngListEdit();inp.focus();}
+function saveRecipe(){
+  var name=document.getElementById('rName').value.trim();if(!name){alert('Bitte einen Namen eingeben.');return;}
+  var desc=document.getElementById('rDesc').value.trim(),editId=document.getElementById('recipeEditId').value;
+  if(!appData.recipes)appData.recipes=[];
+  if(editId){var idx=appData.recipes.findIndex(function(r){return r.id===editId;});if(idx!==-1)appData.recipes[idx]={id:editId,name:name,description:desc,ingredients:formIngredients.slice()};}
+  else{appData.recipes.push({id:genId(),name:name,description:desc,ingredients:formIngredients.slice()});}
+  saveData();hideRecipeForm();renderRecipes();
+}
+function deleteRecipe(id){if(!canManageRecipes())return;if(!confirm('Rezept wirklich l\u00f6schen?'))return;appData.recipes=appData.recipes.filter(function(r){return r.id!==id;});Object.keys(appData.mealRecipes||{}).forEach(function(k){if(appData.mealRecipes[k]===id)delete appData.mealRecipes[k];});saveData();renderRecipes();}
+function renderRecipes(){
+  var grid=document.getElementById('recipeGrid'),recipes=appData.recipes||[];
+  if(!recipes.length){grid.innerHTML='<div class="empty">Noch keine Rezepte.</div>';return;}
+  grid.innerHTML=recipes.map(function(r){return'<div class="recipe-card"><div class="recipe-card-name">'+esc(r.name)+'</div>'+(r.description?'<div class="recipe-card-desc">'+esc(r.description)+'</div>':'')+(r.ingredients.length?'<div class="ingredient-tags">'+r.ingredients.map(function(i){return'<span class="ingredient-tag">'+(i.qty?esc(i.qty)+' ':'')+esc(i.name)+'</span>';}).join('')+'</div>':'')+(canManageRecipes()?'<div class="recipe-actions"><button class="btn btn-outline btn-sm" onclick="showRecipeForm(\''+r.id+'\')">Bearbeiten</button><button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe(\''+r.id+'\')">L\u00f6schen</button></div>':'')+'</div>';}).join('');
 }
 
-var formIngredients = [];
-function genId() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+var ROLE_LABELS={owner:'Owner',admin:'Admin',member:'Mitglied',viewer:'Zuschauer'};
+var ROLE_CLASS={owner:'role-owner',admin:'role-admin',member:'role-member',viewer:'role-viewer'};
 
-function showRecipeForm(recipeId) {
-  if (!canManageRecipes()) return;
-  formIngredients = [];
-  document.getElementById('recipeEditId').value = '';
-  document.getElementById('rName').value = '';
-  document.getElementById('rDesc').value = '';
-  document.getElementById('recipeFormTitle').textContent = 'Neues Rezept';
-  if (recipeId) {
-    var rec = appData.recipes.find(function(r) { return r.id === recipeId; });
-    if (rec) { document.getElementById('recipeEditId').value = rec.id; document.getElementById('rName').value = rec.name; document.getElementById('rDesc').value = rec.description || ''; formIngredients = rec.ingredients.slice(); document.getElementById('recipeFormTitle').textContent = 'Rezept bearbeiten'; }
-  }
-  renderIngListEdit(); document.getElementById('recipeFormWrap').style.display = ''; document.getElementById('rName').focus();
+function updateContextSwitcher(){var sel=document.getElementById('contextSelect');if(userGroups.length===0){sel.style.display='none';return;}sel.innerHTML='<option value="">Pers\u00f6nlich</option>'+userGroups.map(function(g){return'<option value="'+g.id+'">'+esc(g.name)+'</option>';}).join('');sel.value=currentGroupId||'';sel.style.display='';}
+async function switchContext(val){
+  if(!val){currentGroupId=null;currentGroupRole=null;currentGroupName='';}
+  else{var g=userGroups.find(function(g){return g.id===val;});if(g){currentGroupId=g.id;currentGroupRole=g.role;currentGroupName=g.name;}}
+  await loadData();renderPlan();var ap=document.querySelector('.page.active');if(ap&&ap.id==='shoppingPage')renderShopping();if(ap&&ap.id==='recipesPage')renderRecipes();if(ap&&ap.id==='groupPage')renderGroupPage();
 }
-function hideRecipeForm() { document.getElementById('recipeFormWrap').style.display = 'none'; }
-function renderIngListEdit() {
-  document.getElementById('ingListEdit').innerHTML = formIngredients.map(function(ing, i) {
-    return '<span class="ing-tag-edit">' + (ing.qty ? esc(ing.qty) + ' ' : '') + esc(ing.name) + '<button onclick="removeIngredient(' + i + ')" title="Entfernen">x</button></span>';
-  }).join('');
+async function createGroup(){
+  var name=document.getElementById('newGroupName').value.trim();if(!name)return alert('Bitte einen Gruppennamen eingeben.');
+  var inviteCode=Math.random().toString(36).slice(2,8).toUpperCase(),groupRef=db.collection('groups').doc();
+  var members={};members[currentUid]={username:currentUser,role:'owner'};
+  await groupRef.set({name:name,inviteCode:inviteCode,createdBy:currentUid,members:members});
+  await db.collection('users').doc(currentUid).update({groupIds:firebase.firestore.FieldValue.arrayUnion(groupRef.id)});
+  userGroups.push({id:groupRef.id,name:name,role:'owner'});currentGroupId=groupRef.id;currentGroupRole='owner';currentGroupName=name;
+  appData={meals:{},shopping:[],checked:{},recipes:[],mealRecipes:{}};document.getElementById('newGroupName').value='';
+  updateContextSwitcher();await renderGroupPage();renderPlan();
 }
-function removeIngredient(i) { formIngredients.splice(i, 1); renderIngListEdit(); }
-function addIngredientToForm() {
-  var inp = document.getElementById('ingInput'); var qtyInp = document.getElementById('ingQtyInput');
-  var name = inp.value.trim(); if (!name) return;
-  formIngredients.push({ name: name, qty: qtyInp ? qtyInp.value.trim() : '' });
-  inp.value = ''; if (qtyInp) qtyInp.value = ''; renderIngListEdit(); inp.focus();
-}
-function saveRecipe() {
-  var name = document.getElementById('rName').value.trim(); if (!name) { alert('Bitte einen Namen eingeben.'); return; }
-  var desc = document.getElementById('rDesc').value.trim(); var editId = document.getElementById('recipeEditId').value;
-  if (!appData.recipes) appData.recipes = [];
-  if (editId) {
-    var idx = appData.recipes.findIndex(function(r) { return r.id === editId; });
-    if (idx !== -1) appData.recipes[idx] = { id: editId, name: name, description: desc, ingredients: formIngredients.slice() };
-  } else { appData.recipes.push({ id: genId(), name: name, description: desc, ingredients: formIngredients.slice() }); }
-  saveData(); hideRecipeForm(); renderRecipes();
-}
-function deleteRecipe(id) {
-  if (!canManageRecipes()) return; if (!confirm('Rezept wirklich löschen?')) return;
-  appData.recipes = appData.recipes.filter(function(r) { return r.id !== id; });
-  Object.keys(appData.mealRecipes || {}).forEach(function(k) { if (appData.mealRecipes[k] === id) delete appData.mealRecipes[k]; });
-  saveData(); renderRecipes();
-}
-function renderRecipes() {
-  var grid = document.getElementById('recipeGrid'); var recipes = appData.recipes || [];
-  if (!recipes.length) { grid.innerHTML = '<div class="empty">Noch keine Rezepte.</div>'; return; }
-  grid.innerHTML = recipes.map(function(r) {
-    return '<div class="recipe-card"><div class="recipe-card-name">' + esc(r.name) + '</div>' +
-      (r.description ? '<div class="recipe-card-desc">' + esc(r.description) + '</div>' : '') +
-      (r.ingredients.length ? '<div class="ingredient-tags">' + r.ingredients.map(function(i) { return '<span class="ingredient-tag">' + (i.qty ? esc(i.qty) + ' ' : '') + esc(i.name) + '</span>'; }).join('') + '</div>' : '') +
-      (canManageRecipes() ? '<div class="recipe-actions"><button class="btn btn-outline btn-sm" onclick="showRecipeForm(\'' + r.id + '\')">Bearbeiten</button><button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe(\'' + r.id + '\')">Löschen</button></div>' : '') +
-      '</div>';
-  }).join('');
-}
-
-var ROLE_LABELS = { owner:'Owner', admin:'Admin', member:'Mitglied', viewer:'Zuschauer' };
-var ROLE_CLASS  = { owner:'role-owner', admin:'role-admin', member:'role-member', viewer:'role-viewer' };
-
-function updateContextSwitcher() {
-  var sel = document.getElementById('contextSelect');
-  if (userGroups.length === 0) { sel.style.display = 'none'; return; }
-  sel.innerHTML = '<option value="">Persoenlich</option>' + userGroups.map(function(g) { return '<option value="' + g.id + '">' + esc(g.name) + '</option>'; }).join('');
-  sel.value = currentGroupId || ''; sel.style.display = '';
-}
-async function switchContext(val) {
-  if (!val) { currentGroupId = null; currentGroupRole = null; currentGroupName = ''; }
-  else {
-    var g = userGroups.find(function(g) { return g.id === val; });
-    if (g) { currentGroupId = g.id; currentGroupRole = g.role; currentGroupName = g.name; }
-  }
-  await loadData(); renderPlan();
-  var ap = document.querySelector('.page.active');
-  if (ap && ap.id === 'shoppingPage') renderShopping();
-  if (ap && ap.id === 'recipesPage')  renderRecipes();
-  if (ap && ap.id === 'groupPage')    renderGroupPage();
-}
-async function createGroup() {
-  var name = document.getElementById('newGroupName').value.trim(); if (!name) return alert('Bitte einen Gruppennamen eingeben.');
-  var inviteCode = Math.random().toString(36).slice(2, 8).toUpperCase();
-  var groupRef = db.collection('groups').doc();
-  var members = {}; members[currentUid] = { username: currentUser, role: 'owner' };
-  await groupRef.set({ name: name, inviteCode: inviteCode, createdBy: currentUid, members: members });
-  await db.collection('users').doc(currentUid).update({ groupIds: firebase.firestore.FieldValue.arrayUnion(groupRef.id) });
-  userGroups.push({ id: groupRef.id, name: name, role: 'owner' });
-  currentGroupId = groupRef.id; currentGroupRole = 'owner'; currentGroupName = name;
-  appData = { meals:{}, shopping:[], checked:{}, recipes:[], mealRecipes:{} };
-  document.getElementById('newGroupName').value = '';
-  updateContextSwitcher(); await renderGroupPage(); renderPlan();
-}
-async function joinGroup() {
-  var code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
-  var errEl = document.getElementById('groupJoinErr'); errEl.style.display = 'none';
-  if (!code) { errEl.textContent = 'Bitte einen Code eingeben.'; errEl.style.display = 'block'; return; }
-  var snap = await db.collection('groups').where('inviteCode', '==', code).get();
-  if (snap.empty) { errEl.textContent = 'Ungültiger Einladungscode.'; errEl.style.display = 'block'; return; }
-  var gDoc = snap.docs[0];
-  if ((gDoc.data().members && gDoc.data().members[currentUid]) || userGroups.find(function(g){return g.id===gDoc.id;})) { errEl.textContent = 'Du bist bereits in dieser Gruppe.'; errEl.style.display = 'block'; return; }
-  var upd = {}; upd['members.' + currentUid] = { username: currentUser, role: 'member' };
+async function joinGroup(){
+  var code=document.getElementById('joinCodeInput').value.trim().toUpperCase(),errEl=document.getElementById('groupJoinErr');errEl.style.display='none';
+  if(!code){errEl.textContent='Bitte einen Code eingeben.';errEl.style.display='block';return;}
+  var snap=await db.collection('groups').where('inviteCode','==',code).get();
+  if(snap.empty){errEl.textContent='Ung\u00fcltiger Einladungscode.';errEl.style.display='block';return;}
+  var gDoc=snap.docs[0];
+  if((gDoc.data().members&&gDoc.data().members[currentUid])||userGroups.find(function(g){return g.id===gDoc.id;})){errEl.textContent='Du bist bereits in dieser Gruppe.';errEl.style.display='block';return;}
+  var upd={};upd['members.'+currentUid]={username:currentUser,role:'member'};
   await db.collection('groups').doc(gDoc.id).update(upd);
-  await db.collection('users').doc(currentUid).update({ groupIds: firebase.firestore.FieldValue.arrayUnion(gDoc.id) });
-  userGroups.push({ id: gDoc.id, name: gDoc.data().name, role: 'member' });
-  currentGroupId = gDoc.id; currentGroupRole = 'member'; currentGroupName = gDoc.data().name;
-  await loadData(); document.getElementById('joinCodeInput').value = '';
-  updateContextSwitcher(); await renderGroupPage(); renderPlan();
+  await db.collection('users').doc(currentUid).update({groupIds:firebase.firestore.FieldValue.arrayUnion(gDoc.id)});
+  userGroups.push({id:gDoc.id,name:gDoc.data().name,role:'member'});currentGroupId=gDoc.id;currentGroupRole='member';currentGroupName=gDoc.data().name;
+  await loadData();document.getElementById('joinCodeInput').value='';updateContextSwitcher();await renderGroupPage();renderPlan();
 }
-async function leaveGroup(groupId) {
-  var g = userGroups.find(function(g){return g.id===groupId;}); if (!g) return;
-  if (g.role === 'owner') { var gDoc = await db.collection('groups').doc(groupId).get(); var others = Object.keys(gDoc.data().members || {}).filter(function(u){return u!==currentUid;}); if (others.length > 0) return alert('Du bist der Owner. Übertrage zuerst den Owner-Status oder lösche die Gruppe.'); }
-  if (!confirm('Gruppe wirklich verlassen?')) return;
-  var upd = {}; upd['members.' + currentUid] = firebase.firestore.FieldValue.delete();
+async function leaveGroup(groupId){
+  var g=userGroups.find(function(g){return g.id===groupId;});if(!g)return;
+  if(g.role==='owner'){var gDoc=await db.collection('groups').doc(groupId).get();var others=Object.keys(gDoc.data().members||{}).filter(function(u){return u!==currentUid;});if(others.length>0)return alert('Du bist der Owner. \u00dcbertrage zuerst den Owner-Status oder l\u00f6sche die Gruppe.');}
+  if(!confirm('Gruppe wirklich verlassen?'))return;
+  var upd={};upd['members.'+currentUid]=firebase.firestore.FieldValue.delete();
   await db.collection('groups').doc(groupId).update(upd);
-  await db.collection('users').doc(currentUid).update({ groupIds: firebase.firestore.FieldValue.arrayRemove(groupId) });
-  userGroups = userGroups.filter(function(g){return g.id!==groupId;});
-  if (currentGroupId === groupId) { currentGroupId = null; currentGroupRole = null; currentGroupName = ''; await loadData(); }
-  updateContextSwitcher(); await renderGroupPage(); renderPlan();
+  await db.collection('users').doc(currentUid).update({groupIds:firebase.firestore.FieldValue.arrayRemove(groupId)});
+  userGroups=userGroups.filter(function(g){return g.id!==groupId;});
+  if(currentGroupId===groupId){currentGroupId=null;currentGroupRole=null;currentGroupName='';await loadData();}
+  updateContextSwitcher();await renderGroupPage();renderPlan();
 }
-async function deleteGroup(groupId) {
-  var g = userGroups.find(function(g){return g.id===groupId;}); if (!g || g.role !== 'owner') return;
-  if (!confirm('Gruppe und alle gemeinsamen Daten wirklich unwiderruflich löschen?')) return;
-  var gDoc = await db.collection('groups').doc(groupId).get(); var members = gDoc.data().members || {};
-  var batch = db.batch();
-  Object.keys(members).forEach(function(uid) { batch.update(db.collection('users').doc(uid), { groupIds: firebase.firestore.FieldValue.arrayRemove(groupId) }); });
+async function deleteGroup(groupId){
+  var g=userGroups.find(function(g){return g.id===groupId;});if(!g||g.role!=='owner')return;
+  if(!confirm('Gruppe und alle Daten wirklich unwiderruflich l\u00f6schen?'))return;
+  var gDoc=await db.collection('groups').doc(groupId).get(),members=gDoc.data().members||{};
+  var batch=db.batch();
+  Object.keys(members).forEach(function(uid){batch.update(db.collection('users').doc(uid),{groupIds:firebase.firestore.FieldValue.arrayRemove(groupId)});});
   batch.delete(db.collection('groups').doc(groupId).collection('data').doc('main'));
   batch.delete(db.collection('groups').doc(groupId));
   await batch.commit();
-  userGroups = userGroups.filter(function(g){return g.id!==groupId;});
-  if (currentGroupId === groupId) { currentGroupId = null; currentGroupRole = null; currentGroupName = ''; await loadData(); }
-  updateContextSwitcher(); await renderGroupPage(); renderPlan();
+  userGroups=userGroups.filter(function(g){return g.id!==groupId;});
+  if(currentGroupId===groupId){currentGroupId=null;currentGroupRole=null;currentGroupName='';await loadData();}
+  updateContextSwitcher();await renderGroupPage();renderPlan();
 }
-async function setMemberRole(groupId, memberUid, role) {
-  var g = userGroups.find(function(g){return g.id===groupId;}); if (!g || ['owner','admin'].indexOf(g.role) === -1) return;
-  var upd = {}; upd['members.' + memberUid + '.role'] = role;
-  await db.collection('groups').doc(groupId).update(upd);
-  if (role === 'owner' && g.role === 'owner') {
-    var upd2 = {}; upd2['members.' + currentUid + '.role'] = 'admin';
-    await db.collection('groups').doc(groupId).update(upd2);
-    g.role = 'admin'; if (currentGroupId === groupId) currentGroupRole = 'admin';
-  }
+async function setMemberRole(groupId,memberUid,role){
+  var g=userGroups.find(function(g){return g.id===groupId;});if(!g||['owner','admin'].indexOf(g.role)===-1)return;
+  var upd={};upd['members.'+memberUid+'.role']=role;await db.collection('groups').doc(groupId).update(upd);
+  if(role==='owner'&&g.role==='owner'){var upd2={};upd2['members.'+currentUid+'.role']='admin';await db.collection('groups').doc(groupId).update(upd2);g.role='admin';if(currentGroupId===groupId)currentGroupRole='admin';}
   await renderGroupPage();
 }
-async function removeMember(groupId, memberUid) {
-  var g = userGroups.find(function(g){return g.id===groupId;}); if (!g || ['owner','admin'].indexOf(g.role) === -1) return;
-  if (!confirm('Mitglied wirklich entfernen?')) return;
-  var upd = {}; upd['members.' + memberUid] = firebase.firestore.FieldValue.delete();
+async function removeMember(groupId,memberUid){
+  var g=userGroups.find(function(g){return g.id===groupId;});if(!g||['owner','admin'].indexOf(g.role)===-1)return;
+  if(!confirm('Mitglied wirklich entfernen?'))return;
+  var upd={};upd['members.'+memberUid]=firebase.firestore.FieldValue.delete();
   await db.collection('groups').doc(groupId).update(upd);
-  await db.collection('users').doc(memberUid).update({ groupIds: firebase.firestore.FieldValue.arrayRemove(groupId) });
+  await db.collection('users').doc(memberUid).update({groupIds:firebase.firestore.FieldValue.arrayRemove(groupId)});
   await renderGroupPage();
 }
-async function copyInviteCode(code) {
-  try { await navigator.clipboard.writeText(code); } catch(e) {}
-  alert('Einladungscode kopiert: ' + code);
-}
-async function renderGroupPage() {
-  var container = document.getElementById('myGroupsList');
-  if (userGroups.length === 0) { container.innerHTML = '<div class="empty" style="background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:1rem">Du bist noch in keiner Gruppe.</div>'; return; }
-  var html = '';
-  for (var gi = 0; gi < userGroups.length; gi++) {
-    var g = userGroups[gi];
-    var gDoc = await db.collection('groups').doc(g.id).get(); if (!gDoc.exists) continue;
-    var gData = gDoc.data(); var isActive = currentGroupId === g.id;
-    var membersHtml = Object.keys(gData.members || {}).map(function(mUid) {
-      var m = gData.members[mUid]; var isMe = mUid === currentUid;
-      var editable = !isMe && (g.role === 'owner' || (g.role === 'admin' && m.role !== 'owner' && m.role !== 'admin'));
-      var roles = g.role === 'owner' ? ['owner','admin','member','viewer'] : ['member','viewer'];
-      return '<div class="member-row"><div><div class="member-name">' + esc(m.username) + (isMe ? ' <span style="color:var(--muted);font-size:.82rem;font-weight:400">(du)</span>' : '') + '</div><span class="member-role-badge ' + (ROLE_CLASS[m.role]||'') + '">' + (ROLE_LABELS[m.role]||m.role) + '</span></div>' +
-        '<div style="display:flex;gap:.4rem;align-items:center">' + (editable ? '<select class="role-select" onchange="setMemberRole(\'' + g.id + '\',\'' + mUid + '\',this.value)">' + roles.map(function(r){return '<option value="' + r + '"' + (r===m.role?' selected':'') + '>' + ROLE_LABELS[r] + '</option>';}).join('') + '</select><button class="btn btn-danger btn-sm" onclick="removeMember(\'' + g.id + '\',\'' + mUid + '\')">Entfernen</button>' : '') + '</div></div>';
+async function copyInviteCode(code){try{await navigator.clipboard.writeText(code);}catch(e){}alert('Einladungscode kopiert: '+code);}
+async function renderGroupPage(){
+  var container=document.getElementById('myGroupsList');
+  if(userGroups.length===0){container.innerHTML='<div class="empty" style="background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:1rem">Du bist noch in keiner Gruppe.</div>';return;}
+  var html='';
+  for(var gi=0;gi<userGroups.length;gi++){
+    var g=userGroups[gi];var gDoc=await db.collection('groups').doc(g.id).get();if(!gDoc.exists)continue;
+    var gData=gDoc.data(),isActive=currentGroupId===g.id;
+    var membersHtml=Object.keys(gData.members||{}).map(function(mUid){
+      var m=gData.members[mUid],isMe=mUid===currentUid;
+      var editable=!isMe&&(g.role==='owner'||(g.role==='admin'&&m.role!=='owner'&&m.role!=='admin'));
+      var roles=g.role==='owner'?['owner','admin','member','viewer']:['member','viewer'];
+      return'<div class="member-row"><div><div class="member-name">'+esc(m.username)+(isMe?' <span style="color:var(--muted);font-size:.82rem;font-weight:400">(du)</span>':'')+'</div><span class="member-role-badge '+(ROLE_CLASS[m.role]||'')+'">'+( ROLE_LABELS[m.role]||m.role)+'</span></div><div style="display:flex;gap:.4rem;align-items:center">'+(editable?'<select class="role-select" onchange="setMemberRole(\''+g.id+'\',\''+mUid+'\',this.value)">'+roles.map(function(r){return'<option value="'+r+'"'+(r===m.role?' selected':'')+'>'+ROLE_LABELS[r]+'</option>';}).join('')+'</select><button class="btn btn-danger btn-sm" onclick="removeMember(\''+g.id+'\',\''+mUid+'\')">Entfernen</button>':'')+'</div></div>';
     }).join('');
-    html += '<div class="settings-card" style="margin-bottom:1rem">' +
-      '<div class="settings-section" style="display:flex;justify-content:space-between;align-items:center"><span>' + esc(gData.name) + '</span><span class="member-role-badge ' + (ROLE_CLASS[g.role]||'') + '">' + (ROLE_LABELS[g.role]||g.role) + '</span></div>' +
-      '<div class="settings-row"><div><div class="settings-label">Aktiver Kontext</div><div class="settings-sub">Daten die du gerade bearbeitest</div></div><button class="btn ' + (isActive?'btn-primary':'btn-outline') + ' btn-sm" style="width:auto" onclick="switchContext(\'' + g.id + '\');updateContextSwitcher()">' + (isActive ? '&#10003; Aktiv' : 'Wechseln') + '</button></div>' +
-      '<div class="settings-row"><div class="settings-label">Einladungscode</div><div style="display:flex;align-items:center;gap:.6rem"><span class="invite-code">' + esc(gData.inviteCode) + '</span><button class="btn btn-outline btn-sm" onclick="copyInviteCode(\'' + esc(gData.inviteCode) + '\')">Kopieren</button></div></div>' +
-      '<div class="settings-section" style="font-size:.72rem">Mitglieder</div>' + membersHtml +
-      '<div class="settings-row" style="gap:.5rem"><div><div class="settings-label">Gruppe verlassen</div><div class="settings-sub">Kehrt zum persönlichen Plan zurück</div></div><button class="btn btn-danger btn-sm" onclick="leaveGroup(\'' + g.id + '\')">Verlassen</button>' + (g.role === 'owner' ? '<button class="btn btn-danger btn-sm" onclick="deleteGroup(\'' + g.id + '\')">Löschen</button>' : '') + '</div></div>';
+    html+='<div class="settings-card" style="margin-bottom:1rem"><div class="settings-section" style="display:flex;justify-content:space-between;align-items:center"><span>'+esc(gData.name)+'</span><span class="member-role-badge '+(ROLE_CLASS[g.role]||'')+'">'+( ROLE_LABELS[g.role]||g.role)+'</span></div>'+
+      '<div class="settings-row"><div><div style="font-size:.95rem;font-weight:500">Aktiver Kontext</div><div style="font-size:.8rem;color:var(--muted);margin-top:.15rem">Daten die du gerade bearbeitest</div></div><button class="btn '+(isActive?'btn-primary':'btn-outline')+' btn-sm" style="width:auto" onclick="switchContext(\''+g.id+'\');updateContextSwitcher()">'+(isActive?'&#10003; Aktiv':'Wechseln')+'</button></div>'+
+      '<div class="settings-row"><div style="font-size:.95rem;font-weight:500">Einladungscode</div><div style="display:flex;align-items:center;gap:.6rem"><span class="invite-code">'+esc(gData.inviteCode)+'</span><button class="btn btn-outline btn-sm" onclick="copyInviteCode(\''+esc(gData.inviteCode)+'\')">Kopieren</button></div></div>'+
+      '<div class="settings-section" style="font-size:.72rem">Mitglieder</div>'+membersHtml+
+      '<div class="settings-row" style="gap:.5rem"><div><div style="font-size:.95rem;font-weight:500">Gruppe verlassen</div><div style="font-size:.8rem;color:var(--muted);margin-top:.15rem">Kehrt zum pers\u00f6nlichen Plan zur\u00fcck</div></div><button class="btn btn-danger btn-sm" onclick="leaveGroup(\''+g.id+'\')">Verlassen</button>'+(g.role==='owner'?'<button class="btn btn-danger btn-sm" onclick="deleteGroup(\''+g.id+'\')">L\u00f6schen</button>':'')+'</div></div>';
   }
-  container.innerHTML = html;
+  container.innerHTML=html;
 }
 </script>
 </body>
