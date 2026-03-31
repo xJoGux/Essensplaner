@@ -215,6 +215,11 @@
     .meal-ing-btn:hover { background: #eef2ff; }
     [data-theme="dark"] .meal-ing-btn:hover { background: #312e81; }
 
+    /* ── Drag & Drop ─────────────────────────────────────────── */
+    .meal-slot.dragging  { opacity: .45; }
+    .meal-slot.drag-over { border: 2px dashed var(--primary) !important; background: #eef2ff; }
+    [data-theme="dark"] .meal-slot.drag-over { background: #1e2a4a; }
+
     /* ── Group ───────────────────────────────────────────────── */
     .group-badge { font-size:.75rem; background:#eef2ff; color:var(--primary); border-radius:99px; padding:.15rem .65rem; font-weight:600; white-space:nowrap; }
     [data-theme="dark"] .group-badge { background:#312e81; }
@@ -969,7 +974,12 @@ function renderWeek() {
         <div class="day-date">${dateFmt(d)}</div>
       </div>` +
       MEALS.map((m, mi) =>
-        `<div class="meal-slot" id="slot_${dk}_${mi}">
+        `<div class="meal-slot" id="slot_${dk}_${mi}" draggable="true"
+          ondragstart="onMealDragStart(event,'${dk}',${mi})"
+          ondragover="onMealDragOver(event)"
+          ondragleave="onMealDragLeave(event)"
+          ondrop="onMealDrop(event,'${dk}',${mi})"
+          ondragend="onMealDragEnd(event)">
           <div class="meal-type">${m}</div>
           <div class="meal-name" onclick="editMeal('${dk}',${mi})">${esc(getMeal(dk, mi))}</div>
           ${mealIngBtn(dk, mi)}
@@ -1188,6 +1198,138 @@ function closeMealEditPopup() {
   document.getElementById('mealEditPopup').style.display = 'none';
   _editDk = null; _editMi = null;
 }
+
+// ── Drag & Drop ───────────────────────────────────────────────────
+let _dragSrcDk = null, _dragSrcMi = null;
+
+function onMealDragStart(e, dk, mi) {
+  if (!canEdit()) { e.preventDefault(); return; }
+  _dragSrcDk = dk; _dragSrcMi = mi;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dk + '|' + mi);
+  setTimeout(() => {
+    const el = document.getElementById('slot_' + dk + '_' + mi);
+    if (el) el.classList.add('dragging');
+  }, 0);
+}
+
+function onMealDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const slot = e.currentTarget;
+  slot.classList.add('drag-over');
+}
+
+function onMealDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onMealDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.meal-slot.drag-over').forEach(el => el.classList.remove('drag-over'));
+}
+
+function onMealDrop(e, tgtDk, tgtMi) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!canEdit()) return;
+  if (_dragSrcDk === null) return;
+  if (_dragSrcDk === tgtDk && _dragSrcMi === tgtMi) return;
+
+  const srcVal = getMeal(_dragSrcDk, _dragSrcMi);
+  const tgtVal = getMeal(tgtDk, tgtMi);
+
+  // Swap recipe links too
+  const srcKey = _dragSrcDk + '_' + _dragSrcMi;
+  const tgtKey = tgtDk + '_' + tgtMi;
+  if (!appData.mealRecipes) appData.mealRecipes = {};
+  const srcRid = appData.mealRecipes[srcKey] || null;
+  const tgtRid = appData.mealRecipes[tgtKey] || null;
+
+  setMeal(_dragSrcDk, _dragSrcMi, tgtVal);
+  setMeal(tgtDk, tgtMi, srcVal);
+
+  if (srcRid) appData.mealRecipes[tgtKey] = srcRid; else delete appData.mealRecipes[tgtKey];
+  if (tgtRid) appData.mealRecipes[srcKey] = tgtRid; else delete appData.mealRecipes[srcKey];
+
+  _dragSrcDk = null; _dragSrcMi = null;
+  saveData();
+  renderPlan();
+}
+
+// ── Touch drag fallback (mobile) ──────────────────────────────────
+(function() {
+  let touchSrcDk = null, touchSrcMi = null, touchClone = null, lastOver = null;
+
+  function slotFromPoint(x, y) {
+    const els = document.elementsFromPoint(x, y);
+    for (const el of els) {
+      if (el.classList && el.classList.contains('meal-slot')) return el;
+    }
+    return null;
+  }
+
+  function parsSlot(el) {
+    const id = el.id || ''; // slot_dk_mi
+    const m = id.match(/^slot_(.+)_(\d+)$/);
+    if (!m) return null;
+    return { dk: m[1], mi: parseInt(m[2], 10) };
+  }
+
+  document.addEventListener('touchstart', function(e) {
+    const slot = e.target.closest('.meal-slot');
+    if (!slot || !canEdit()) return;
+    const info = parsSlot(slot);
+    if (!info) return;
+    touchSrcDk = info.dk; touchSrcMi = info.mi;
+
+    // Create floating clone
+    const rect = slot.getBoundingClientRect();
+    touchClone = slot.cloneNode(true);
+    touchClone.style.cssText =
+      'position:fixed;pointer-events:none;z-index:9999;opacity:.7;width:' + rect.width + 'px;' +
+      'top:' + rect.top + 'px;left:' + rect.left + 'px;transition:none;border-radius:8px;';
+    document.body.appendChild(touchClone);
+    slot.classList.add('dragging');
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!touchSrcDk) return;
+    const t = e.touches[0];
+    if (touchClone) {
+      touchClone.style.top  = (t.clientY - 20) + 'px';
+      touchClone.style.left = (t.clientX - 40) + 'px';
+    }
+    const over = slotFromPoint(t.clientX, t.clientY);
+    if (lastOver && lastOver !== over) lastOver.classList.remove('drag-over');
+    if (over && over !== document.getElementById('slot_' + touchSrcDk + '_' + touchSrcMi)) {
+      over.classList.add('drag-over');
+      lastOver = over;
+    } else {
+      lastOver = null;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    if (!touchSrcDk) return;
+    const srcEl = document.getElementById('slot_' + touchSrcDk + '_' + touchSrcMi);
+    if (srcEl) srcEl.classList.remove('dragging');
+    if (touchClone) { touchClone.remove(); touchClone = null; }
+    document.querySelectorAll('.meal-slot.drag-over').forEach(el => el.classList.remove('drag-over'));
+
+    const t = e.changedTouches[0];
+    const tgtEl = slotFromPoint(t.clientX, t.clientY);
+    if (tgtEl) {
+      const info = parsSlot(tgtEl);
+      if (info && !(info.dk === touchSrcDk && info.mi === touchSrcMi)) {
+        // Reuse desktop drop logic
+        _dragSrcDk = touchSrcDk; _dragSrcMi = touchSrcMi;
+        onMealDrop({ preventDefault: function(){}, currentTarget: tgtEl }, info.dk, info.mi);
+      }
+    }
+    touchSrcDk = null; touchSrcMi = null; lastOver = null;
+  }, { passive: true });
+})();
 
 // ── Shopping list ─────────────────────────────────────────────────
 function renderShopping() {
