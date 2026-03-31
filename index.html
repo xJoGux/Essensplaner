@@ -265,13 +265,11 @@
       <button class="auth-tab" onclick="showTab('register')">Registrieren</button>
     </div>
     <div id="authErr" class="err"></div>
-
     <div id="loginForm">
       <div class="fg"><label>Benutzername</label><input type="text" id="lUser" placeholder="dein_name" /></div>
       <div class="fg"><label>Passwort</label><input type="password" id="lPass" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;" onkeydown="if(event.key==='Enter')doLogin()" /></div>
       <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Anmelden</button>
     </div>
-
     <div id="regForm" style="display:none">
       <div class="fg"><label>Benutzername</label><input type="text" id="rUser" placeholder="dein_name" /></div>
       <div class="fg"><label>Passwort</label><input type="password" id="rPass" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022; (min. 6 Zeichen)" /></div>
@@ -300,8 +298,8 @@
       </div>
     </div>
   </nav>
-
   <div class="main">
+
     <!-- Wochenplan -->
     <div id="planPage" class="page active">
       <div class="page-header">
@@ -363,9 +361,7 @@
 
     <!-- Einstellungen -->
     <div id="settingsPage" class="page">
-      <div class="page-header">
-        <div class="page-title">Einstellungen</div>
-      </div>
+      <div class="page-header"><div class="page-title">Einstellungen</div></div>
       <div class="settings-card">
         <div class="settings-section">Account</div>
         <div class="settings-row">
@@ -391,7 +387,6 @@
           </div>
         </div>
       </div>
-
       <div class="settings-card">
         <div class="settings-row">
           <div>
@@ -418,9 +413,7 @@
     <!-- Gruppe -->
     <div id="groupPage" class="page">
       <div class="page-header"><div class="page-title">Gruppen</div></div>
-
       <div id="myGroupsList"></div>
-
       <div class="settings-card" style="margin-top:1rem">
         <div class="settings-section">Neue Gruppe erstellen</div>
         <div style="padding:1rem 1.25rem">
@@ -428,7 +421,6 @@
           <button class="btn btn-primary btn-sm" style="width:auto" onclick="createGroup()">Gruppe erstellen</button>
         </div>
       </div>
-
       <div class="settings-card" style="margin-top:1rem">
         <div class="settings-section">Bestehender Gruppe beitreten</div>
         <div style="padding:1rem 1.25rem">
@@ -437,7 +429,6 @@
           <button class="btn btn-primary btn-sm" style="width:auto" onclick="joinGroup()">Beitreten</button>
         </div>
       </div>
-
       <div class="settings-card" style="margin-top:1rem">
         <div class="settings-section">Rollen&#xFC;bersicht</div>
         <table class="perm-table">
@@ -468,7 +459,7 @@
   </div>
 </div>
 
-<!-- ── Ingredient selection modal ────────────────────────────────── -->
+<!-- ── Ingredient modal ───────────────────────────────────────────── -->
 <div id="ingModal" class="modal-overlay" style="display:none" onclick="closeIngModal(event)">
   <div class="modal-box">
     <div class="modal-title" id="ingModalTitle">Zutaten ausw&#xE4;hlen</div>
@@ -480,7 +471,7 @@
   </div>
 </div>
 
-<!-- ── Error handler + emergency timeout (vor Firebase) ── -->
+<!-- ── Notfall-Timeout (VOR Firebase CDN) ────────────────────────── -->
 <script>
 window.onerror = function(msg, src, line) {
   var dbg = document.getElementById('loadingDebug');
@@ -508,1208 +499,842 @@ setTimeout(function() {
   }
 }, 2000);
 </script>
+
 <!-- ── Firebase SDKs ─────────────────────────────────────────────── -->
-<script src="<https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js>"></script>
-<script src="<https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js>"></script>
-<script src="<https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js>"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
 <script>
 // ── Firebase Config ───────────────────────────────────────────────
 const firebaseConfig = {
   apiKey: "AIzaSyBqYqgPi_qeSxhmVpeDZcLd8Hl6OotdA_I",
-  authDomain: "<memorydeck-af728.firebaseapp.com>",
+  authDomain: "memorydeck-af728.firebaseapp.com",
   projectId: "memorydeck-af728",
   storageBucket: "memorydeck-af728.firebasestorage.app",
   messagingSenderId: "1077936268943",
   appId: "1:1077936268943:web:9bf39e8a18f3f79068b2fa"
 };
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-// ── Constants ────────────────────────────────────────────────────
+// ── Konstanten ───────────────────────────────────────────────────
 const DAYS  = ['Mo','Di','Mi','Do','Fr','Sa','So'];
 const MEALS = ['Fr\u00FChst\u00FCck','Mittagessen','Abendessen'];
 const FAKE_DOMAIN = '@essensplaner.app';
 
 // ── State ────────────────────────────────────────────────────────
-let currentUser = null;
-let currentUid  = null;
-let weekOffset  = 0;
-let currentView = 'week';
-let appData     = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
-let _cachedPw   = '';
-let _pwVisible  = false;
-let currentGroupId   = null;
-let currentGroupRole = null;
-let currentGroupName = '';
-let userGroups       = [];
+let currentUser = null, currentUid = null;
+let weekOffset = 0, currentView = 'week';
+let appData = { meals:{}, shopping:[], checked:{}, recipes:[], mealRecipes:{} };
+let _cachedPw = '', _pwVisible = false;
+let currentGroupId = null, currentGroupRole = null, currentGroupName = '';
+let userGroups = [];
 
 // ── Helpers ──────────────────────────────────────────────────────
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
 function monday(offset) {
   offset = offset || 0;
-  const d = new Date();
-  const dow = d.getDay();
+  const d = new Date(), dow = d.getDay();
   d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow) + offset * 7);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  d.setHours(0,0,0,0); return d;
 }
-const dateKey = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-const dateFmt = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+const dateKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const dateFmt = d => d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
 const todayKey = () => dateKey(new Date());
-
 function userRef() {
   if (currentGroupId) return db.collection('groups').doc(currentGroupId).collection('data').doc('main');
   return db.collection('users').doc(currentUid).collection('data').doc('main');
 }
 
-// ── Data (Firestore) ─────────────────────────────────────────────
+// ── Daten laden/speichern ─────────────────────────────────────────
 async function loadData() {
   const doc = await userRef().get();
   if (doc.exists) {
-    appData = Object.assign({ meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} }, doc.data());
-    appData.recipes = appData.recipes.map(function(r) {
-      return Object.assign({}, r, {
-        ingredients: (r.ingredients || []).map(function(ing) {
-          return typeof ing === 'string' ? { name: ing, qty: '' } : ing;
-        })
-      });
-    });
-    appData.shopping = appData.shopping.map(function(item) {
-      return typeof item === 'object' ? Object.assign({ qty: '' }, item) : { name: String(item), qty: '', done: false };
-    });
+    appData = { meals:{}, shopping:[], checked:{}, recipes:[], mealRecipes:{}, ...doc.data() };
+    appData.recipes = appData.recipes.map(r => ({
+      ...r, ingredients: (r.ingredients||[]).map(ing => typeof ing==='string' ? {name:ing,qty:''} : ing)
+    }));
+    appData.shopping = appData.shopping.map(item =>
+      typeof item==='object' ? {qty:'',...item} : {name:String(item),qty:'',done:false}
+    );
   } else {
-    appData = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
+    appData = { meals:{}, shopping:[], checked:{}, recipes:[], mealRecipes:{} };
   }
 }
+function saveData() { userRef().set(appData).catch(console.error); }
+function getMeal(date,mi)      { return appData.meals[date+'_'+mi] || ''; }
+function setMeal(date,mi,val)  { appData.meals[date+'_'+mi] = val; saveData(); }
 
-// ── Quantity helpers ──────────────────────────────────────────────
+// ── Mengen ───────────────────────────────────────────────────────
 function parseQty(s) {
-  s = (s || '').trim();
+  s = (s||'').trim();
   const m = s.match(/^(\d+(?:[.,]\d+)?)\s*(.*)/);
-  if (m) return { amount: parseFloat(m[1].replace(',', '.')), unit: m[2].trim().toLowerCase() };
+  if (m) return { amount: parseFloat(m[1].replace(',','.')), unit: m[2].trim().toLowerCase() };
   return { amount: null, unit: s.toLowerCase() };
 }
-
-function combineQty(qa, qb) {
-  if (!qa) return qb || '';
-  if (!qb) return qa || '';
-  const a = parseQty(qa), b = parseQty(qb);
-  if (a.amount !== null && b.amount !== null && a.unit === b.unit) {
-    const sum = +(a.amount + b.amount).toFixed(4).replace(/\.?0+$/, '');
-    return sum + (a.unit ? ' ' + a.unit : '');
+function combineQty(qa,qb) {
+  if (!qa) return qb||''; if (!qb) return qa||'';
+  const a=parseQty(qa), b=parseQty(qb);
+  if (a.amount!==null && b.amount!==null && a.unit===b.unit) {
+    const sum = +(a.amount+b.amount).toFixed(4).replace(/\.?0+$/,'');
+    return sum+(a.unit ? ' '+a.unit : '');
   }
-  return qa + ' + ' + qb;
+  return qa+' + '+qb;
 }
-
-function addToShopping(name, qty) {
-  const existing = appData.shopping.find(function(x) { return x.name.toLowerCase() === name.toLowerCase(); });
-  if (existing) {
-    existing.qty = combineQty(existing.qty, qty || '');
-  } else {
-    appData.shopping.push({ name: name, qty: qty || '', done: false });
-  }
+function addToShopping(name,qty) {
+  const ex = appData.shopping.find(x => x.name.toLowerCase()===name.toLowerCase());
+  if (ex) { ex.qty = combineQty(ex.qty, qty||''); }
+  else appData.shopping.push({name, qty:qty||'', done:false});
 }
-
-function saveData() {
-  userRef().set(appData).catch(console.error);
-}
-
-function getMeal(date, mi)      { return appData.meals[date + '_' + mi] || ''; }
-function setMeal(date, mi, val) { appData.meals[date + '_' + mi] = val; saveData(); }
 
 // ── Auth ─────────────────────────────────────────────────────────
 function showTab(tab) {
-  document.getElementById('loginForm').style.display = tab === 'login' ? '' : 'none';
-  document.getElementById('regForm').style.display   = tab === 'register' ? '' : 'none';
+  document.getElementById('loginForm').style.display = tab==='login' ? '' : 'none';
+  document.getElementById('regForm').style.display   = tab==='register' ? '' : 'none';
   document.getElementById('authErr').style.display   = 'none';
-  document.querySelectorAll('.auth-tab').forEach(function(el, i) {
-    el.classList.toggle('active', i === (tab === 'login' ? 0 : 1));
-  });
+  document.querySelectorAll('.auth-tab').forEach((el,i) =>
+    el.classList.toggle('active', i===(tab==='login' ? 0 : 1)));
 }
-
-function authErr(msg) {
-  const el = document.getElementById('authErr');
-  el.textContent = msg;
-  el.style.display = 'block';
+function authErr(msg) { const el=document.getElementById('authErr'); el.textContent=msg; el.style.display='block'; }
+function setBusy(btnId,busy) {
+  const btn=document.getElementById(btnId); btn.disabled=busy;
+  btn.textContent = busy ? 'Bitte warten \u2026' : (btnId==='loginBtn' ? 'Anmelden' : 'Registrieren');
 }
-
-function setBusy(btnId, busy) {
-  const btn = document.getElementById(btnId);
-  btn.disabled = busy;
-  btn.textContent = busy ? 'Bitte warten \u2026' : (btnId === 'loginBtn' ? 'Anmelden' : 'Registrieren');
-}
-
 async function doLogin() {
-  const user = document.getElementById('lUser').value.trim().toLowerCase();
-  const pass = document.getElementById('lPass').value;
-  if (!user || !pass) return authErr('Bitte alle Felder ausf\u00FCllen.');
+  const user=document.getElementById('lUser').value.trim().toLowerCase();
+  const pass=document.getElementById('lPass').value;
+  if (!user||!pass) return authErr('Bitte alle Felder ausf\u00FCllen.');
   if (!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
-
-  setBusy('loginBtn', true);
-  const timeout = new Promise(function(_, reject) {
-    setTimeout(function() { reject(new Error('timeout')); }, 10000);
-  });
+  setBusy('loginBtn',true);
+  const timeout = new Promise((_,reject) => setTimeout(()=>reject(new Error('timeout')),10000));
   try {
-    await Promise.race([
-      auth.signInWithEmailAndPassword(user + FAKE_DOMAIN, pass),
-      timeout
-    ]);
-  } catch (e) {
-    if (e.message === 'timeout') {
-      authErr('Keine Verbindung zu Firebase. Bitte Internetverbindung pr\u00FCfen.');
-    } else if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+    await Promise.race([auth.signInWithEmailAndPassword(user+FAKE_DOMAIN,pass), timeout]);
+  } catch(e) {
+    if (e.message==='timeout') authErr('Keine Verbindung zu Firebase. Bitte Internetverbindung pr\u00FCfen.');
+    else if (e.code==='auth/user-not-found'||e.code==='auth/wrong-password'||e.code==='auth/invalid-credential')
       authErr('Benutzername oder Passwort falsch.');
-    } else {
-      authErr('Fehler: ' + e.message);
-    }
-    setBusy('loginBtn', false);
+    else authErr('Fehler: '+e.message);
+    setBusy('loginBtn',false);
   }
 }
-
 async function doRegister() {
-  const user  = document.getElementById('rUser').value.trim().toLowerCase();
-  const pass  = document.getElementById('rPass').value;
-  const pass2 = document.getElementById('rPass2').value;
-  if (!user || !pass || !pass2) return authErr('Bitte alle Felder ausf\u00FCllen.');
+  const user=document.getElementById('rUser').value.trim().toLowerCase();
+  const pass=document.getElementById('rPass').value;
+  const pass2=document.getElementById('rPass2').value;
+  if (!user||!pass||!pass2) return authErr('Bitte alle Felder ausf\u00FCllen.');
   if (!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
-  if (pass !== pass2) return authErr('Passw\u00F6rter stimmen nicht \u00FCberein.');
-  if (pass.length < 6) return authErr('Passwort muss mindestens 6 Zeichen haben.');
-
-  setBusy('registerBtn', true);
+  if (pass!==pass2) return authErr('Passw\u00F6rter stimmen nicht \u00FCberein.');
+  if (pass.length<6) return authErr('Passwort muss mindestens 6 Zeichen haben.');
+  setBusy('registerBtn',true);
   try {
-    const cred = await auth.createUserWithEmailAndPassword(user + FAKE_DOMAIN, pass);
-    await db.collection('users').doc(cred.user.uid).set({ username: user, password: pass });
-  } catch (e) {
-    if (e.code === 'auth/email-already-in-use') {
-      authErr('Benutzername bereits vergeben.');
-    } else {
-      authErr('Fehler: ' + e.message);
-    }
-    setBusy('registerBtn', false);
+    const cred = await auth.createUserWithEmailAndPassword(user+FAKE_DOMAIN,pass);
+    await db.collection('users').doc(cred.user.uid).set({username:user,password:pass});
+  } catch(e) {
+    authErr(e.code==='auth/email-already-in-use' ? 'Benutzername bereits vergeben.' : 'Fehler: '+e.message);
+    setBusy('registerBtn',false);
   }
 }
 
-async function startSession(uid, username) {
-  currentUid  = uid;
-  currentUser = username;
-
+async function startSession(uid,username) {
+  currentUid=uid; currentUser=username;
   const uDoc = await db.collection('users').doc(uid).get();
   let groupIds = [];
   if (uDoc.exists) {
-    const d = uDoc.data();
+    const d=uDoc.data();
     if (d.groupId && !d.groupIds) {
-      groupIds = [d.groupId];
-      await db.collection('users').doc(uid).update({
-        groupIds: [d.groupId],
-        groupId: firebase.firestore.FieldValue.delete()
-      });
-    } else {
-      groupIds = d.groupIds || [];
-    }
+      groupIds=[d.groupId];
+      await db.collection('users').doc(uid).update({groupIds:[d.groupId],groupId:firebase.firestore.FieldValue.delete()});
+    } else { groupIds=d.groupIds||[]; }
   }
-
-  userGroups = [];
-  const validIds = [];
+  userGroups=[]; const validIds=[];
   for (const gid of groupIds) {
-    const gDoc = await db.collection('groups').doc(gid).get();
+    const gDoc=await db.collection('groups').doc(gid).get();
     if (gDoc.exists && gDoc.data().members && gDoc.data().members[uid]) {
-      userGroups.push({ id: gid, name: gDoc.data().name, role: gDoc.data().members[uid].role });
+      userGroups.push({id:gid,name:gDoc.data().name,role:gDoc.data().members[uid].role});
       validIds.push(gid);
     }
   }
-  if (validIds.length !== groupIds.length) {
-    await db.collection('users').doc(uid).update({ groupIds: validIds });
-  }
-
-  currentGroupId = null; currentGroupRole = null; currentGroupName = '';
-
+  if (validIds.length!==groupIds.length)
+    await db.collection('users').doc(uid).update({groupIds:validIds});
+  currentGroupId=null; currentGroupRole=null; currentGroupName='';
   await loadData();
-  document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('appScreen').style.display  = '';
-  document.getElementById('navName').textContent = username;
-  updateContextSwitcher();
-  renderPlan();
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('appScreen').style.display='';
+  document.getElementById('navName').textContent=username;
+  updateContextSwitcher(); renderPlan();
 }
-
 function showAuthScreen() {
-  currentUid        = null;
-  currentUser       = null;
-  currentGroupId    = null;
-  currentGroupRole  = null;
-  currentGroupName  = '';
-  userGroups        = [];
-  appData           = { meals: {}, shopping: [], checked: {} };
-  document.getElementById('appScreen').style.display  = 'none';
-  document.getElementById('authScreen').style.display = 'flex';
-  setBusy('loginBtn', false);
-  setBusy('registerBtn', false);
+  currentUid=null; currentUser=null; currentGroupId=null; currentGroupRole=null;
+  currentGroupName=''; userGroups=[]; appData={meals:{},shopping:[],checked:{}};
+  document.getElementById('appScreen').style.display='none';
+  document.getElementById('authScreen').style.display='flex';
+  setBusy('loginBtn',false); setBusy('registerBtn',false);
 }
+function doLogout() { auth.signOut(); }
 
-function doLogout() {
-  auth.signOut();
-}
-
-// ── Permissions ───────────────────────────────────────────────────
-function canEdit()          { return !currentGroupId || ['owner','admin','member'].includes(currentGroupRole); }
-function canManageRecipes() { return !currentGroupId || ['owner','admin'].includes(currentGroupRole); }
+// ── Berechtigungen ────────────────────────────────────────────────
+function canEdit()          { return !currentGroupId||['owner','admin','member'].includes(currentGroupRole); }
+function canManageRecipes() { return !currentGroupId||['owner','admin'].includes(currentGroupRole); }
 function canManageGroup()   { return ['owner','admin'].includes(currentGroupRole); }
 
-// ── Firebase Auth State ───────────────────────────────────────────
+// ── Auth State ───────────────────────────────────────────────────
 auth.onAuthStateChanged(async function(fu) {
-  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('loadingScreen').style.display='none';
   if (fu) {
-    const pd = await db.collection('users').doc(fu.uid).get();
-    const username = pd.exists ? pd.data().username : fu.email.split('@')[0];
-    _cachedPw = pd.exists ? (pd.data().password || '') : '';
-    await startSession(fu.uid, username);
-  } else {
-    showAuthScreen();
-  }
+    const pd=await db.collection('users').doc(fu.uid).get();
+    const username=pd.exists ? pd.data().username : fu.email.split('@')[0];
+    _cachedPw=pd.exists ? (pd.data().password||'') : '';
+    await startSession(fu.uid,username);
+  } else { showAuthScreen(); }
 });
 
-// ── Password management ───────────────────────────────────────────
+// ── Passwortverwaltung ────────────────────────────────────────────
 function toggleShowPw() {
-  _pwVisible = !_pwVisible;
-  document.getElementById('settingsPwDisplay').textContent = _pwVisible ? (_cachedPw || '(nicht verf\u00FCgbar)') : '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+  _pwVisible=!_pwVisible;
+  document.getElementById('settingsPwDisplay').textContent = _pwVisible ? (_cachedPw||'(nicht verf\u00FCgbar)') : '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
   document.getElementById('settingsPwToggleBtn').textContent = _pwVisible ? 'Verbergen' : 'Anzeigen';
 }
-
 function toggleChangePwForm() {
-  const form = document.getElementById('changePwForm');
-  const open = form.style.display === 'none';
-  form.style.display = open ? '' : 'none';
+  const form=document.getElementById('changePwForm');
+  const open=form.style.display==='none';
+  form.style.display=open ? '' : 'none';
   if (open) {
-    document.getElementById('currentPw').value = '';
-    document.getElementById('newPw1').value = '';
-    document.getElementById('newPw2').value = '';
-    document.getElementById('changePwErr').style.display = 'none';
+    ['currentPw','newPw1','newPw2'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('changePwErr').style.display='none';
     document.getElementById('currentPw').focus();
   }
 }
-
 async function saveNewPw() {
-  const currentPw = document.getElementById('currentPw').value;
-  const pw1 = document.getElementById('newPw1').value;
-  const pw2 = document.getElementById('newPw2').value;
-  const errEl = document.getElementById('changePwErr');
-  errEl.style.display = 'none';
-
-  if (!currentPw || !pw1 || !pw2) { errEl.textContent = 'Bitte alle Felder ausf\u00FCllen.'; errEl.style.display = 'block'; return; }
-  if (pw1.length < 6) { errEl.textContent = 'Passwort muss mindestens 6 Zeichen haben.'; errEl.style.display = 'block'; return; }
-  if (pw1 !== pw2) { errEl.textContent = 'Passw\u00F6rter stimmen nicht \u00FCberein.'; errEl.style.display = 'block'; return; }
-
+  const cp=document.getElementById('currentPw').value;
+  const p1=document.getElementById('newPw1').value;
+  const p2=document.getElementById('newPw2').value;
+  const errEl=document.getElementById('changePwErr'); errEl.style.display='none';
+  if (!cp||!p1||!p2) { errEl.textContent='Bitte alle Felder ausf\u00FCllen.'; errEl.style.display='block'; return; }
+  if (p1.length<6) { errEl.textContent='Passwort muss mindestens 6 Zeichen haben.'; errEl.style.display='block'; return; }
+  if (p1!==p2) { errEl.textContent='Passw\u00F6rter stimmen nicht \u00FCberein.'; errEl.style.display='block'; return; }
   try {
-    const credential = firebase.auth.EmailAuthProvider.credential(currentUser + FAKE_DOMAIN, currentPw);
-    await auth.currentUser.reauthenticateWithCredential(credential);
-    await auth.currentUser.updatePassword(pw1);
-    await db.collection('users').doc(currentUid).update({ password: pw1 });
-    _cachedPw = pw1;
-    if (_pwVisible) document.getElementById('settingsPwDisplay').textContent = pw1;
-    toggleChangePwForm();
-    alert('Passwort erfolgreich ge\u00E4ndert.');
-  } catch (e) {
-    if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
-      errEl.textContent = 'Aktuelles Passwort ist falsch.';
-    } else {
-      errEl.textContent = 'Fehler: ' + e.message;
-    }
-    errEl.style.display = 'block';
+    const cred=firebase.auth.EmailAuthProvider.credential(currentUser+FAKE_DOMAIN,cp);
+    await auth.currentUser.reauthenticateWithCredential(cred);
+    await auth.currentUser.updatePassword(p1);
+    await db.collection('users').doc(currentUid).update({password:p1});
+    _cachedPw=p1;
+    if (_pwVisible) document.getElementById('settingsPwDisplay').textContent=p1;
+    toggleChangePwForm(); alert('Passwort erfolgreich ge\u00E4ndert.');
+  } catch(e) {
+    errEl.textContent=(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential')
+      ? 'Aktuelles Passwort ist falsch.' : 'Fehler: '+e.message;
+    errEl.style.display='block';
   }
 }
 
 // ── Dark Mode ────────────────────────────────────────────────────
 function applyTheme(dark) {
-  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-  localStorage.setItem('ep_theme', dark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', dark?'dark':'light');
+  localStorage.setItem('ep_theme', dark?'dark':'light');
 }
-
 function toggleDark(dark) { applyTheme(dark); }
+(function(){ if (localStorage.getItem('ep_theme')==='dark') applyTheme(true); })();
 
-(function() {
-  const saved = localStorage.getItem('ep_theme');
-  if (saved === 'dark') applyTheme(true);
-})();
-
-// ── Account Deletion ─────────────────────────────────────────────
+// ── Account l\u00F6schen ──────────────────────────────────────────────
 async function deleteAccount() {
   if (!confirm('Willst du deinen Account und alle deine Daten wirklich unwiderruflich l\u00F6schen?')) return;
   try {
-    for (const g of userGroups) {
-      await db.collection('groups').doc(<g.id>).update({
-        ['members.' + currentUid]: firebase.firestore.FieldValue.delete()
-      });
-    }
+    for (const g of userGroups)
+      await db.collection('groups').doc(g.id).update({[`members.${currentUid}`]:firebase.firestore.FieldValue.delete()});
     await db.collection('users').doc(currentUid).collection('data').doc('main').delete();
     await db.collection('users').doc(currentUid).delete();
     await auth.currentUser.delete();
-  } catch (e) {
-    if (e.code === 'auth/requires-recent-login') {
-      alert('Bitte melde dich ab und erneut an, um deinen Account zu l\u00F6schen.');
-    } else {
-      alert('Fehler beim L\u00F6schen: ' + e.message);
-    }
+  } catch(e) {
+    alert(e.code==='auth/requires-recent-login'
+      ? 'Bitte melde dich ab und erneut an, um deinen Account zu l\u00F6schen.'
+      : 'Fehler beim L\u00F6schen: '+e.message);
   }
 }
 
 // ── Navigation ───────────────────────────────────────────────────
-function showPage(name, btn) {
-  document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
-  document.querySelectorAll('.nav-btn').forEach(function(el) { el.classList.remove('active'); });
-  document.getElementById(name + 'Page').classList.add('active');
+function showPage(name,btn) {
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById(name+'Page').classList.add('active');
   btn.classList.add('active');
-  if (name === 'shopping') renderShopping();
-  if (name === 'recipes')  renderRecipes();
-  if (name === 'group')    renderGroupPage();
-  if (name === 'settings') {
-    document.getElementById('darkToggle').checked = localStorage.getItem('ep_theme') === 'dark';
-    document.getElementById('settingsUsername').textContent = currentUser || '';
-    _pwVisible = false;
-    document.getElementById('settingsPwDisplay').textContent = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
-    document.getElementById('settingsPwToggleBtn').textContent = 'Anzeigen';
-    document.getElementById('changePwForm').style.display = 'none';
+  if (name==='shopping') renderShopping();
+  if (name==='recipes')  renderRecipes();
+  if (name==='group')    renderGroupPage();
+  if (name==='settings') {
+    document.getElementById('darkToggle').checked=localStorage.getItem('ep_theme')==='dark';
+    document.getElementById('settingsUsername').textContent=currentUser||'';
+    _pwVisible=false;
+    document.getElementById('settingsPwDisplay').textContent='\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+    document.getElementById('settingsPwToggleBtn').textContent='Anzeigen';
+    document.getElementById('changePwForm').style.display='none';
   }
 }
 
-// ── View switching ────────────────────────────────────────────────
+// ── Ansicht wechseln ──────────────────────────────────────────────
 function setView(v) {
-  currentView = v;
-  weekOffset  = 0;
-  ['day','week','month'].forEach(function(x) {
-    document.getElementById('v' + x.charAt(0).toUpperCase() + x.slice(1))
-            .classList.toggle('active', x === v);
-  });
+  currentView=v; weekOffset=0;
+  ['day','week','month'].forEach(x =>
+    document.getElementById('v'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('active',x===v));
   renderPlan();
 }
-
-function changeOffset(dir) { weekOffset += dir; renderPlan(); }
-
+function changeOffset(dir) { weekOffset+=dir; renderPlan(); }
 function renderPlan() {
-  if (currentView === 'week')  renderWeek();
-  else if (currentView === 'day') renderDay();
+  if (currentView==='week') renderWeek();
+  else if (currentView==='day') renderDay();
   else renderMonth();
 }
 
-// ── Day view ─────────────────────────────────────────────────────
+// ── Tagesansicht ─────────────────────────────────────────────────
 function renderDay() {
-  const d = new Date();
-  d.setDate(d.getDate() + weekOffset);
-  d.setHours(0,0,0,0);
-  const dk = dateKey(d);
-  const isToday = dk === todayKey();
-  const dayIdx  = (d.getDay() + 6) % 7;
-
-  document.getElementById('planTitle').textContent = 'Tagesplan';
+  const d=new Date(); d.setDate(d.getDate()+weekOffset); d.setHours(0,0,0,0);
+  const dk=dateKey(d), isToday=dk===todayKey(), dayIdx=(d.getDay()+6)%7;
+  document.getElementById('planTitle').textContent='Tagesplan';
   document.getElementById('weekLabel').textContent =
-    weekOffset === 0 ? 'Heute' :
-    weekOffset === 1 ? 'Morgen' :
-    weekOffset === -1 ? 'Gestern' :
-    DAYS[dayIdx] + ', ' + dateFmt(d);
-
-  const view = document.getElementById('planView');
-  const card = document.createElement('div');
-  card.className = 'day-view-card' + (isToday ? ' today' : '');
-  card.innerHTML =
-    '<div class="day-view-head">' +
-    '<div class="day-view-name">' + DAYS[dayIdx] + (isToday ? ' \u25CF' : '') + '</div>' +
-    '<div class="day-view-date">' + d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}) + '</div>' +
-    '</div>' +
-    MEALS.map(function(m, mi) {
-      return '<div class="meal-slot" id="slot_' + dk + '_' + mi + '">' +
-        '<div class="meal-type">' + m + '</div>' +
-        '<div class="meal-name" onclick="editMeal(\'' + dk + '\',' + mi + ')">' + esc(getMeal(dk, mi)) + '</div>' +
-        '</div>';
-    }).join('');
-
-  view.innerHTML = '';
-  view.appendChild(card);
+    weekOffset===0 ? 'Heute' : weekOffset===1 ? 'Morgen' : weekOffset===-1 ? 'Gestern' :
+    DAYS[dayIdx]+', '+dateFmt(d);
+  const view=document.getElementById('planView');
+  const card=document.createElement('div');
+  card.className='day-view-card'+(isToday?' today':'');
+  card.innerHTML=
+    `<div class="day-view-head">
+      <div class="day-view-name">${DAYS[dayIdx]}${isToday?' \u25CF':''}</div>
+      <div class="day-view-date">${d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}</div>
+    </div>`+
+    MEALS.map((m,mi)=>
+      `<div class="meal-slot" id="slot_${dk}_${mi}">
+        <div class="meal-type">${m}</div>
+        <div class="meal-name" onclick="editMeal('${dk}',${mi})">${esc(getMeal(dk,mi))}</div>
+      </div>`
+    ).join('');
+  view.innerHTML=''; view.appendChild(card);
 }
 
-// ── Week view ─────────────────────────────────────────────────────
+// ── Wochenansicht ─────────────────────────────────────────────────
 function renderWeek() {
-  const mon = monday(weekOffset);
-  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-
-  document.getElementById('planTitle').textContent = 'Wochenplan';
+  const mon=monday(weekOffset);
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  document.getElementById('planTitle').textContent='Wochenplan';
   document.getElementById('weekLabel').textContent =
-    weekOffset ===  0 ? 'Diese Woche' :
-    weekOffset ===  1 ? 'N\u00E4chste Woche' :
-    weekOffset === -1 ? 'Letzte Woche'  :
-    dateFmt(mon) + ' \u2013 ' + dateFmt(sun);
-
-  const view = document.getElementById('planView');
-  const grid = document.createElement('div');
-  grid.className = 'week-grid';
-
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(mon);
-    d.setDate(mon.getDate() + i);
-    const dk = dateKey(d);
-    const isToday = dk === todayKey();
-
-    const card = document.createElement('div');
-    card.className = 'day-card' + (isToday ? ' today' : '');
-    card.innerHTML =
-      '<div class="day-head">' +
-      '<div class="day-name">' + DAYS[i] + (isToday ? ' \u25CF' : '') + '</div>' +
-      '<div class="day-date">' + dateFmt(d) + '</div>' +
-      '</div>' +
-      MEALS.map(function(m, mi) {
-        return '<div class="meal-slot" id="slot_' + dk + '_' + mi + '" draggable="true"' +
-          ' ondragstart="onMealDragStart(event,\'' + dk + '\',' + mi + ')"' +
-          ' ondragover="onMealDragOver(event)"' +
-          ' ondragleave="onMealDragLeave(event)"' +
-          ' ondrop="onMealDrop(event,\'' + dk + '\',' + mi + ')"' +
-          ' ondragend="onMealDragEnd(event)">' +
-          '<div class="meal-type">' + m + '</div>' +
-          '<div class="meal-name" onclick="editMeal(\'' + dk + '\',' + mi + ')">' + esc(getMeal(dk, mi)) + '</div>' +
-          mealIngBtn(dk, mi) +
-          '</div>';
-      }).join('');
-
+    weekOffset===0  ? 'Diese Woche' :
+    weekOffset===1  ? 'N\u00E4chste Woche' :
+    weekOffset===-1 ? 'Letzte Woche' :
+    dateFmt(mon)+' \u2013 '+dateFmt(sun);
+  const view=document.getElementById('planView');
+  const grid=document.createElement('div'); grid.className='week-grid';
+  for (let i=0;i<7;i++) {
+    const d=new Date(mon); d.setDate(mon.getDate()+i);
+    const dk=dateKey(d), isToday=dk===todayKey();
+    const card=document.createElement('div');
+    card.className='day-card'+(isToday?' today':'');
+    card.innerHTML=
+      `<div class="day-head">
+        <div class="day-name">${DAYS[i]}${isToday?' \u25CF':''}</div>
+        <div class="day-date">${dateFmt(d)}</div>
+      </div>`+
+      MEALS.map((m,mi)=>
+        `<div class="meal-slot" id="slot_${dk}_${mi}" draggable="true"
+          ondragstart="onMealDragStart(event,'${dk}',${mi})"
+          ondragover="onMealDragOver(event)"
+          ondragleave="onMealDragLeave(event)"
+          ondrop="onMealDrop(event,'${dk}',${mi})"
+          ondragend="onMealDragEnd(event)">
+          <div class="meal-type">${m}</div>
+          <div class="meal-name" onclick="editMeal('${dk}',${mi})">${esc(getMeal(dk,mi))}</div>
+          ${mealIngBtn(dk,mi)}
+        </div>`
+      ).join('');
     grid.appendChild(card);
   }
-
-  view.innerHTML = '';
-  view.appendChild(grid);
+  view.innerHTML=''; view.appendChild(grid);
 }
 
-// ── Month view ────────────────────────────────────────────────────
+// ── Monatsansicht ─────────────────────────────────────────────────
 function renderMonth() {
-  const now   = new Date();
-  const year  = now.getFullYear();
-  const month = now.getMonth() + weekOffset;
-  const first = new Date(year, month, 1);
-  const last  = new Date(year, month + 1, 0);
-
-  document.getElementById('planTitle').textContent = 'Monatsplan';
-  document.getElementById('weekLabel').textContent =
-    first.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
-
-  const view = document.getElementById('planView');
-  view.innerHTML = '';
-
-  const hdr = document.createElement('div');
-  hdr.className = 'month-header';
-  DAYS.forEach(function(n) { hdr.innerHTML += '<div class="month-dname">' + n + '</div>'; });
+  const now=new Date(), year=now.getFullYear(), month=now.getMonth()+weekOffset;
+  const first=new Date(year,month,1), last=new Date(year,month+1,0);
+  document.getElementById('planTitle').textContent='Monatsplan';
+  document.getElementById('weekLabel').textContent=first.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+  const view=document.getElementById('planView'); view.innerHTML='';
+  const hdr=document.createElement('div'); hdr.className='month-header';
+  DAYS.forEach(n=>{ hdr.innerHTML+=`<div class="month-dname">${n}</div>`; });
   view.appendChild(hdr);
-
-  const grid = document.createElement('div');
-  grid.className = 'month-grid';
-
-  const startDow = (first.getDay() + 6) % 7;
-  for (let i = 0; i < startDow; i++) {
-    grid.appendChild(monthCell(new Date(year, month, 1 - startDow + i), true));
-  }
-  for (let d = 1; d <= last.getDate(); d++) {
-    grid.appendChild(monthCell(new Date(year, month, d), false));
-  }
-  const total = startDow + last.getDate();
-  const remainder = (7 - (total % 7)) % 7;
-  for (let i = 1; i <= remainder; i++) {
-    grid.appendChild(monthCell(new Date(year, month + 1, i), true));
-  }
-
+  const grid=document.createElement('div'); grid.className='month-grid';
+  const startDow=(first.getDay()+6)%7;
+  for (let i=0;i<startDow;i++) grid.appendChild(monthCell(new Date(year,month,1-startDow+i),true));
+  for (let d=1;d<=last.getDate();d++) grid.appendChild(monthCell(new Date(year,month,d),false));
+  const rem=(7-((startDow+last.getDate())%7))%7;
+  for (let i=1;i<=rem;i++) grid.appendChild(monthCell(new Date(year,month+1,i),true));
   view.appendChild(grid);
 }
-
-function monthCell(d, otherMonth) {
-  const dk = dateKey(d);
-  const isToday = dk === todayKey();
-
-  const cell = document.createElement('div');
-  cell.className = 'month-cell' + (isToday ? ' today' : '') + (otherMonth ? ' other-month' : '');
-  cell.title = 'Tag anzeigen';
-
-  let html = '<div class="month-num">' + d.getDate() + (isToday ? '<span class="month-today-badge">Heute</span>' : '') + '</div>';
-  MEALS.forEach(function(m, mi) {
-    const val = getMeal(dk, mi);
-    if (val) html += '<div class="month-meal-dot" title="' + esc(m) + ': ' + esc(val) + '">\u00B7 ' + esc(val) + '</div>';
-  });
-  cell.innerHTML = html;
-
-  cell.onclick = function() {
-    const today = new Date(); today.setHours(0,0,0,0);
-    d.setHours(0,0,0,0);
-    const diff = Math.round((d - today) / 86400000);
-    weekOffset = diff;
-    document.getElementById('vWeek').classList.remove('active');
-    document.getElementById('vMonth').classList.remove('active');
+function monthCell(d,otherMonth) {
+  const dk=dateKey(d), isToday=dk===todayKey();
+  const cell=document.createElement('div');
+  cell.className='month-cell'+(isToday?' today':'')+(otherMonth?' other-month':'');
+  let html=`<div class="month-num">${d.getDate()}${isToday?'<span class="month-today-badge">Heute</span>':''}</div>`;
+  MEALS.forEach((m,mi)=>{ const v=getMeal(dk,mi); if(v) html+=`<div class="month-meal-dot" title="${esc(m)}: ${esc(v)}">\u00B7 ${esc(v)}</div>`; });
+  cell.innerHTML=html;
+  cell.onclick=()=>{
+    const today=new Date(); today.setHours(0,0,0,0); d.setHours(0,0,0,0);
+    weekOffset=Math.round((d-today)/86400000);
+    ['vWeek','vMonth'].forEach(id=>document.getElementById(id).classList.remove('active'));
     document.getElementById('vDay').classList.add('active');
-    currentView = 'day';
-    renderPlan();
+    currentView='day'; renderPlan();
   };
   return cell;
 }
 
-function mealIngBtn(dk, mi) {
-  const rid = (appData.mealRecipes || {})[dk + '_' + mi];
-  if (!rid) return '';
-  const rec = (appData.recipes || []).find(function(r) { return <r.id> === rid; });
-  if (!rec || !rec.ingredients.length) return '';
-  return '<button class="meal-ing-btn" onclick="addRecipeToShop(\'' + dk + '\',' + mi + ',event)">\uD83D\uDED2 Zutaten zur Einkaufsliste</button>';
+// ── Zutatenschaltfl\u00E4che ──────────────────────────────────────────
+function mealIngBtn(dk,mi) {
+  const rid=(appData.mealRecipes||{})[dk+'_'+mi]; if (!rid) return '';
+  const rec=(appData.recipes||[]).find(r=>r.id===rid);
+  if (!rec||!rec.ingredients.length) return '';
+  return `<button class="meal-ing-btn" onclick="addRecipeToShop('${dk}',${mi},event)">\uD83D\uDED2 Zutaten zur Einkaufsliste</button>`;
 }
 
-let _ingModalRecipe = null;
-
-function addRecipeToShop(dk, mi, e) {
+let _ingModalRecipe=null;
+function addRecipeToShop(dk,mi,e) {
   e.stopPropagation();
-  const rid = (appData.mealRecipes || {})[dk + '_' + mi];
-  const rec = (appData.recipes || []).find(function(r) { return <r.id> === rid; });
-  if (!rec || !rec.ingredients.length) return;
-  _ingModalRecipe = rec;
-
-  document.getElementById('ingModalTitle').textContent = 'Zutaten von \u201E' + rec.name + '\u201C';
-  const list = document.getElementById('ingModalList');
-  list.innerHTML = rec.ingredients.map(function(ing, i) {
-    return '<div class="modal-ing-item">' +
-      '<input type="checkbox" id="ingCb_' + i + '" checked />' +
-      '<span style="flex:1">' + esc(ing.name) + '</span>' +
-      '<input type="text" id="ingQtyCb_' + i + '" class="qty-inp" value="' + esc(ing.qty||'') + '" placeholder="Menge" />' +
-      '</div>';
-  }).join('');
-  document.getElementById('ingModal').style.display = 'flex';
+  const rid=(appData.mealRecipes||{})[dk+'_'+mi];
+  const rec=(appData.recipes||[]).find(r=>r.id===rid);
+  if (!rec||!rec.ingredients.length) return;
+  _ingModalRecipe=rec;
+  document.getElementById('ingModalTitle').textContent=`Zutaten von \u201E${rec.name}\u201C`;
+  document.getElementById('ingModalList').innerHTML=rec.ingredients.map((ing,i)=>
+    `<div class="modal-ing-item">
+      <input type="checkbox" id="ingCb_${i}" checked />
+      <span style="flex:1">${esc(ing.name)}</span>
+      <input type="text" id="ingQtyCb_${i}" class="qty-inp" value="${esc(ing.qty||'')}" placeholder="Menge" />
+    </div>`
+  ).join('');
+  document.getElementById('ingModal').style.display='flex';
 }
-
 function closeIngModal(e) {
-  if (e && e.target !== document.getElementById('ingModal')) return;
-  document.getElementById('ingModal').style.display = 'none';
-  _ingModalRecipe = null;
+  if (e && e.target!==document.getElementById('ingModal')) return;
+  document.getElementById('ingModal').style.display='none'; _ingModalRecipe=null;
 }
-
 function confirmIngModal() {
   if (!_ingModalRecipe) return;
-  _ingModalRecipe.ingredients.forEach(function(ing, i) {
-    const cb = document.getElementById('ingCb_' + i);
-    if (cb && cb.checked) {
-      const qtyEl = document.getElementById('ingQtyCb_' + i);
-      const qty = qtyEl ? qtyEl.value.trim() : (ing.qty || '');
-      addToShopping(ing.name, qty);
-    }
+  _ingModalRecipe.ingredients.forEach((ing,i)=>{
+    if (document.getElementById(`ingCb_${i}`)?.checked)
+      addToShopping(ing.name, document.getElementById(`ingQtyCb_${i}`)?.value.trim()||ing.qty||'');
   });
-  saveData();
-  document.getElementById('ingModal').style.display = 'none';
-  _ingModalRecipe = null;
+  saveData(); document.getElementById('ingModal').style.display='none'; _ingModalRecipe=null;
 }
 
-let _editDk = null, _editMi = null;
-
-function editMeal(dk, mi) {
+// ── Mahlzeit bearbeiten (Popup) ───────────────────────────────────
+let _editDk=null, _editMi=null;
+function editMeal(dk,mi) {
   if (!canEdit()) return;
-  _editDk = dk; _editMi = mi;
-
-  const slot  = document.getElementById('slot_' + dk + '_' + mi);
-  const popup = document.getElementById('mealEditPopup');
-  const inp   = document.getElementById('mealEditInput');
-  const ac    = document.getElementById('mealEditAC');
-
-  document.getElementById('mealEditPopupLabel').textContent = MEALS[mi];
-  inp.value = getMeal(dk, mi);
-  ac.style.display = 'none';
-  popup.style.display = 'block';
-
-  const rect = slot.getBoundingClientRect();
-  popup.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 340)) + 'px';
-  popup.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
-
-  requestAnimationFrame(function() {
-    const ph = popup.offsetHeight;
-    if (rect.bottom + ph + 6 > window.innerHeight) {
-      popup.style.top = (rect.top + window.scrollY - ph - 6) + 'px';
-    }
+  _editDk=dk; _editMi=mi;
+  const slot=document.getElementById('slot_'+dk+'_'+mi);
+  const popup=document.getElementById('mealEditPopup');
+  const inp=document.getElementById('mealEditInput');
+  document.getElementById('mealEditPopupLabel').textContent=MEALS[mi];
+  inp.value=getMeal(dk,mi);
+  document.getElementById('mealEditAC').style.display='none';
+  popup.style.display='block';
+  const rect=slot.getBoundingClientRect();
+  popup.style.left=Math.max(8,Math.min(rect.left,window.innerWidth-340))+'px';
+  popup.style.top=(rect.bottom+window.scrollY+6)+'px';
+  requestAnimationFrame(()=>{
+    const ph=popup.offsetHeight;
+    if (rect.bottom+ph+6>window.innerHeight) popup.style.top=(rect.top+window.scrollY-ph-6)+'px';
     inp.focus(); inp.select();
   });
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-  const inp = document.getElementById('mealEditInput');
-  inp.addEventListener('input', function() { showMealEditAC(inp.value); });
-  inp.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter')  saveMealFromPopup();
-    if (e.key === 'Escape') closeMealEditPopup();
+document.addEventListener('DOMContentLoaded',function(){
+  const inp=document.getElementById('mealEditInput');
+  inp.addEventListener('input',()=>showMealEditAC(inp.value));
+  inp.addEventListener('keydown',e=>{
+    if (e.key==='Enter') saveMealFromPopup();
+    if (e.key==='Escape') closeMealEditPopup();
   });
-  document.addEventListener('mousedown', function(e) {
-    const popup = document.getElementById('mealEditPopup');
-    if (popup.style.display !== 'none' && !popup.contains(e.target) && !e.target.classList.contains('meal-name')) {
+  document.addEventListener('mousedown',function(e){
+    const popup=document.getElementById('mealEditPopup');
+    if (popup.style.display!=='none'&&!popup.contains(e.target)&&!e.target.classList.contains('meal-name'))
       closeMealEditPopup();
-    }
   });
 });
-
 function showMealEditAC(val) {
-  const drop = document.getElementById('mealEditAC');
-  if (!val.trim()) { drop.style.display = 'none'; return; }
-  const matches = (appData.recipes || []).filter(function(r) { return r.name.toLowerCase().includes(val.toLowerCase()); });
-  if (!matches.length) { drop.style.display = 'none'; return; }
-  drop.innerHTML = matches.map(function(r) {
-    return '<div class="ac-item" onmousedown="pickMealEditRecipe(\'' + <r.id> + '\')">' + esc(r.name) + '</div>';
-  }).join('');
-  drop.style.display = '';
+  const drop=document.getElementById('mealEditAC');
+  if (!val.trim()) { drop.style.display='none'; return; }
+  const matches=(appData.recipes||[]).filter(r=>r.name.toLowerCase().includes(val.toLowerCase()));
+  if (!matches.length) { drop.style.display='none'; return; }
+  drop.innerHTML=matches.map(r=>`<div class="ac-item" onmousedown="pickMealEditRecipe('${r.id}')">${esc(r.name)}</div>`).join('');
+  drop.style.display='';
 }
-
 function pickMealEditRecipe(rid) {
-  const rec = (appData.recipes || []).find(function(r) { return <r.id> === rid; });
-  if (!rec) return;
-  document.getElementById('mealEditInput').value = rec.name;
-  document.getElementById('mealEditAC').style.display = 'none';
-  if (!appData.mealRecipes) appData.mealRecipes = {};
-  appData.mealRecipes[_editDk + '_' + _editMi] = rid;
+  const rec=(appData.recipes||[]).find(r=>r.id===rid); if (!rec) return;
+  document.getElementById('mealEditInput').value=rec.name;
+  document.getElementById('mealEditAC').style.display='none';
+  if (!appData.mealRecipes) appData.mealRecipes={};
+  appData.mealRecipes[_editDk+'_'+_editMi]=rid;
 }
-
 function saveMealFromPopup() {
-  if (_editDk === null) return;
-  const val = document.getElementById('mealEditInput').value.trim();
-  const rid = (appData.mealRecipes || {})[_editDk + '_' + _editMi];
-  if (rid) {
-    const rec = (appData.recipes || []).find(function(r) { return <r.id> === rid; });
-    if (!rec || rec.name !== val) delete appData.mealRecipes[_editDk + '_' + _editMi];
-  }
-  setMeal(_editDk, _editMi, val);
-  closeMealEditPopup();
-  renderPlan();
+  if (_editDk===null) return;
+  const val=document.getElementById('mealEditInput').value.trim();
+  const rid=(appData.mealRecipes||{})[_editDk+'_'+_editMi];
+  if (rid) { const rec=(appData.recipes||[]).find(r=>r.id===rid); if (!rec||rec.name!==val) delete appData.mealRecipes[_editDk+'_'+_editMi]; }
+  setMeal(_editDk,_editMi,val); closeMealEditPopup(); renderPlan();
 }
-
 function closeMealEditPopup() {
-  document.getElementById('mealEditPopup').style.display = 'none';
-  _editDk = null; _editMi = null;
+  document.getElementById('mealEditPopup').style.display='none'; _editDk=null; _editMi=null;
 }
 
 // ── Drag & Drop ───────────────────────────────────────────────────
-let _dragSrcDk = null, _dragSrcMi = null;
-
-function onMealDragStart(e, dk, mi) {
+let _dragSrcDk=null, _dragSrcMi=null;
+function onMealDragStart(e,dk,mi) {
   if (!canEdit()) { e.preventDefault(); return; }
-  _dragSrcDk = dk; _dragSrcMi = mi;
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', dk + '|' + mi);
-  setTimeout(function() {
-    const el = document.getElementById('slot_' + dk + '_' + mi);
-    if (el) el.classList.add('dragging');
-  }, 0);
+  _dragSrcDk=dk; _dragSrcMi=mi;
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',dk+'|'+mi);
+  setTimeout(()=>{ const el=document.getElementById('slot_'+dk+'_'+mi); if(el) el.classList.add('dragging'); },0);
 }
-
 function onMealDragOver(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
+  e.preventDefault(); e.dataTransfer.dropEffect='move';
   e.currentTarget.classList.add('drag-over');
 }
-
-function onMealDragLeave(e) {
-  e.currentTarget.classList.remove('drag-over');
-}
-
+function onMealDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
 function onMealDragEnd(e) {
   e.currentTarget.classList.remove('dragging');
-  document.querySelectorAll('.meal-slot.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
+  document.querySelectorAll('.meal-slot.drag-over').forEach(el=>el.classList.remove('drag-over'));
+}
+function onMealDrop(e,tgtDk,tgtMi) {
+  e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+  if (!canEdit()||_dragSrcDk===null) return;
+  if (_dragSrcDk===tgtDk&&_dragSrcMi===tgtMi) return;
+  const srcVal=getMeal(_dragSrcDk,_dragSrcMi), tgtVal=getMeal(tgtDk,tgtMi);
+  const srcKey=_dragSrcDk+'_'+_dragSrcMi, tgtKey=tgtDk+'_'+tgtMi;
+  if (!appData.mealRecipes) appData.mealRecipes={};
+  const srcRid=appData.mealRecipes[srcKey]||null, tgtRid=appData.mealRecipes[tgtKey]||null;
+  setMeal(_dragSrcDk,_dragSrcMi,tgtVal); setMeal(tgtDk,tgtMi,srcVal);
+  if (srcRid) appData.mealRecipes[tgtKey]=srcRid; else delete appData.mealRecipes[tgtKey];
+  if (tgtRid) appData.mealRecipes[srcKey]=tgtRid; else delete appData.mealRecipes[srcKey];
+  _dragSrcDk=null; _dragSrcMi=null; saveData(); renderPlan();
 }
 
-function onMealDrop(e, tgtDk, tgtMi) {
-  e.preventDefault();
-  e.currentTarget.classList.remove('drag-over');
-  if (!canEdit()) return;
-  if (_dragSrcDk === null) return;
-  if (_dragSrcDk === tgtDk && _dragSrcMi === tgtMi) return;
-
-  const srcVal = getMeal(_dragSrcDk, _dragSrcMi);
-  const tgtVal = getMeal(tgtDk, tgtMi);
-
-  const srcKey = _dragSrcDk + '_' + _dragSrcMi;
-  const tgtKey = tgtDk + '_' + tgtMi;
-  if (!appData.mealRecipes) appData.mealRecipes = {};
-  const srcRid = appData.mealRecipes[srcKey] || null;
-  const tgtRid = appData.mealRecipes[tgtKey] || null;
-
-  setMeal(_dragSrcDk, _dragSrcMi, tgtVal);
-  setMeal(tgtDk, tgtMi, srcVal);
-
-  if (srcRid) appData.mealRecipes[tgtKey] = srcRid; else delete appData.mealRecipes[tgtKey];
-  if (tgtRid) appData.mealRecipes[srcKey] = tgtRid; else delete appData.mealRecipes[srcKey];
-
-  _dragSrcDk = null; _dragSrcMi = null;
-  saveData();
-  renderPlan();
-}
-
-// ── Touch drag fallback (mobile) ──────────────────────────────────
-(function() {
-  let touchSrcDk = null, touchSrcMi = null, touchClone = null, lastOver = null;
-
-  function slotFromPoint(x, y) {
-    const els = document.elementsFromPoint(x, y);
-    for (let i = 0; i < els.length; i++) {
-      if (els[i].classList && els[i].classList.contains('meal-slot')) return els[i];
-    }
+// ── Touch-Fallback (Mobil) ────────────────────────────────────────
+(function(){
+  let touchSrcDk=null,touchSrcMi=null,touchClone=null,lastOver=null;
+  function slotFromPoint(x,y) {
+    const els=document.elementsFromPoint(x,y);
+    for (const el of els) if (el.classList&&el.classList.contains('meal-slot')) return el;
     return null;
   }
-
   function parsSlot(el) {
-    const id = <el.id> || '';
-    const m = id.match(/^slot_(.+)_(\d+)$/);
-    if (!m) return null;
-    return { dk: m[1], mi: parseInt(m[2], 10) };
+    const m=(el.id||'').match(/^slot_(.+)_(\d+)$/);
+    return m ? {dk:m[1],mi:parseInt(m[2],10)} : null;
   }
-
-  document.addEventListener('touchstart', function(e) {
-    const slot = e.target.closest('.meal-slot');
-    if (!slot || !canEdit()) return;
-    const info = parsSlot(slot);
-    if (!info) return;
-    touchSrcDk = <info.dk>; touchSrcMi = info.mi;
-
-    const rect = slot.getBoundingClientRect();
-    touchClone = slot.cloneNode(true);
-    touchClone.style.cssText =
-      'position:fixed;pointer-events:none;z-index:9999;opacity:.7;width:' + rect.width + 'px;' +
-      'top:' + rect.top + 'px;left:' + rect.left + 'px;transition:none;border-radius:8px;';
-    document.body.appendChild(touchClone);
-    slot.classList.add('dragging');
-  }, { passive: true });
-
-  document.addEventListener('touchmove', function(e) {
+  document.addEventListener('touchstart',function(e){
+    const slot=e.target.closest('.meal-slot'); if (!slot||!canEdit()) return;
+    const info=parsSlot(slot); if (!info) return;
+    touchSrcDk=info.dk; touchSrcMi=info.mi;
+    const rect=slot.getBoundingClientRect();
+    touchClone=slot.cloneNode(true);
+    touchClone.style.cssText='position:fixed;pointer-events:none;z-index:9999;opacity:.7;width:'+rect.width+'px;top:'+rect.top+'px;left:'+rect.left+'px;transition:none;border-radius:8px;';
+    document.body.appendChild(touchClone); slot.classList.add('dragging');
+  },{passive:true});
+  document.addEventListener('touchmove',function(e){
     if (!touchSrcDk) return;
-    const t = e.touches[0];
-    if (touchClone) {
-      touchClone.style.top  = (t.clientY - 20) + 'px';
-      touchClone.style.left = (t.clientX - 40) + 'px';
-    }
-    const over = slotFromPoint(t.clientX, t.clientY);
-    if (lastOver && lastOver !== over) lastOver.classList.remove('drag-over');
-    if (over && over !== document.getElementById('slot_' + touchSrcDk + '_' + touchSrcMi)) {
-      over.classList.add('drag-over');
-      lastOver = over;
-    } else {
-      lastOver = null;
-    }
-  }, { passive: true });
-
-  document.addEventListener('touchend', function(e) {
+    const t=e.touches[0];
+    if (touchClone) { touchClone.style.top=(t.clientY-20)+'px'; touchClone.style.left=(t.clientX-40)+'px'; }
+    const over=slotFromPoint(t.clientX,t.clientY);
+    if (lastOver&&lastOver!==over) lastOver.classList.remove('drag-over');
+    if (over&&over!==document.getElementById('slot_'+touchSrcDk+'_'+touchSrcMi)) {
+      over.classList.add('drag-over'); lastOver=over;
+    } else { lastOver=null; }
+  },{passive:true});
+  document.addEventListener('touchend',function(e){
     if (!touchSrcDk) return;
-    const srcEl = document.getElementById('slot_' + touchSrcDk + '_' + touchSrcMi);
+    const srcEl=document.getElementById('slot_'+touchSrcDk+'_'+touchSrcMi);
     if (srcEl) srcEl.classList.remove('dragging');
-    if (touchClone) { touchClone.remove(); touchClone = null; }
-    document.querySelectorAll('.meal-slot.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
-
-    const t = e.changedTouches[0];
-    const tgtEl = slotFromPoint(t.clientX, t.clientY);
+    if (touchClone) { touchClone.remove(); touchClone=null; }
+    document.querySelectorAll('.meal-slot.drag-over').forEach(el=>el.classList.remove('drag-over'));
+    const t=e.changedTouches[0], tgtEl=slotFromPoint(t.clientX,t.clientY);
     if (tgtEl) {
-      const info = parsSlot(tgtEl);
-      if (info && !(<info.dk> === touchSrcDk && info.mi === touchSrcMi)) {
-        _dragSrcDk = touchSrcDk; _dragSrcMi = touchSrcMi;
-        onMealDrop({ preventDefault: function(){}, currentTarget: tgtEl }, <info.dk>, info.mi);
+      const info=parsSlot(tgtEl);
+      if (info&&!(info.dk===touchSrcDk&&info.mi===touchSrcMi)) {
+        _dragSrcDk=touchSrcDk; _dragSrcMi=touchSrcMi;
+        onMealDrop({preventDefault:function(){},currentTarget:tgtEl},info.dk,info.mi);
       }
     }
-    touchSrcDk = null; touchSrcMi = null; lastOver = null;
-  }, { passive: true });
+    touchSrcDk=null; touchSrcMi=null; lastOver=null;
+  },{passive:true});
 })();
 
-// ── Shopping list ─────────────────────────────────────────────────
+// ── Einkaufsliste ─────────────────────────────────────────────────
 function renderShopping() {
-  const custom = appData.shopping || [];
-  const el     = document.getElementById('sList');
-  el.innerHTML = '';
-
+  const custom=appData.shopping||[];
+  const el=document.getElementById('sList'); el.innerHTML='';
   if (!custom.length) {
-    el.innerHTML = '<div class="empty">Keine Eintr\u00E4ge. F\u00FCge Artikel hinzu oder nutze \uD83D\uDED2 im Wochenplan.</div>';
+    el.innerHTML='<div class="empty">Keine Eintr\u00E4ge. F\u00FCge Artikel hinzu oder nutze \uD83D\uDED2 im Wochenplan.</div>';
   } else {
-    const active = custom.map(function(x, i) { return Object.assign({}, x, { i: i }); }).filter(function(x) { return !x.done; });
-    const done   = custom.map(function(x, i) { return Object.assign({}, x, { i: i }); }).filter(function(x) { return x.done; });
-
+    const active=custom.map((x,i)=>({...x,i})).filter(x=>!x.done);
+    const done  =custom.map((x,i)=>({...x,i})).filter(x=> x.done);
     if (active.length) {
-      el.innerHTML += '<div class="s-section">Einkaufsliste</div>';
-      active.forEach(function(item) {
-        el.innerHTML += '<div class="s-item" id="ci_' + item.i + '">' +
-          '<input type="checkbox" onchange="toggleCustom(' + item.i + ',this)" />' +
-          '<span class="s-text">' + (item.qty ? '<b>' + esc(item.qty) + '</b> ' : '') + esc(item.name) + '</span>' +
-          '<button class="s-del" onclick="delCustom(' + item.i + ')" title="L\u00F6schen">\u2715</button>' +
-          '</div>';
+      el.innerHTML+='<div class="s-section">Einkaufsliste</div>';
+      active.forEach(({name,qty,i})=>{
+        el.innerHTML+=`<div class="s-item" id="ci_${i}">
+          <input type="checkbox" onchange="toggleCustom(${i},this)" />
+          <span class="s-text">${qty?`<b>${esc(qty)}</b> `:''}${esc(name)}</span>
+          <button class="s-del" onclick="delCustom(${i})" title="L\u00F6schen">\u2715</button>
+        </div>`;
       });
     }
-
     if (done.length) {
-      el.innerHTML += '<div class="s-section done-section">Erledigt</div>';
-      done.forEach(function(item) {
-        el.innerHTML += '<div class="s-item done">' +
-          '<input type="checkbox" checked onchange="toggleCustom(' + item.i + ',this)" />' +
-          '<span class="s-text">' + (item.qty ? '<b>' + esc(item.qty) + '</b> ' : '') + esc(item.name) + '</span>' +
-          '<button class="s-del" onclick="delCustom(' + item.i + ')" title="L\u00F6schen">\u2715</button>' +
-          '</div>';
+      el.innerHTML+='<div class="s-section done-section">Erledigt</div>';
+      done.forEach(({name,qty,i})=>{
+        el.innerHTML+=`<div class="s-item done">
+          <input type="checkbox" checked onchange="toggleCustom(${i},this)" />
+          <span class="s-text">${qty?`<b>${esc(qty)}</b> `:''}${esc(name)}</span>
+          <button class="s-del" onclick="delCustom(${i})" title="L\u00F6schen">\u2715</button>
+        </div>`;
       });
     }
   }
-
-  el.innerHTML += '<div class="s-add">' +
-    '<input type="text" id="newItem" placeholder="Artikel \u2026" onkeydown="if(event.key===\'Enter\')addItem()" />' +
-    '<input type="text" id="newItemQty" class="qty-inp" placeholder="Menge" onkeydown="if(event.key===\'Enter\')addItem()" />' +
-    '<button class="btn btn-primary btn-sm" onclick="addItem()">+ Hinzuf\u00FCgen</button>' +
-    '</div>';
+  el.innerHTML+=`<div class="s-add">
+    <input type="text" id="newItem" placeholder="Artikel \u2026" onkeydown="if(event.key==='Enter')addItem()" />
+    <input type="text" id="newItemQty" class="qty-inp" placeholder="Menge" onkeydown="if(event.key==='Enter')addItem()" />
+    <button class="btn btn-primary btn-sm" onclick="addItem()">+ Hinzuf\u00FCgen</button>
+  </div>`;
 }
-
-function toggleCustom(i, cb) {
-  appData.shopping[i].done = cb.checked;
-  saveData();
-  renderShopping();
-}
-
-function delCustom(i) {
-  if (!canEdit()) return;
-  appData.shopping.splice(i, 1);
-  saveData();
-  renderShopping();
-}
-
+function toggleCustom(i,cb) { appData.shopping[i].done=cb.checked; saveData(); renderShopping(); }
+function delCustom(i) { if (!canEdit()) return; appData.shopping.splice(i,1); saveData(); renderShopping(); }
 function addItem() {
   if (!canEdit()) return;
-  const inp    = document.getElementById('newItem');
-  const qtyInp = document.getElementById('newItemQty');
-  const name   = inp.value.trim();
-  if (!name) return;
-  const qty = qtyInp ? qtyInp.value.trim() : '';
-  addToShopping(name, qty);
-  saveData();
-  inp.value = '';
-  if (qtyInp) qtyInp.value = '';
-  renderShopping();
+  const inp=document.getElementById('newItem'), qtyInp=document.getElementById('newItemQty');
+  const name=inp.value.trim(); if (!name) return;
+  addToShopping(name, qtyInp?qtyInp.value.trim():'');
+  saveData(); inp.value=''; if(qtyInp) qtyInp.value=''; renderShopping();
 }
 
-// ── Recipes ───────────────────────────────────────────────────────
-let formIngredients = [];
-
-function uid() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
-
+// ── Rezepte ───────────────────────────────────────────────────────
+let formIngredients=[];
+function uid() { return Math.random().toString(36).slice(2)+Date.now().toString(36); }
 function showRecipeForm(recipeId) {
   if (!canManageRecipes()) return;
-  formIngredients = [];
-  document.getElementById('recipeEditId').value = '';
-  document.getElementById('rName').value = '';
-  document.getElementById('rDesc').value = '';
-  document.getElementById('recipeFormTitle').textContent = 'Neues Rezept';
-
+  formIngredients=[];
+  document.getElementById('recipeEditId').value='';
+  document.getElementById('rName').value='';
+  document.getElementById('rDesc').value='';
+  document.getElementById('recipeFormTitle').textContent='Neues Rezept';
   if (recipeId) {
-    const rec = appData.recipes.find(function(r) { return <r.id> === recipeId; });
+    const rec=appData.recipes.find(r=>r.id===recipeId);
     if (rec) {
-      document.getElementById('recipeEditId').value = <rec.id>;
-      document.getElementById('rName').value = rec.name;
-      document.getElementById('rDesc').value = rec.description || '';
-      formIngredients = rec.ingredients.slice();
-      document.getElementById('recipeFormTitle').textContent = 'Rezept bearbeiten';
+      document.getElementById('recipeEditId').value=rec.id;
+      document.getElementById('rName').value=rec.name;
+      document.getElementById('rDesc').value=rec.description||'';
+      formIngredients=[...rec.ingredients];
+      document.getElementById('recipeFormTitle').textContent='Rezept bearbeiten';
     }
   }
-
-  renderIngListEdit();
-  document.getElementById('recipeFormWrap').style.display = '';
+  renderIngListEdit(); document.getElementById('recipeFormWrap').style.display='';
   document.getElementById('rName').focus();
 }
-
-function hideRecipeForm() {
-  document.getElementById('recipeFormWrap').style.display = 'none';
-}
-
+function hideRecipeForm() { document.getElementById('recipeFormWrap').style.display='none'; }
 function renderIngListEdit() {
-  const el = document.getElementById('ingListEdit');
-  el.innerHTML = formIngredients.map(function(ing, i) {
-    return '<span class="ing-tag-edit">' + (ing.qty ? esc(ing.qty) + ' ' : '') + esc(ing.name) +
-      '<button onclick="removeIngredient(' + i + ')" title="Entfernen">\u00D7</button></span>';
-  }).join('');
+  document.getElementById('ingListEdit').innerHTML=formIngredients.map((ing,i)=>
+    `<span class="ing-tag-edit">${ing.qty?esc(ing.qty)+' ':''}${esc(ing.name)}<button onclick="removeIngredient(${i})" title="Entfernen">\u00D7</button></span>`
+  ).join('');
 }
-
-function removeIngredient(i) {
-  formIngredients.splice(i, 1);
-  renderIngListEdit();
-}
-
+function removeIngredient(i) { formIngredients.splice(i,1); renderIngListEdit(); }
 function addIngredientToForm() {
-  const inp    = document.getElementById('ingInput');
-  const qtyInp = document.getElementById('ingQtyInput');
-  const name   = inp.value.trim();
-  if (!name) return;
-  const qty = qtyInp ? qtyInp.value.trim() : '';
-  formIngredients.push({ name: name, qty: qty });
-  inp.value = '';
-  if (qtyInp) qtyInp.value = '';
-  renderIngListEdit();
-  inp.focus();
+  const inp=document.getElementById('ingInput'), qtyInp=document.getElementById('ingQtyInput');
+  const name=inp.value.trim(); if (!name) return;
+  formIngredients.push({name, qty:qtyInp?qtyInp.value.trim():''});
+  inp.value=''; if(qtyInp) qtyInp.value=''; renderIngListEdit(); inp.focus();
 }
-
 function saveRecipe() {
-  const name = document.getElementById('rName').value.trim();
+  const name=document.getElementById('rName').value.trim();
   if (!name) { alert('Bitte einen Namen eingeben.'); return; }
-  const desc   = document.getElementById('rDesc').value.trim();
-  const editId = document.getElementById('recipeEditId').value;
-
-  if (!appData.recipes) appData.recipes = [];
-
+  const desc=document.getElementById('rDesc').value.trim();
+  const editId=document.getElementById('recipeEditId').value;
+  if (!appData.recipes) appData.recipes=[];
   if (editId) {
-    const idx = appData.recipes.findIndex(function(r) { return <r.id> === editId; });
-    if (idx !== -1) {
-      appData.recipes[idx] = { id: editId, name: name, description: desc, ingredients: formIngredients.slice() };
-    }
+    const idx=appData.recipes.findIndex(r=>r.id===editId);
+    if (idx!==-1) appData.recipes[idx]={id:editId,name,description:desc,ingredients:[...formIngredients]};
   } else {
-    appData.recipes.push({ id: uid(), name: name, description: desc, ingredients: formIngredients.slice() });
+    appData.recipes.push({id:uid(),name,description:desc,ingredients:[...formIngredients]});
   }
-
-  saveData();
-  hideRecipeForm();
-  renderRecipes();
+  saveData(); hideRecipeForm(); renderRecipes();
 }
-
 function deleteRecipe(id) {
   if (!canManageRecipes()) return;
   if (!confirm('Rezept wirklich l\u00F6schen?')) return;
-  appData.recipes = appData.recipes.filter(function(r) { return <r.id> !== id; });
-  for (const key in appData.mealRecipes) {
-    if (appData.mealRecipes[key] === id) delete appData.mealRecipes[key];
-  }
-  saveData();
-  renderRecipes();
+  appData.recipes=appData.recipes.filter(r=>r.id!==id);
+  for (const key in appData.mealRecipes) if (appData.mealRecipes[key]===id) delete appData.mealRecipes[key];
+  saveData(); renderRecipes();
 }
-
 function renderRecipes() {
-  const grid    = document.getElementById('recipeGrid');
-  const recipes = appData.recipes || [];
-
-  if (!recipes.length) {
-    grid.innerHTML = '<div class="empty">Noch keine Rezepte. Klicke auf \u201E+ Neues Rezept\u201C.</div>';
-    return;
-  }
-
-  grid.innerHTML = recipes.map(function(r) {
-    return '<div class="recipe-card">' +
-      '<div class="recipe-card-name">' + esc(r.name) + '</div>' +
-      (r.description ? '<div class="recipe-card-desc">' + esc(r.description) + '</div>' : '') +
-      (r.ingredients.length ? '<div class="ingredient-tags">' +
-        r.ingredients.map(function(i) { return '<span class="ingredient-tag">' + (i.qty ? esc(i.qty) + ' ' : '') + esc(i.name) + '</span>'; }).join('') +
-        '</div>' : '') +
-      (canManageRecipes() ? '<div class="recipe-actions">' +
-        '<button class="btn btn-outline btn-sm" onclick="showRecipeForm(\'' + <r.id> + '\')">Bearbeiten</button>' +
-        '<button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe(\'' + <r.id> + '\')">L\u00F6schen</button>' +
-        '</div>' : '') +
-      '</div>';
-  }).join('');
+  const grid=document.getElementById('recipeGrid'), recipes=appData.recipes||[];
+  if (!recipes.length) { grid.innerHTML='<div class="empty">Noch keine Rezepte. Klicke auf \u201E+ Neues Rezept\u201C.</div>'; return; }
+  grid.innerHTML=recipes.map(r=>`
+    <div class="recipe-card">
+      <div class="recipe-card-name">${esc(r.name)}</div>
+      ${r.description?`<div class="recipe-card-desc">${esc(r.description)}</div>`:''}
+      ${r.ingredients.length?`<div class="ingredient-tags">${r.ingredients.map(i=>`<span class="ingredient-tag">${i.qty?esc(i.qty)+' ':''}${esc(i.name)}</span>`).join('')}</div>`:''}
+      ${canManageRecipes()?`<div class="recipe-actions">
+        <button class="btn btn-outline btn-sm" onclick="showRecipeForm('${r.id}')">Bearbeiten</button>
+        <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${r.id}')">L\u00F6schen</button>
+      </div>`:''}
+    </div>`).join('');
 }
 
-// ── Group management ──────────────────────────────────────────────
-const ROLE_LABELS = { owner:'Owner', admin:'Admin', member:'Mitglied', viewer:'Zuschauer' };
-const ROLE_CLASS  = { owner:'role-owner', admin:'role-admin', member:'role-member', viewer:'role-viewer' };
+// ── Gruppen ───────────────────────────────────────────────────────
+const ROLE_LABELS={owner:'Owner',admin:'Admin',member:'Mitglied',viewer:'Zuschauer'};
+const ROLE_CLASS ={owner:'role-owner',admin:'role-admin',member:'role-member',viewer:'role-viewer'};
 
 function updateContextSwitcher() {
-  const sel = document.getElementById('contextSelect');
-  if (userGroups.length === 0) { sel.style.display = 'none'; return; }
-  sel.innerHTML = '<option value="">\uD83D\uDC4B Pers\u00F6nlich</option>' +
-    userGroups.map(function(g) { return '<option value="' + <g.id> + '">' + esc(g.name) + '</option>'; }).join('');
-  sel.value = currentGroupId || '';
-  sel.style.display = '';
+  const sel=document.getElementById('contextSelect');
+  if (!userGroups.length) { sel.style.display='none'; return; }
+  sel.innerHTML=`<option value="">\uD83D\uDC4B Pers\u00F6nlich</option>`+
+    userGroups.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
+  sel.value=currentGroupId||''; sel.style.display='';
 }
-
 async function switchContext(val) {
-  if (!val) {
-    currentGroupId = null; currentGroupRole = null; currentGroupName = '';
-  } else {
-    const g = userGroups.find(function(g) { return <g.id> === val; });
-    if (g) { currentGroupId = <g.id>; currentGroupRole = g.role; currentGroupName = g.name; }
-  }
-  await loadData();
-  renderPlan();
-  const ap = document.querySelector('.page.active');
-  if (ap && <ap.id> === 'shoppingPage') renderShopping();
-  if (ap && <ap.id> === 'recipesPage')  renderRecipes();
-  if (ap && <ap.id> === 'groupPage')    renderGroupPage();
+  if (!val) { currentGroupId=null; currentGroupRole=null; currentGroupName=''; }
+  else { const g=userGroups.find(g=>g.id===val); if(g){currentGroupId=g.id;currentGroupRole=g.role;currentGroupName=g.name;} }
+  await loadData(); renderPlan();
+  const ap=document.querySelector('.page.active');
+  if (ap&&ap.id==='shoppingPage') renderShopping();
+  if (ap&&ap.id==='recipesPage')  renderRecipes();
+  if (ap&&ap.id==='groupPage')    renderGroupPage();
 }
-
 async function createGroup() {
-  const name = document.getElementById('newGroupName').value.trim();
+  const name=document.getElementById('newGroupName').value.trim();
   if (!name) return alert('Bitte einen Gruppennamen eingeben.');
-  const inviteCode = Math.random().toString(36).slice(2, 8).toUpperCase();
-  const groupRef = db.collection('groups').doc();
-  await groupRef.set({
-    name: name, inviteCode: inviteCode, createdBy: currentUid,
-    members: { [currentUid]: { username: currentUser, role: 'owner' } }
-  });
-  await db.collection('users').doc(currentUid).update({
-    groupIds: firebase.firestore.FieldValue.arrayUnion(<groupRef.id>)
-  });
-  userGroups.push({ id: <groupRef.id>, name: name, role: 'owner' });
-  currentGroupId = <groupRef.id>; currentGroupRole = 'owner'; currentGroupName = name;
-  appData = { meals:{}, shopping:[], checked:{}, recipes:[], mealRecipes:{} };
-  document.getElementById('newGroupName').value = '';
-  updateContextSwitcher();
-  await renderGroupPage();
-  renderPlan();
+  const inviteCode=Math.random().toString(36).slice(2,8).toUpperCase();
+  const groupRef=db.collection('groups').doc();
+  await groupRef.set({name,inviteCode,createdBy:currentUid,members:{[currentUid]:{username:currentUser,role:'owner'}}});
+  await db.collection('users').doc(currentUid).update({groupIds:firebase.firestore.FieldValue.arrayUnion(groupRef.id)});
+  userGroups.push({id:groupRef.id,name,role:'owner'});
+  currentGroupId=groupRef.id; currentGroupRole='owner'; currentGroupName=name;
+  appData={meals:{},shopping:[],checked:{},recipes:[],mealRecipes:{}};
+  document.getElementById('newGroupName').value='';
+  updateContextSwitcher(); await renderGroupPage(); renderPlan();
 }
-
 async function joinGroup() {
-  const code  = document.getElementById('joinCodeInput').value.trim().toUpperCase();
-  const errEl = document.getElementById('groupJoinErr');
-  errEl.style.display = 'none';
-  if (!code) { errEl.textContent = 'Bitte einen Code eingeben.'; errEl.style.display = 'block'; return; }
-  const snap = await db.collection('groups').where('inviteCode', '==', code).get();
-  if (snap.empty) { errEl.textContent = 'Ung\u00FCltiger Einladungscode.'; errEl.style.display = 'block'; return; }
-  const gDoc = snap.docs[0];
-  if ((gDoc.data().members && gDoc.data().members[currentUid]) || userGroups.find(function(g) { return <g.id> === <gDoc.id>; })) {
-    errEl.textContent = 'Du bist bereits in dieser Gruppe.'; errEl.style.display = 'block'; return;
+  const code=document.getElementById('joinCodeInput').value.trim().toUpperCase();
+  const errEl=document.getElementById('groupJoinErr'); errEl.style.display='none';
+  if (!code) { errEl.textContent='Bitte einen Code eingeben.'; errEl.style.display='block'; return; }
+  const snap=await db.collection('groups').where('inviteCode','==',code).get();
+  if (snap.empty) { errEl.textContent='Ung\u00FCltiger Einladungscode.'; errEl.style.display='block'; return; }
+  const gDoc=snap.docs[0];
+  if ((gDoc.data().members&&gDoc.data().members[currentUid])||userGroups.find(g=>g.id===gDoc.id)) {
+    errEl.textContent='Du bist bereits in dieser Gruppe.'; errEl.style.display='block'; return;
   }
-  await db.collection('groups').doc(<gDoc.id>).update({
-    ['members.' + currentUid]: { username: currentUser, role: 'member' }
-  });
-  await db.collection('users').doc(currentUid).update({
-    groupIds: firebase.firestore.FieldValue.arrayUnion(<gDoc.id>)
-  });
-  userGroups.push({ id: <gDoc.id>, name: gDoc.data().name, role: 'member' });
-  currentGroupId = <gDoc.id>; currentGroupRole = 'member'; currentGroupName = gDoc.data().name;
-  await loadData();
-  document.getElementById('joinCodeInput').value = '';
-  updateContextSwitcher();
-  await renderGroupPage();
-  renderPlan();
+  await db.collection('groups').doc(gDoc.id).update({[`members.${currentUid}`]:{username:currentUser,role:'member'}});
+  await db.collection('users').doc(currentUid).update({groupIds:firebase.firestore.FieldValue.arrayUnion(gDoc.id)});
+  userGroups.push({id:gDoc.id,name:gDoc.data().name,role:'member'});
+  currentGroupId=gDoc.id; currentGroupRole='member'; currentGroupName=gDoc.data().name;
+  await loadData(); document.getElementById('joinCodeInput').value='';
+  updateContextSwitcher(); await renderGroupPage(); renderPlan();
 }
-
 async function leaveGroup(groupId) {
-  const g = userGroups.find(function(g) { return <g.id> === groupId; });
-  if (!g) return;
-  if (g.role === 'owner') {
-    const gDoc = await db.collection('groups').doc(groupId).get();
-    const others = Object.keys(gDoc.data().members || {}).filter(function(u) { return u !== currentUid; });
-    if (others.length > 0) return alert('Du bist der Owner. \u00DCbertrage zuerst den Owner-Status oder l\u00F6sche die Gruppe.');
+  const g=userGroups.find(g=>g.id===groupId); if (!g) return;
+  if (g.role==='owner') {
+    const gDoc=await db.collection('groups').doc(groupId).get();
+    if (Object.keys(gDoc.data().members||{}).filter(u=>u!==currentUid).length>0)
+      return alert('Du bist der Owner. \u00DCbertrage zuerst den Owner-Status oder l\u00F6sche die Gruppe.');
   }
   if (!confirm('Gruppe wirklich verlassen?')) return;
-  await db.collection('groups').doc(groupId).update({
-    ['members.' + currentUid]: firebase.firestore.FieldValue.delete()
-  });
-  await db.collection('users').doc(currentUid).update({
-    groupIds: firebase.firestore.FieldValue.arrayRemove(groupId)
-  });
-  userGroups = userGroups.filter(function(g) { return <g.id> !== groupId; });
-  if (currentGroupId === groupId) {
-    currentGroupId = null; currentGroupRole = null; currentGroupName = '';
-    await loadData();
-  }
-  updateContextSwitcher();
-  await renderGroupPage();
-  renderPlan();
+  await db.collection('groups').doc(groupId).update({[`members.${currentUid}`]:firebase.firestore.FieldValue.delete()});
+  await db.collection('users').doc(currentUid).update({groupIds:firebase.firestore.FieldValue.arrayRemove(groupId)});
+  userGroups=userGroups.filter(g=>g.id!==groupId);
+  if (currentGroupId===groupId) { currentGroupId=null; currentGroupRole=null; currentGroupName=''; await loadData(); }
+  updateContextSwitcher(); await renderGroupPage(); renderPlan();
 }
-
 async function deleteGroup(groupId) {
-  const g = userGroups.find(function(g) { return <g.id> === groupId; });
-  if (!g || g.role !== 'owner') return;
+  const g=userGroups.find(g=>g.id===groupId); if (!g||g.role!=='owner') return;
   if (!confirm('Gruppe und alle gemeinsamen Daten wirklich unwiderruflich l\u00F6schen?')) return;
-  const gDoc = await db.collection('groups').doc(groupId).get();
-  const members = gDoc.data().members || {};
-  const batch = db.batch();
-  for (const uid of Object.keys(members)) {
-    batch.update(db.collection('users').doc(uid), {
-      groupIds: firebase.firestore.FieldValue.arrayRemove(groupId)
-    });
-  }
+  const gDoc=await db.collection('groups').doc(groupId).get();
+  const batch=db.batch();
+  for (const u of Object.keys(gDoc.data().members||{}))
+    batch.update(db.collection('users').doc(u),{groupIds:firebase.firestore.FieldValue.arrayRemove(groupId)});
   batch.delete(db.collection('groups').doc(groupId).collection('data').doc('main'));
   batch.delete(db.collection('groups').doc(groupId));
   await batch.commit();
-  userGroups = userGroups.filter(function(g) { return <g.id> !== groupId; });
-  if (currentGroupId === groupId) {
-    currentGroupId = null; currentGroupRole = null; currentGroupName = '';
-    await loadData();
-  }
-  updateContextSwitcher();
-  await renderGroupPage();
-  renderPlan();
+  userGroups=userGroups.filter(g=>g.id!==groupId);
+  if (currentGroupId===groupId) { currentGroupId=null; currentGroupRole=null; currentGroupName=''; await loadData(); }
+  updateContextSwitcher(); await renderGroupPage(); renderPlan();
 }
-
-async function setMemberRole(groupId, memberUid, role) {
-  const g = userGroups.find(function(g) { return <g.id> === groupId; });
-  if (!g || !['owner','admin'].includes(g.role)) return;
-  await db.collection('groups').doc(groupId).update({ ['members.' + memberUid + '.role']: role });
-  if (role === 'owner' && g.role === 'owner') {
-    await db.collection('groups').doc(groupId).update({ ['members.' + currentUid + '.role']: 'admin' });
-    g.role = 'admin';
-    if (currentGroupId === groupId) currentGroupRole = 'admin';
+async function setMemberRole(groupId,memberUid,role) {
+  const g=userGroups.find(g=>g.id===groupId); if (!g||!['owner','admin'].includes(g.role)) return;
+  await db.collection('groups').doc(groupId).update({[`members.${memberUid}.role`]:role});
+  if (role==='owner'&&g.role==='owner') {
+    await db.collection('groups').doc(groupId).update({[`members.${currentUid}.role`]:'admin'});
+    g.role='admin'; if (currentGroupId===groupId) currentGroupRole='admin';
   }
   await renderGroupPage();
 }
-
-async function removeMember(groupId, memberUid) {
-  const g = userGroups.find(function(g) { return <g.id> === groupId; });
-  if (!g || !['owner','admin'].includes(g.role)) return;
+async function removeMember(groupId,memberUid) {
+  const g=userGroups.find(g=>g.id===groupId); if (!g||!['owner','admin'].includes(g.role)) return;
   if (!confirm('Mitglied wirklich entfernen?')) return;
-  await db.collection('groups').doc(groupId).update({
-    ['members.' + memberUid]: firebase.firestore.FieldValue.delete()
-  });
-  await db.collection('users').doc(memberUid).update({
-    groupIds: firebase.firestore.FieldValue.arrayRemove(groupId)
-  });
+  await db.collection('groups').doc(groupId).update({[`members.${memberUid}`]:firebase.firestore.FieldValue.delete()});
+  await db.collection('users').doc(memberUid).update({groupIds:firebase.firestore.FieldValue.arrayRemove(groupId)});
   await renderGroupPage();
 }
-
 async function copyInviteCode(code) {
-  try { await navigator.clipboard.writeText(code); } catch(e) {}
-  alert('Einladungscode kopiert: ' + code);
+  try { await navigator.clipboard.writeText(code); } catch(e){}
+  alert('Einladungscode kopiert: '+code);
 }
-
 async function renderGroupPage() {
-  const container = document.getElementById('myGroupsList');
-  if (userGroups.length === 0) {
-    container.innerHTML = '<div class="empty" style="background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:1rem">Du bist noch in keiner Gruppe.</div>';
+  const container=document.getElementById('myGroupsList');
+  if (!userGroups.length) {
+    container.innerHTML='<div class="empty" style="background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:1rem">Du bist noch in keiner Gruppe.</div>';
     return;
   }
-
-  let html = '';
+  let html='';
   for (const g of userGroups) {
-    const gDoc = await db.collection('groups').doc(<g.id>).get();
-    if (!gDoc.exists) continue;
-    const gData    = gDoc.data();
-    const isActive = currentGroupId === <g.id>;
-
-    const membersHtml = Object.entries(gData.members || {}).map(function(entry) {
-      const mUid = entry[0], m = entry[1];
-      const isMe = mUid === currentUid;
-      const editable = !isMe && (g.role === 'owner' || (g.role === 'admin' && m.role !== 'owner' && m.role !== 'admin'));
-      const roles = g.role === 'owner' ? ['owner','admin','member','viewer'] : ['member','viewer'];
-      return '<div class="member-row">' +
-        '<div>' +
-        '<div class="member-name">' + esc(m.username) + (isMe ? ' <span style="color:var(--muted);font-size:.82rem;font-weight:400">(du)</span>' : '') + '</div>' +
-        '<span class="member-role-badge ' + (ROLE_CLASS[m.role]||'') + '">' + (ROLE_LABELS[m.role]||m.role) + '</span>' +
-        '</div>' +
-        '<div style="display:flex;gap:.4rem;align-items:center">' +
-        (editable ?
-          '<select class="role-select" onchange="setMemberRole(\'' + <g.id> + '\',\'' + mUid + '\',this.value)">' +
-          roles.map(function(r) { return '<option value="' + r + '"' + (r===m.role?' selected':'') + '>' + ROLE_LABELS[r] + '</option>'; }).join('') +
-          '</select>' +
-          '<button class="btn btn-danger btn-sm" onclick="removeMember(\'' + <g.id> + '\',\'' + mUid + '\')">Entfernen</button>'
-          : '') +
-        '</div>' +
-        '</div>';
+    const gDoc=await db.collection('groups').doc(g.id).get(); if (!gDoc.exists) continue;
+    const gData=gDoc.data(), isActive=currentGroupId===g.id;
+    const membersHtml=Object.entries(gData.members||{}).map(([mUid,m])=>{
+      const isMe=mUid===currentUid;
+      const editable=!isMe&&(g.role==='owner'||(g.role==='admin'&&m.role!=='owner'&&m.role!=='admin'));
+      const roles=g.role==='owner'?['owner','admin','member','viewer']:['member','viewer'];
+      return `<div class="member-row">
+        <div>
+          <div class="member-name">${esc(m.username)}${isMe?' <span style="color:var(--muted);font-size:.82rem;font-weight:400">(du)</span>':''}</div>
+          <span class="member-role-badge ${ROLE_CLASS[m.role]||''}">${ROLE_LABELS[m.role]||m.role}</span>
+        </div>
+        <div style="display:flex;gap:.4rem;align-items:center">
+          ${editable?`<select class="role-select" onchange="setMemberRole('${g.id}','${mUid}',this.value)">
+            ${roles.map(r=>`<option value="${r}"${r===m.role?' selected':''}>${ROLE_LABELS[r]}</option>`).join('')}
+          </select>
+          <button class="btn btn-danger btn-sm" onclick="removeMember('${g.id}','${mUid}')">Entfernen</button>`:''}
+        </div>
+      </div>`;
     }).join('');
-
-    html += '<div class="settings-card" style="margin-bottom:1rem">' +
-      '<div class="settings-section" style="display:flex;justify-content:space-between;align-items:center">' +
-      '<span>' + esc(gData.name) + '</span>' +
-      '<span class="member-role-badge ' + (ROLE_CLASS[g.role]||'') + '">' + (ROLE_LABELS[g.role]||g.role) + '</span>' +
-      '</div>' +
-      '<div class="settings-row">' +
-      '<div><div class="settings-label">Aktiver Kontext</div><div class="settings-sub">Daten die du gerade bearbeitest</div></div>' +
-      '<button class="btn ' + (isActive ? 'btn-primary' : 'btn-outline') + ' btn-sm" style="width:auto" onclick="switchContext(\'' + <g.id> + '\');updateContextSwitcher()">' +
-      (isActive ? '\u2713 Aktiv' : 'Wechseln') +
-      '</button>' +
-      '</div>' +
-      '<div class="settings-row">' +
-      '<div class="settings-label">Einladungscode</div>' +
-      '<div style="display:flex;align-items:center;gap:.6rem">' +
-      '<span class="invite-code">' + esc(gData.inviteCode) + '</span>' +
-      '<button class="btn btn-outline btn-sm" onclick="copyInviteCode(\'' + esc(gData.inviteCode) + '\')">Kopieren</button>' +
-      '</div>' +
-      '</div>' +
-      '<div class="settings-section" style="font-size:.72rem">Mitglieder</div>' +
-      membersHtml +
-      '<div class="settings-row" style="gap:.5rem">' +
-      '<div><div class="settings-label">Gruppe verlassen</div><div class="settings-sub">Kehrt zum pers\u00F6nlichen Plan zur\u00FCck</div></div>' +
-      '<button class="btn btn-danger btn-sm" onclick="leaveGroup(\'' + <g.id> + '\')">Verlassen</button>' +
-      (g.role === 'owner' ? '<button class="btn btn-danger btn-sm" onclick="deleteGroup(\'' + <g.id> + '\')">L\u00F6schen</button>' : '') +
-      '</div>' +
-      '</div>';
+    html+=`<div class="settings-card" style="margin-bottom:1rem">
+      <div class="settings-section" style="display:flex;justify-content:space-between;align-items:center">
+        <span>${esc(gData.name)}</span>
+        <span class="member-role-badge ${ROLE_CLASS[g.role]||''}">${ROLE_LABELS[g.role]||g.role}</span>
+      </div>
+      <div class="settings-row">
+        <div><div class="settings-label">Aktiver Kontext</div><div class="settings-sub">Daten die du gerade bearbeitest</div></div>
+        <button class="btn ${isActive?'btn-primary':'btn-outline'} btn-sm" style="width:auto" onclick="switchContext('${g.id}');updateContextSwitcher()">
+          ${isActive?'\u2713 Aktiv':'Wechseln'}
+        </button>
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">Einladungscode</div>
+        <div style="display:flex;align-items:center;gap:.6rem">
+          <span class="invite-code">${esc(gData.inviteCode)}</span>
+          <button class="btn btn-outline btn-sm" onclick="copyInviteCode('${esc(gData.inviteCode)}')">Kopieren</button>
+        </div>
+      </div>
+      <div class="settings-section" style="font-size:.72rem">Mitglieder</div>
+      ${membersHtml}
+      <div class="settings-row" style="gap:.5rem">
+        <div><div class="settings-label">Gruppe verlassen</div><div class="settings-sub">Kehrt zum pers\u00F6nlichen Plan zur\u00FCck</div></div>
+        <button class="btn btn-danger btn-sm" onclick="leaveGroup('${g.id}')">Verlassen</button>
+        ${g.role==='owner'?`<button class="btn btn-danger btn-sm" onclick="deleteGroup('${g.id}')">L\u00F6schen</button>`:''}
+      </div>
+    </div>`;
   }
-  container.innerHTML = html;
+  container.innerHTML=html;
 }
 </script>
 </body>
