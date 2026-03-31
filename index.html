@@ -5,183 +5,257 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Essensplaner</title>
   <style>
-    :root { --primary:#4f46e5;--primary-dark:#4338ca;--bg:#f9fafb;--card:#ffffff;--border:#e5e7eb;--text:#111827;--muted:#6b7280;--danger:#ef4444; }
-    [data-theme="dark"] { --primary:#818cf8;--primary-dark:#6366f1;--bg:#111827;--card:#1f2937;--border:#374151;--text:#f9fafb;--muted:#9ca3af;--danger:#f87171; }
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-    .auth-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem;}
-    .auth-card{background:var(--card);border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.09);padding:2rem;width:100%;max-width:400px;}
-    .auth-logo{font-size:1.6rem;font-weight:800;color:var(--primary);margin-bottom:.25rem;}
-    .auth-sub{color:var(--muted);font-size:.9rem;margin-bottom:1.5rem;}
-    .auth-tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;}
-    .auth-tab{flex:1;padding:.5rem;border:none;background:var(--bg);border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:600;color:var(--muted);transition:.15s;}
-    .auth-tab.active{background:var(--primary);color:#fff;}
-    .fg{margin-bottom:1rem;}
-    label{display:block;font-size:.82rem;font-weight:600;color:var(--muted);margin-bottom:.35rem;}
-    input[type="text"],input[type="password"]{width:100%;padding:.6rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.95rem;outline:none;transition:border-color .15s;font-family:inherit;}
-    input:focus{border-color:var(--primary);}
-    .err{display:none;color:var(--danger);font-size:.85rem;background:#fef2f2;padding:.5rem .75rem;border-radius:6px;margin-bottom:1rem;}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.6rem 1.2rem;border:none;border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer;transition:.15s;font-family:inherit;}
-    .btn-primary{background:var(--primary);color:#fff;width:100%;}
-    .btn-primary:hover{background:var(--primary-dark);}
-    .btn-primary:disabled{opacity:.6;cursor:not-allowed;}
-    .btn-sm{padding:.35rem .75rem;font-size:.8rem;}
-    .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text);}
-    .btn-outline:hover{border-color:var(--primary);color:var(--primary);}
-    .btn-danger{background:var(--danger);color:#fff;}
-    .btn-danger:hover{opacity:.88;}
-    nav{background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
-    .nav-inner{max-width:1100px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:60px;}
-    .nav-logo{font-weight:800;font-size:1.1rem;color:var(--primary);}
-    .nav-links{display:flex;gap:.25rem;}
-    .nav-btn{padding:.4rem .85rem;border-radius:8px;border:none;background:none;color:var(--muted);font-size:.9rem;font-weight:500;cursor:pointer;transition:.15s;}
-    .nav-btn:hover{background:var(--bg);}
-    .nav-btn.active{background:#eef2ff;color:var(--primary);}
-    .nav-user{display:flex;align-items:center;gap:.75rem;font-size:.9rem;color:var(--muted);}
-    .nav-out{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;text-decoration:underline;}
-    .nav-out:hover{color:var(--danger);}
-    .main{max-width:1100px;margin:0 auto;padding:1.5rem;}
-    .page{display:none;}
-    .page.active{display:block;}
-    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;}
-    .page-title{font-size:1.25rem;font-weight:700;}
-    .view-switch{display:flex;gap:.25rem;background:var(--bg);border-radius:10px;padding:.2rem;border:1px solid var(--border);}
-    .view-btn{padding:.3rem .75rem;border-radius:7px;border:none;background:none;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;transition:.15s;}
-    .view-btn.active{background:var(--primary);color:#fff;}
-    .week-nav{display:flex;gap:.5rem;align-items:center;}
-    .week-label{font-size:.9rem;color:var(--muted);min-width:190px;text-align:center;}
-    .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.75rem;}
-    @media(max-width:900px){.week-grid{grid-template-columns:repeat(2,1fr);}}
-    @media(max-width:500px){.week-grid{grid-template-columns:1fr;}}
-    .day-view-card{background:var(--card);border-radius:14px;border:1px solid var(--border);max-width:480px;overflow:hidden;}
-    .day-view-card.today{border-color:var(--primary);box-shadow:0 0 0 2px #c7d2fe;}
-    .day-view-head{padding:.9rem 1.25rem;background:#6366f1;color:#fff;}
-    .day-view-card.today .day-view-head{background:var(--primary);}
-    .day-view-name{font-weight:700;font-size:1.1rem;}
-    .day-view-date{font-size:.85rem;opacity:.85;}
-    .month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;}
-    .month-header{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;margin-bottom:.3rem;}
-    .month-dname{text-align:center;font-size:.72rem;font-weight:700;color:var(--muted);padding:.25rem 0;text-transform:uppercase;}
-    .month-cell{background:var(--card);border:1px solid var(--border);border-radius:8px;min-height:80px;padding:.35rem .4rem;cursor:pointer;transition:border-color .15s;}
-    .month-cell:hover{border-color:var(--primary);}
-    .month-cell.today{border-color:var(--primary);box-shadow:0 0 0 2px #c7d2fe;}
-    .month-cell.other-month{opacity:.4;}
-    .month-num{font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:.25rem;}
-    .month-cell.today .month-num{color:var(--primary);}
-    .month-today-badge{font-size:.65rem;font-weight:700;background:var(--primary);color:#fff;border-radius:99px;padding:.05rem .4rem;margin-left:.3rem;vertical-align:middle;}
-    .month-meal-dot{font-size:.72rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.1rem;}
-    @media(max-width:600px){.month-cell{min-height:55px;}.month-meal-dot{display:none;}}
-    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;}
-    .modal-box{background:var(--card);border-radius:14px;padding:1.5rem;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.2);}
-    .modal-title{font-weight:700;font-size:1rem;margin-bottom:1rem;}
-    .modal-ing-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.25rem;max-height:260px;overflow-y:auto;}
-    .modal-ing-item{display:flex;align-items:center;gap:.65rem;font-size:.9rem;}
-    .modal-ing-item input[type="checkbox"]{width:17px;height:17px;accent-color:var(--primary);flex-shrink:0;cursor:pointer;}
-    .modal-actions{display:flex;gap:.5rem;justify-content:flex-end;}
-    .day-card{background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden;}
-    .day-card.today{border-color:var(--primary);box-shadow:0 0 0 2px #c7d2fe;}
-    .day-head{padding:.55rem .875rem;background:#6366f1;color:#fff;}
-    .day-card.today .day-head{background:var(--primary);}
-    .day-name{font-weight:700;font-size:.85rem;}
-    .day-date{font-size:.72rem;opacity:.85;}
-    .meal-slot{padding:.55rem .875rem;border-bottom:1px solid var(--border);min-height:52px;}
-    .meal-slot:last-child{border-bottom:none;}
-    .meal-type{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.2rem;}
-    .meal-name{font-size:.85rem;cursor:pointer;min-height:1.2em;}
-    .meal-name:empty::before{content:'+ Mahlzeit';color:#aaa;font-size:.8rem;}
-    .meal-name:hover{color:var(--primary);}
-    .s-list{background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden;}
-    .s-section{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:.45rem 1rem;background:var(--bg);border-bottom:1px solid var(--border);}
-    .s-item{display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;border-bottom:1px solid var(--border);}
-    .s-item:last-of-type{border-bottom:none;}
-    .s-item.done .s-text{text-decoration:line-through;color:var(--muted);}
-    .s-section.done-section{color:var(--muted);opacity:.7;}
-    .s-item input[type="checkbox"]{width:17px;height:17px;accent-color:var(--primary);flex-shrink:0;cursor:pointer;}
-    .s-text{flex:1;font-size:.9rem;}
-    .s-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;padding:.2rem .35rem;border-radius:4px;}
-    .s-del:hover{color:var(--danger);background:#fef2f2;}
-    .s-add{display:flex;gap:.5rem;padding:.75rem 1rem;background:var(--bg);border-top:1px solid var(--border);}
-    .s-add input{flex:1;padding:.5rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;outline:none;font-family:inherit;}
-    .s-add input:focus{border-color:var(--primary);}
-    .s-add .btn{width:auto;flex-shrink:0;}
-    .empty{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:.9rem;}
-    .settings-card{background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden;margin-bottom:1rem;}
-    .settings-section{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:.55rem 1.25rem;background:var(--bg);border-bottom:1px solid var(--border);}
-    .settings-row{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.25rem;border-bottom:1px solid var(--border);gap:1rem;}
-    .settings-row:last-child{border-bottom:none;}
-    .settings-label{font-size:.95rem;font-weight:500;flex-shrink:0;}
-    .settings-sub{font-size:.8rem;color:var(--muted);margin-top:.15rem;}
-    .settings-value{font-weight:700;font-size:.95rem;}
-    .settings-pw-wrap{display:flex;align-items:center;gap:.5rem;flex:1;justify-content:flex-end;}
-    .settings-pw-dots{font-size:1rem;letter-spacing:2px;color:var(--text);flex-shrink:0;}
-    .settings-changepw{padding:.9rem 1.25rem;border-top:1px solid var(--border);}
-    .settings-changepw .fg:last-of-type{margin-bottom:.75rem;}
-    .toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
-    .toggle input{opacity:0;width:0;height:0;}
-    .toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:24px;cursor:pointer;transition:.2s;}
-    .toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
-    .toggle input:checked+.toggle-slider{background:var(--primary);}
-    .toggle input:checked+.toggle-slider::before{transform:translateX(20px);}
-    .loading{display:flex;align-items:center;justify-content:center;min-height:100vh;font-size:1rem;color:var(--muted);}
-    .recipe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;}
-    .recipe-card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:1rem;}
-    .recipe-card-name{font-weight:700;font-size:1rem;margin-bottom:.25rem;}
-    .recipe-card-desc{font-size:.82rem;color:var(--muted);margin-bottom:.6rem;white-space:pre-wrap;}
-    .ingredient-tags{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.6rem;}
-    .ingredient-tag{background:#eef2ff;color:var(--primary);font-size:.75rem;padding:.2rem .55rem;border-radius:99px;font-weight:600;}
-    [data-theme="dark"] .ingredient-tag{background:#312e81;}
-    .recipe-actions{display:flex;gap:.4rem;}
-    .recipe-form{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:1.25rem;margin-bottom:1rem;}
-    .recipe-form h3{font-size:1rem;font-weight:700;margin-bottom:1rem;}
-    textarea{width:100%;padding:.6rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;outline:none;font-family:inherit;resize:vertical;transition:border-color .15s;}
-    textarea:focus{border-color:var(--primary);}
-    .ing-input-row{display:flex;gap:.4rem;margin-bottom:.5rem;}
-    .ing-input-row input{flex:1;}
-    .ing-list-edit{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.6rem;}
-    .ing-tag-edit{display:flex;align-items:center;gap:.25rem;background:#eef2ff;color:var(--primary);font-size:.78rem;padding:.2rem .5rem;border-radius:99px;font-weight:600;}
-    [data-theme="dark"] .ing-tag-edit{background:#312e81;}
-    .ing-tag-edit button{background:none;border:none;cursor:pointer;color:var(--primary);font-size:.85rem;line-height:1;padding:0;}
-    .qty-inp{width:82px;padding:.25rem .45rem;border:1.5px solid var(--border);border-radius:6px;font-size:.82rem;outline:none;font-family:inherit;flex-shrink:0;}
-    .qty-inp:focus{border-color:var(--primary);}
-    .ac-wrap{position:relative;flex:1;}
-    .ac-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1.5px solid var(--primary);border-radius:8px;z-index:200;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.12);}
-    .ac-item{padding:.45rem .75rem;font-size:.85rem;cursor:pointer;}
-    .ac-item:hover{background:#eef2ff;}
-    [data-theme="dark"] .ac-item:hover{background:#312e81;}
-    .meal-ing-btn{font-size:.7rem;color:var(--primary);background:none;border:none;cursor:pointer;padding:.1rem .3rem;border-radius:4px;margin-top:.15rem;display:block;}
-    .meal-ing-btn:hover{background:#eef2ff;}
-    [data-theme="dark"] .meal-ing-btn:hover{background:#312e81;}
-    .context-select{padding:.3rem .6rem;border:1.5px solid var(--border);border-radius:8px;font-size:.82rem;font-weight:600;outline:none;font-family:inherit;background:var(--card);color:var(--text);cursor:pointer;max-width:170px;}
-    .context-select:focus{border-color:var(--primary);}
-    .role-select{padding:.28rem .45rem;border:1.5px solid var(--border);border-radius:6px;font-size:.8rem;outline:none;font-family:inherit;background:var(--card);color:var(--text);cursor:pointer;}
-    .role-select:focus{border-color:var(--primary);}
-    .member-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.25rem;border-bottom:1px solid var(--border);gap:.75rem;}
-    .member-row:last-child{border-bottom:none;}
-    .member-name{font-size:.95rem;font-weight:500;}
-    .member-role-badge{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:.15rem .5rem;border-radius:99px;}
-    .role-owner{background:#fef3c7;color:#92400e;}
-    .role-admin{background:#dbeafe;color:#1e40af;}
-    .role-member{background:#d1fae5;color:#065f46;}
-    .role-viewer{background:var(--bg);color:var(--muted);border:1px solid var(--border);}
-    [data-theme="dark"] .role-owner{background:#78350f;color:#fde68a;}
-    [data-theme="dark"] .role-admin{background:#1e3a5f;color:#93c5fd;}
-    [data-theme="dark"] .role-member{background:#064e3b;color:#6ee7b7;}
-    .invite-code{font-size:1.3rem;font-weight:800;letter-spacing:4px;font-family:monospace;color:var(--primary);}
-    .perm-table{width:100%;border-collapse:collapse;font-size:.82rem;}
-    .perm-table th{text-align:left;padding:.4rem .75rem;color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);}
-    .perm-table td{padding:.45rem .75rem;border-bottom:1px solid var(--border);}
-    .perm-table tr:last-child td{border-bottom:none;}
-    .perm-check{color:#10b981;font-weight:700;}
-    .perm-cross{color:var(--muted);}
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #4338ca;
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --danger: #ef4444;
+    }
+    [data-theme="dark"] {
+      --primary: #818cf8;
+      --primary-dark: #6366f1;
+      --bg: #111827;
+      --card: #1f2937;
+      --border: #374151;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --danger: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Auth ───────────────────────────────────────────────── */
+    .auth-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; }
+    .auth-card { background: var(--card); border-radius: 14px; box-shadow: 0 4px 24px rgba(0,0,0,.09); padding: 2rem; width: 100%; max-width: 400px; }
+    .auth-logo { font-size: 1.6rem; font-weight: 800; color: var(--primary); margin-bottom: .25rem; }
+    .auth-sub  { color: var(--muted); font-size: .9rem; margin-bottom: 1.5rem; }
+    .auth-tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
+    .auth-tab  { flex: 1; padding: .5rem; border: none; background: var(--bg); border-radius: 8px; cursor: pointer; font-size: .9rem; font-weight: 600; color: var(--muted); transition: .15s; }
+    .auth-tab.active { background: var(--primary); color: #fff; }
+
+    /* ── Forms ──────────────────────────────────────────────── */
+    .fg { margin-bottom: 1rem; }
+    label { display: block; font-size: .82rem; font-weight: 600; color: var(--muted); margin-bottom: .35rem; }
+    input[type="text"], input[type="password"] {
+      width: 100%; padding: .6rem .75rem; border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: .95rem; outline: none; transition: border-color .15s; font-family: inherit;
+    }
+    input:focus { border-color: var(--primary); }
+    .err { display: none; color: var(--danger); font-size: .85rem; background: #fef2f2; padding: .5rem .75rem; border-radius: 6px; margin-bottom: 1rem; }
+
+    /* ── Buttons ────────────────────────────────────────────── */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+           padding: .6rem 1.2rem; border: none; border-radius: 8px; font-size: .9rem;
+           font-weight: 600; cursor: pointer; transition: .15s; font-family: inherit; }
+    .btn-primary { background: var(--primary); color: #fff; width: 100%; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+    .btn-sm  { padding: .35rem .75rem; font-size: .8rem; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ── Nav ────────────────────────────────────────────────── */
+    nav { background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    .nav-logo  { font-weight: 800; font-size: 1.1rem; color: var(--primary); }
+    .nav-links { display: flex; gap: .25rem; }
+    .nav-btn   { padding: .4rem .85rem; border-radius: 8px; border: none; background: none;
+                 color: var(--muted); font-size: .9rem; font-weight: 500; cursor: pointer; transition: .15s; }
+    .nav-btn:hover  { background: var(--bg); }
+    .nav-btn.active { background: #eef2ff; color: var(--primary); }
+    .nav-user  { display: flex; align-items: center; gap: .75rem; font-size: .9rem; color: var(--muted); }
+    .nav-out   { background: none; border: none; color: var(--muted); cursor: pointer; font-size: .85rem; text-decoration: underline; }
+    .nav-out:hover { color: var(--danger); }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .main  { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+    .page  { display: none; }
+    .page.active { display: block; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+    .page-title  { font-size: 1.25rem; font-weight: 700; }
+
+    /* ── View switcher ──────────────────────────────────────── */
+    .view-switch { display: flex; gap: .25rem; background: var(--bg); border-radius: 10px; padding: .2rem; border: 1px solid var(--border); }
+    .view-btn    { padding: .3rem .75rem; border-radius: 7px; border: none; background: none; font-size: .82rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: .15s; }
+    .view-btn.active { background: var(--primary); color: #fff; }
+
+    /* ── Week grid ──────────────────────────────────────────── */
+    .week-nav   { display: flex; gap: .5rem; align-items: center; }
+    .week-label { font-size: .9rem; color: var(--muted); min-width: 190px; text-align: center; }
+    .week-grid  { display: grid; grid-template-columns: repeat(7, 1fr); gap: .75rem; }
+    @media (max-width: 900px) { .week-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 500px) { .week-grid { grid-template-columns: 1fr; } }
+
+    /* ── Day view ───────────────────────────────────────────── */
+    .day-view-card { background: var(--card); border-radius: 14px; border: 1px solid var(--border); max-width: 480px; overflow: hidden; }
+    .day-view-card.today { border-color: var(--primary); box-shadow: 0 0 0 2px #c7d2fe; }
+    .day-view-head { padding: .9rem 1.25rem; background: #6366f1; color: #fff; }
+    .day-view-card.today .day-view-head { background: var(--primary); }
+    .day-view-name { font-weight: 700; font-size: 1.1rem; }
+    .day-view-date { font-size: .85rem; opacity: .85; }
+
+    /* ── Month grid ─────────────────────────────────────────── */
+    .month-grid    { display: grid; grid-template-columns: repeat(7, 1fr); gap: .4rem; }
+    .month-header  { display: grid; grid-template-columns: repeat(7, 1fr); gap: .4rem; margin-bottom: .3rem; }
+    .month-dname   { text-align: center; font-size: .72rem; font-weight: 700; color: var(--muted); padding: .25rem 0; text-transform: uppercase; }
+    .month-cell    { background: var(--card); border: 1px solid var(--border); border-radius: 8px; min-height: 80px; padding: .35rem .4rem; cursor: pointer; transition: border-color .15s; }
+    .month-cell:hover { border-color: var(--primary); }
+    .month-cell.today { border-color: var(--primary); box-shadow: 0 0 0 2px #c7d2fe; }
+    .month-cell.other-month { opacity: .4; }
+    .month-num     { font-size: .75rem; font-weight: 700; color: var(--muted); margin-bottom: .25rem; }
+    .month-cell.today .month-num { color: var(--primary); }
+    .month-today-badge { font-size: .65rem; font-weight: 700; background: var(--primary); color: #fff; border-radius: 99px; padding: .05rem .4rem; margin-left: .3rem; vertical-align: middle; }
+    .month-meal-dot { font-size: .72rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: .1rem; }
+    @media (max-width: 600px) { .month-cell { min-height: 55px; } .month-meal-dot { display: none; } }
+
+    /* ── Ingredient modal ────────────────────────────────────── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-box     { background: var(--card); border-radius: 14px; padding: 1.5rem; width: 100%; max-width: 380px; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+    .modal-title   { font-weight: 700; font-size: 1rem; margin-bottom: 1rem; }
+    .modal-ing-list { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1.25rem; max-height: 260px; overflow-y: auto; }
+    .modal-ing-item { display: flex; align-items: center; gap: .65rem; font-size: .9rem; }
+    .modal-ing-item input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--primary); flex-shrink: 0; cursor: pointer; }
+    .modal-actions  { display: flex; gap: .5rem; justify-content: flex-end; }
+
+    .day-card   { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+    .day-card.today { border-color: var(--primary); box-shadow: 0 0 0 2px #c7d2fe; }
+    .day-head   { padding: .55rem .875rem; background: #6366f1; color: #fff; }
+    .day-card.today .day-head { background: var(--primary); }
+    .day-name   { font-weight: 700; font-size: .85rem; }
+    .day-date   { font-size: .72rem; opacity: .85; }
+
+    .meal-slot  { padding: .55rem .875rem; border-bottom: 1px solid var(--border); min-height: 52px; }
+    .meal-slot:last-child { border-bottom: none; }
+    .meal-type  { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: .2rem; }
+    .meal-name  { font-size: .85rem; cursor: pointer; min-height: 1.2em; }
+    .meal-name:empty::before { content: '+ Mahlzeit'; color: #aaa; font-size: .8rem; }
+    .meal-name:hover { color: var(--primary); }
+    .meal-edit  { display: flex; gap: .3rem; }
+    .meal-input { flex: 1; padding: .25rem .5rem; border: 1.5px solid var(--primary); border-radius: 6px; font-size: .85rem; outline: none; font-family: inherit; }
+
+    /* ── Shopping ───────────────────────────────────────────── */
+    .s-list  { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+    .s-section { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+                 color: var(--muted); padding: .45rem 1rem; background: var(--bg); border-bottom: 1px solid var(--border); }
+    .s-item  { display: flex; align-items: center; gap: .75rem; padding: .7rem 1rem; border-bottom: 1px solid var(--border); }
+    .s-item:last-of-type { border-bottom: none; }
+    .s-item.done .s-text { text-decoration: line-through; color: var(--muted); }
+    .s-section.done-section { color: var(--muted); opacity: .7; }
+    .s-item input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--primary); flex-shrink: 0; cursor: pointer; }
+    .s-text  { flex: 1; font-size: .9rem; }
+    .s-del   { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 1rem; padding: .2rem .35rem; border-radius: 4px; }
+    .s-del:hover { color: var(--danger); background: #fef2f2; }
+    .s-add   { display: flex; gap: .5rem; padding: .75rem 1rem; background: var(--bg); border-top: 1px solid var(--border); }
+    .s-add input { flex: 1; padding: .5rem .75rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; outline: none; font-family: inherit; }
+    .s-add input:focus { border-color: var(--primary); }
+    .s-add .btn { width: auto; flex-shrink: 0; }
+    .empty   { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .9rem; }
+
+    /* ── Settings ───────────────────────────────────────────── */
+    .settings-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1rem; }
+    .settings-section { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: .55rem 1.25rem; background: var(--bg); border-bottom: 1px solid var(--border); }
+    .settings-row  { display: flex; align-items: center; justify-content: space-between; padding: .9rem 1.25rem; border-bottom: 1px solid var(--border); gap: 1rem; }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-label { font-size: .95rem; font-weight: 500; flex-shrink: 0; }
+    .settings-sub   { font-size: .8rem; color: var(--muted); margin-top: .15rem; }
+    .settings-value { font-weight: 700; font-size: .95rem; }
+    .settings-pw-wrap { display: flex; align-items: center; gap: .5rem; flex: 1; justify-content: flex-end; }
+    .settings-pw-dots { font-size: 1rem; letter-spacing: 2px; color: var(--text); flex-shrink: 0; }
+    .settings-changepw { padding: .9rem 1.25rem; border-top: 1px solid var(--border); }
+    .settings-changepw .fg:last-of-type { margin-bottom: .75rem; }
+    .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 24px; cursor: pointer; transition: .2s; }
+    .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+    .toggle input:checked + .toggle-slider { background: var(--primary); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { opacity: .88; }
+
+    /* ── Loading ─────────────────────────────────────────────── */
+    .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; font-size: 1rem; color: var(--muted); }
+
+    /* ── Recipes ─────────────────────────────────────────────── */
+    .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    .recipe-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 1rem; }
+    .recipe-card-name { font-weight: 700; font-size: 1rem; margin-bottom: .25rem; }
+    .recipe-card-desc { font-size: .82rem; color: var(--muted); margin-bottom: .6rem; white-space: pre-wrap; }
+    .ingredient-tags { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .6rem; }
+    .ingredient-tag  { background: #eef2ff; color: var(--primary); font-size: .75rem; padding: .2rem .55rem; border-radius: 99px; font-weight: 600; }
+    [data-theme="dark"] .ingredient-tag { background: #312e81; }
+    .recipe-actions  { display: flex; gap: .4rem; }
+    .recipe-form     { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 1rem; }
+    .recipe-form h3  { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
+    textarea { width: 100%; padding: .6rem .75rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; outline: none; font-family: inherit; resize: vertical; transition: border-color .15s; }
+    textarea:focus { border-color: var(--primary); }
+    .ing-input-row { display: flex; gap: .4rem; margin-bottom: .5rem; }
+    .ing-input-row input { flex: 1; }
+    .ing-list-edit   { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .6rem; }
+    .ing-tag-edit    { display: flex; align-items: center; gap: .25rem; background: #eef2ff; color: var(--primary); font-size: .78rem; padding: .2rem .5rem; border-radius: 99px; font-weight: 600; }
+    [data-theme="dark"] .ing-tag-edit { background: #312e81; }
+    .ing-tag-edit button { background: none; border: none; cursor: pointer; color: var(--primary); font-size: .85rem; line-height: 1; padding: 0; }
+
+    /* ── Quantity input ──────────────────────────────────────── */
+    .qty-inp { width:82px; padding:.25rem .45rem; border:1.5px solid var(--border); border-radius:6px; font-size:.82rem; outline:none; font-family:inherit; flex-shrink:0; }
+    .qty-inp:focus { border-color:var(--primary); }
+
+    /* ── Autocomplete ────────────────────────────────────────── */
+    .ac-wrap { position: relative; flex: 1; }
+    .ac-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1.5px solid var(--primary); border-radius: 8px; z-index: 200; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+    .ac-item { padding: .45rem .75rem; font-size: .85rem; cursor: pointer; }
+    .ac-item:hover { background: #eef2ff; }
+    [data-theme="dark"] .ac-item:hover { background: #312e81; }
+
+    /* ── Meal slot extras ────────────────────────────────────── */
+    .meal-ing-btn { font-size: .7rem; color: var(--primary); background: none; border: none; cursor: pointer; padding: .1rem .3rem; border-radius: 4px; margin-top: .15rem; display: block; }
+    .meal-ing-btn:hover { background: #eef2ff; }
+    [data-theme="dark"] .meal-ing-btn:hover { background: #312e81; }
+
+    /* ── Drag & Drop ─────────────────────────────────────────── */
+    .meal-slot.dragging  { opacity: .45; }
+    .meal-slot.drag-over { border: 2px dashed var(--primary) !important; background: #eef2ff; }
+    [data-theme="dark"] .meal-slot.drag-over { background: #1e2a4a; }
+
+    /* ── Group ───────────────────────────────────────────────── */
+    .group-badge { font-size:.75rem; background:#eef2ff; color:var(--primary); border-radius:99px; padding:.15rem .65rem; font-weight:600; white-space:nowrap; }
+    [data-theme="dark"] .group-badge { background:#312e81; }
+    .context-select { padding:.3rem .6rem; border:1.5px solid var(--border); border-radius:8px; font-size:.82rem; font-weight:600; outline:none; font-family:inherit; background:var(--card); color:var(--text); cursor:pointer; max-width:170px; }
+    .context-select:focus { border-color:var(--primary); }
+    .role-select { padding:.28rem .45rem; border:1.5px solid var(--border); border-radius:6px; font-size:.8rem; outline:none; font-family:inherit; background:var(--card); color:var(--text); cursor:pointer; }
+    .role-select:focus { border-color:var(--primary); }
+    .member-row { display:flex; align-items:center; justify-content:space-between; padding:.75rem 1.25rem; border-bottom:1px solid var(--border); gap:.75rem; }
+    .member-row:last-child { border-bottom:none; }
+    .member-name { font-size:.95rem; font-weight:500; }
+    .member-role-badge { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:.15rem .5rem; border-radius:99px; }
+    .role-owner  { background:#fef3c7; color:#92400e; }
+    .role-admin  { background:#dbeafe; color:#1e40af; }
+    .role-member { background:#d1fae5; color:#065f46; }
+    .role-viewer { background:var(--bg); color:var(--muted); border:1px solid var(--border); }
+    [data-theme="dark"] .role-owner  { background:#78350f; color:#fde68a; }
+    [data-theme="dark"] .role-admin  { background:#1e3a5f; color:#93c5fd; }
+    [data-theme="dark"] .role-member { background:#064e3b; color:#6ee7b7; }
+    .invite-code { font-size:1.3rem; font-weight:800; letter-spacing:4px; font-family:monospace; color:var(--primary); }
+    .perm-table  { width:100%; border-collapse:collapse; font-size:.82rem; }
+    .perm-table th { text-align:left; padding:.4rem .75rem; color:var(--muted); font-weight:600; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--border); }
+    .perm-table td { padding:.45rem .75rem; border-bottom:1px solid var(--border); }
+    .perm-table tr:last-child td { border-bottom:none; }
+    .perm-check { color:#10b981; font-weight:700; }
+    .perm-cross  { color:var(--muted); }
   </style>
 </head>
 <body>
 
+<!-- ── Loading ───────────────────────────────────────────────────── -->
 <div id="loadingScreen" class="loading" style="flex-direction:column;gap:1rem">
   <span>Wird geladen &#x2026;</span>
   <div id="loadingDebug" style="display:none;max-width:340px;background:#fef2f2;color:#991b1b;border-radius:10px;padding:.75rem 1rem;font-size:.82rem;text-align:center;line-height:1.5"></div>
 </div>
 
+<!-- ── Auth ─────────────────────────────────────────────────────── -->
 <div id="authScreen" class="auth-wrap" style="display:none">
   <div class="auth-card">
     <div class="auth-logo">&#x1F37D;&#xFE0F; Essensplaner</div>
@@ -191,11 +265,13 @@
       <button class="auth-tab" onclick="showTab('register')">Registrieren</button>
     </div>
     <div id="authErr" class="err"></div>
+
     <div id="loginForm">
       <div class="fg"><label>Benutzername</label><input type="text" id="lUser" placeholder="dein_name" /></div>
       <div class="fg"><label>Passwort</label><input type="password" id="lPass" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;" onkeydown="if(event.key==='Enter')doLogin()" /></div>
       <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Anmelden</button>
     </div>
+
     <div id="regForm" style="display:none">
       <div class="fg"><label>Benutzername</label><input type="text" id="rUser" placeholder="dein_name" /></div>
       <div class="fg"><label>Passwort</label><input type="password" id="rPass" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022; (min. 6 Zeichen)" /></div>
@@ -205,6 +281,7 @@
   </div>
 </div>
 
+<!-- ── App ──────────────────────────────────────────────────────── -->
 <div id="appScreen" style="display:none">
   <nav>
     <div class="nav-inner">
@@ -223,7 +300,9 @@
       </div>
     </div>
   </nav>
+
   <div class="main">
+    <!-- Wochenplan -->
     <div id="planPage" class="page active">
       <div class="page-header">
         <div class="page-title" id="planTitle">Wochenplan</div>
@@ -242,6 +321,8 @@
       </div>
       <div id="planView"></div>
     </div>
+
+    <!-- Einkaufsliste -->
     <div id="shoppingPage" class="page">
       <div class="page-header">
         <div class="page-title">Einkaufsliste</div>
@@ -249,6 +330,8 @@
       </div>
       <div class="s-list" id="sList"></div>
     </div>
+
+    <!-- Rezepte -->
     <div id="recipesPage" class="page">
       <div class="page-header">
         <div class="page-title">Rezepte</div>
@@ -259,13 +342,13 @@
           <h3 id="recipeFormTitle">Neues Rezept</h3>
           <input type="hidden" id="recipeEditId" />
           <div class="fg"><label>Name</label><input type="text" id="rName" placeholder="z.B. Spaghetti Bolognese" /></div>
-          <div class="fg"><label>Beschreibung (optional)</label><textarea id="rDesc" rows="3" placeholder="Zubereitung, Tipps ..."></textarea></div>
+          <div class="fg"><label>Beschreibung (optional)</label><textarea id="rDesc" rows="3" placeholder="Zubereitung, Tipps &#x2026;"></textarea></div>
           <div class="fg">
             <label>Zutaten</label>
             <div class="ing-list-edit" id="ingListEdit"></div>
             <div class="ing-input-row">
-              <input type="text" id="ingInput" placeholder="Zutat ..." onkeydown="if(event.key==='Enter'){event.preventDefault();addIngredientToForm()}" />
-              <input type="text" id="ingQtyInput" class="qty-inp" placeholder="Menge" onkeydown="if(event.key==='Enter'){event.preventDefault();addIngredientToForm()}" />
+              <input type="text" id="ingInput" placeholder="Zutat &#x2026;" onkeydown="if(event.key==='Enter'){event.preventDefault();addIngredientToForm()}" />
+              <input type="text" id="ingQtyInput" class="qty-inp" placeholder="Menge (z.B. 200g)" onkeydown="if(event.key==='Enter'){event.preventDefault();addIngredientToForm()}" />
               <button class="btn btn-outline btn-sm" onclick="addIngredientToForm()">+ Hinzuf&#xFC;gen</button>
             </div>
           </div>
@@ -277,8 +360,12 @@
       </div>
       <div class="recipe-grid" id="recipeGrid"></div>
     </div>
+
+    <!-- Einstellungen -->
     <div id="settingsPage" class="page">
-      <div class="page-header"><div class="page-title">Einstellungen</div></div>
+      <div class="page-header">
+        <div class="page-title">Einstellungen</div>
+      </div>
       <div class="settings-card">
         <div class="settings-section">Account</div>
         <div class="settings-row">
@@ -290,20 +377,21 @@
           <div class="settings-pw-wrap">
             <span class="settings-pw-dots" id="settingsPwDisplay">&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;</span>
             <button class="btn btn-outline btn-sm" id="settingsPwToggleBtn" onclick="toggleShowPw()">Anzeigen</button>
-            <button class="btn btn-outline btn-sm" onclick="toggleChangePwForm()">&Auml;ndern</button>
+            <button class="btn btn-outline btn-sm" onclick="toggleChangePwForm()">&#xC4;ndern</button>
           </div>
         </div>
         <div id="changePwForm" style="display:none" class="settings-changepw">
           <div id="changePwErr" class="err"></div>
           <div class="fg"><label>Aktuelles Passwort</label><input type="password" id="currentPw" placeholder="Aktuelles Passwort" /></div>
           <div class="fg"><label>Neues Passwort</label><input type="password" id="newPw1" placeholder="Neues Passwort (min. 6 Zeichen)" /></div>
-          <div class="fg"><label>Passwort best&auml;tigen</label><input type="password" id="newPw2" placeholder="Wiederholen" onkeydown="if(event.key==='Enter')saveNewPw()" /></div>
+          <div class="fg"><label>Passwort best&#xE4;tigen</label><input type="password" id="newPw2" placeholder="Wiederholen" onkeydown="if(event.key==='Enter')saveNewPw()" /></div>
           <div style="display:flex;gap:.5rem">
             <button class="btn btn-primary btn-sm" style="width:auto" onclick="saveNewPw()">Speichern</button>
             <button class="btn btn-outline btn-sm" onclick="toggleChangePwForm()">Abbrechen</button>
           </div>
         </div>
       </div>
+
       <div class="settings-card">
         <div class="settings-row">
           <div>
@@ -319,23 +407,28 @@
       <div class="settings-card">
         <div class="settings-row">
           <div>
-            <div class="settings-label">Account l&ouml;schen</div>
-            <div class="settings-sub">L&ouml;scht deinen Account und alle gespeicherten Daten unwiderruflich</div>
+            <div class="settings-label">Account l&#xF6;schen</div>
+            <div class="settings-sub">L&#xF6;scht deinen Account und alle gespeicherten Daten unwiderruflich</div>
           </div>
-          <button class="btn btn-danger btn-sm" onclick="deleteAccount()">Account l&ouml;schen</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteAccount()">Account l&#xF6;schen</button>
         </div>
       </div>
     </div>
+
+    <!-- Gruppe -->
     <div id="groupPage" class="page">
       <div class="page-header"><div class="page-title">Gruppen</div></div>
+
       <div id="myGroupsList"></div>
+
       <div class="settings-card" style="margin-top:1rem">
         <div class="settings-section">Neue Gruppe erstellen</div>
         <div style="padding:1rem 1.25rem">
-          <div class="fg"><label>Gruppenname</label><input type="text" id="newGroupName" placeholder="z.B. Familie M&uuml;ller" /></div>
+          <div class="fg"><label>Gruppenname</label><input type="text" id="newGroupName" placeholder="z.B. Familie M&#xFC;ller" /></div>
           <button class="btn btn-primary btn-sm" style="width:auto" onclick="createGroup()">Gruppe erstellen</button>
         </div>
       </div>
+
       <div class="settings-card" style="margin-top:1rem">
         <div class="settings-section">Bestehender Gruppe beitreten</div>
         <div style="padding:1rem 1.25rem">
@@ -344,23 +437,25 @@
           <button class="btn btn-primary btn-sm" style="width:auto" onclick="joinGroup()">Beitreten</button>
         </div>
       </div>
+
       <div class="settings-card" style="margin-top:1rem">
-        <div class="settings-section">Rollen&uuml;bersicht</div>
+        <div class="settings-section">Rollen&#xFC;bersicht</div>
         <table class="perm-table">
           <tr><th>Aktion</th><th>Owner</th><th>Admin</th><th>Mitglied</th><th>Zuschauer</th></tr>
-          <tr><td>Mahlzeiten bearbeiten</td><td class="perm-check">&#x2713;</td><td class="perm-check">&#x2713;</td><td class="perm-check">&#x2713;</td><td class="perm-cross">&ndash;</td></tr>
-          <tr><td>Einkaufsliste verwalten</td><td class="perm-check">&#x2713;</td><td class="perm-check">&#x2713;</td><td class="perm-check">&#x2713;</td><td class="perm-cross">&ndash;</td></tr>
-          <tr><td>Rezepte hinzuf&uuml;gen/l&ouml;schen</td><td class="perm-check">&#x2713;</td><td class="perm-check">&#x2713;</td><td class="perm-cross">&ndash;</td><td class="perm-cross">&ndash;</td></tr>
-          <tr><td>Mitglieder einladen</td><td class="perm-check">&#x2713;</td><td class="perm-check">&#x2713;</td><td class="perm-cross">&ndash;</td><td class="perm-cross">&ndash;</td></tr>
-          <tr><td>Rollen vergeben</td><td class="perm-check">&#x2713;</td><td>Teilweise</td><td class="perm-cross">&ndash;</td><td class="perm-cross">&ndash;</td></tr>
-          <tr><td>Gruppe l&ouml;schen</td><td class="perm-check">&#x2713;</td><td class="perm-cross">&ndash;</td><td class="perm-cross">&ndash;</td><td class="perm-cross">&ndash;</td></tr>
+          <tr><td>Mahlzeiten bearbeiten</td><td class="perm-check">&#x2713;</td><td class="perm-check">&#x2713;</td><td class="perm-check">&#x2713;</td><td class="perm-cross">&#x2013;</td></tr>
+          <tr><td>Einkaufsliste verwalten</td><td class="perm-check">&#x2713;</td><td class="perm-check">&#x2713;</td><td class="perm-check">&#x2713;</td><td class="perm-cross">&#x2013;</td></tr>
+          <tr><td>Rezepte hinzuf&#xFC;gen/l&#xF6;schen</td><td class="perm-check">&#x2713;</td><td class="perm-check">&#x2713;</td><td class="perm-cross">&#x2013;</td><td class="perm-cross">&#x2013;</td></tr>
+          <tr><td>Mitglieder einladen</td><td class="perm-check">&#x2713;</td><td class="perm-check">&#x2713;</td><td class="perm-cross">&#x2013;</td><td class="perm-cross">&#x2013;</td></tr>
+          <tr><td>Rollen vergeben</td><td class="perm-check">&#x2713;</td><td>Teilweise</td><td class="perm-cross">&#x2013;</td><td class="perm-cross">&#x2013;</td></tr>
+          <tr><td>Gruppe l&#xF6;schen</td><td class="perm-check">&#x2713;</td><td class="perm-cross">&#x2013;</td><td class="perm-cross">&#x2013;</td><td class="perm-cross">&#x2013;</td></tr>
         </table>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- Meal-Edit-Popup -->
+  </div><!-- end .main -->
+</div><!-- end #appScreen -->
+
+<!-- ── Meal edit popup ────────────────────────────────────────────── -->
 <div id="mealEditPopup" style="display:none;position:fixed;z-index:300;background:var(--card);border:2px solid var(--primary);border-radius:12px;padding:.875rem;box-shadow:0 8px 28px rgba(0,0,0,.25);min-width:260px;max-width:320px">
   <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.5rem" id="mealEditPopupLabel"></div>
   <div class="ac-wrap" style="margin-bottom:.6rem">
@@ -373,10 +468,10 @@
   </div>
 </div>
 
-<!-- Zutaten-Modal -->
+<!-- ── Ingredient selection modal ────────────────────────────────── -->
 <div id="ingModal" class="modal-overlay" style="display:none" onclick="closeIngModal(event)">
   <div class="modal-box">
-    <div class="modal-title" id="ingModalTitle">Zutaten ausw&auml;hlen</div>
+    <div class="modal-title" id="ingModalTitle">Zutaten ausw&#xE4;hlen</div>
     <div class="modal-ing-list" id="ingModalList"></div>
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" onclick="closeIngModal()">Abbrechen</button>
@@ -385,313 +480,1236 @@
   </div>
 </div>
 
+<!-- ── Error handler + emergency timeout (vor Firebase) ── -->
 <script>
-window.onerror=function(msg,src,line){var dbg=document.getElementById('loadingDebug');if(dbg){dbg.textContent='Fehler: '+msg+(src?' ('+src.split('/').pop()+':'+line+')':'');dbg.style.display='block';}};
-window.addEventListener('unhandledrejection',function(e){var dbg=document.getElementById('loadingDebug');if(dbg){dbg.textContent='Fehler: '+(e.reason&&e.reason.message?e.reason.message:String(e.reason));dbg.style.display='block';}});
-setTimeout(function(){var ls=document.getElementById('loadingScreen');if(ls&&ls.style.display!=='none'){ls.style.display='none';document.getElementById('authScreen').style.display='flex';var dbg=document.getElementById('loadingDebug');if(dbg){dbg.textContent='Firebase konnte nicht geladen werden (Timeout). Bitte Internetverbindung pr\u00fcfen.';dbg.style.display='block';}}},8000);
-setTimeout(function(){var ls=document.getElementById('loadingScreen');var dbg=document.getElementById('loadingDebug');if(ls&&ls.style.display!=='none'&&dbg){dbg.textContent='Firebase antwortet nicht \u2013 bitte Internetverbindung pr\u00fcfen. Login erscheint gleich \u2026';dbg.style.display='block';}},2000);
-</script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-<script>
-firebase.initializeApp({
-  apiKey:"AIzaSyBqYqgPi_qeSxhmVpeDZcLd8Hl6OotdA_I",
-  authDomain:"memorydeck-af728.firebaseapp.com",
-  projectId:"memorydeck-af728",
-  storageBucket:"memorydeck-af728.firebasestorage.app",
-  messagingSenderId:"1077936268943",
-  appId:"1:1077936268943:web:9bf39e8a18f3f79068b2fa"
+window.onerror = function(msg, src, line) {
+  var dbg = document.getElementById('loadingDebug');
+  if (dbg) { dbg.textContent = 'Fehler: ' + msg + (src ? ' (' + src.split('/').pop() + ':' + line + ')' : ''); dbg.style.display = 'block'; }
+};
+window.addEventListener('unhandledrejection', function(e) {
+  var dbg = document.getElementById('loadingDebug');
+  if (dbg) { dbg.textContent = 'Fehler: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason)); dbg.style.display = 'block'; }
 });
-const auth=firebase.auth(), db=firebase.firestore();
+setTimeout(function() {
+  var ls = document.getElementById('loadingScreen');
+  if (ls && ls.style.display !== 'none') {
+    ls.style.display = 'none';
+    document.getElementById('authScreen').style.display = 'flex';
+    var dbg = document.getElementById('loadingDebug');
+    if (dbg) { dbg.textContent = 'Firebase konnte nicht geladen werden (Timeout). Bitte Internetverbindung pr\u00FCfen.'; dbg.style.display = 'block'; }
+  }
+}, 8000);
+setTimeout(function() {
+  var ls = document.getElementById('loadingScreen');
+  var dbg = document.getElementById('loadingDebug');
+  if (ls && ls.style.display !== 'none' && dbg) {
+    dbg.textContent = 'Firebase antwortet nicht \u2013 bitte Internetverbindung pr\u00FCfen. Login erscheint gleich \u2026';
+    dbg.style.display = 'block';
+  }
+}, 2000);
+</script>
+<!-- ── Firebase SDKs ─────────────────────────────────────────────── -->
+<script src="<https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js>"></script>
+<script src="<https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js>"></script>
+<script src="<https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js>"></script>
 
-const DAYS=['Mo','Di','Mi','Do','Fr','Sa','So'];
-const MEALS=['Fr\u00fchst\u00fcck','Mittagessen','Abendessen'];
-const FAKE_DOMAIN='@essensplaner.app';
+<script>
+// ── Firebase Config ───────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyBqYqgPi_qeSxhmVpeDZcLd8Hl6OotdA_I",
+  authDomain: "<memorydeck-af728.firebaseapp.com>",
+  projectId: "memorydeck-af728",
+  storageBucket: "memorydeck-af728.firebasestorage.app",
+  messagingSenderId: "1077936268943",
+  appId: "1:1077936268943:web:9bf39e8a18f3f79068b2fa"
+};
 
-let currentUser=null,currentUid=null,weekOffset=0,currentView='week';
-let appData={meals:{},shopping:[],checked:{},recipes:[],mealRecipes:{}};
-let _cachedPw='',_pwVisible=false;
-let currentGroupId=null,currentGroupRole=null,currentGroupName='';
-let userGroups=[];
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
 
-const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// ── Constants ────────────────────────────────────────────────────
+const DAYS  = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+const MEALS = ['Fr\u00FChst\u00FCck','Mittagessen','Abendessen'];
+const FAKE_DOMAIN = '@essensplaner.app';
 
-function monday(offset){offset=offset||0;const d=new Date(),dow=d.getDay();d.setDate(d.getDate()+(dow===0?-6:1-dow)+offset*7);d.setHours(0,0,0,0);return d;}
-const dateKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-const dateFmt=d=>d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
-const todayKey=()=>dateKey(new Date());
+// ── State ────────────────────────────────────────────────────────
+let currentUser = null;
+let currentUid  = null;
+let weekOffset  = 0;
+let currentView = 'week';
+let appData     = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
+let _cachedPw   = '';
+let _pwVisible  = false;
+let currentGroupId   = null;
+let currentGroupRole = null;
+let currentGroupName = '';
+let userGroups       = [];
 
-function userRef(){if(currentGroupId)return db.collection('groups').doc(currentGroupId).collection('data').doc('main');return db.collection('users').doc(currentUid).collection('data').doc('main');}
+// ── Helpers ──────────────────────────────────────────────────────
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-async function loadData(){
-  const doc=await userRef().get();
-  if(doc.exists){
-    appData={meals:{},shopping:[],checked:{},recipes:[],mealRecipes:{},...doc.data()};
-    appData.recipes=appData.recipes.map(r=>({...r,ingredients:(r.ingredients||[]).map(ing=>typeof ing==='string'?{name:ing,qty:''}:ing)}));
-    appData.shopping=appData.shopping.map(item=>typeof item==='object'?{qty:'',...item}:{name:String(item),qty:'',done:false});
-  }else{appData={meals:{},shopping:[],checked:{},recipes:[],mealRecipes:{}};}
+function monday(offset) {
+  offset = offset || 0;
+  const d = new Date();
+  const dow = d.getDay();
+  d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow) + offset * 7);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+const dateKey = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+const dateFmt = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+const todayKey = () => dateKey(new Date());
+
+function userRef() {
+  if (currentGroupId) return db.collection('groups').doc(currentGroupId).collection('data').doc('main');
+  return db.collection('users').doc(currentUid).collection('data').doc('main');
 }
 
-function parseQty(s){s=(s||'').trim();const m=s.match(/^(\d+(?:[.,]\d+)?)\s*(.*)/);if(m)return{amount:parseFloat(m[1].replace(',','.')),unit:m[2].trim().toLowerCase()};return{amount:null,unit:s.toLowerCase()};}
-function combineQty(qa,qb){if(!qa)return qb||'';if(!qb)return qa||'';const a=parseQty(qa),b=parseQty(qb);if(a.amount!==null&&b.amount!==null&&a.unit===b.unit){const sum=+(a.amount+b.amount).toFixed(4).replace(/\.?0+$/,'');return sum+(a.unit?' '+a.unit:'');}return qa+' + '+qb;}
-function addToShopping(name,qty){const ex=appData.shopping.find(x=>x.name.toLowerCase()===name.toLowerCase());if(ex){ex.qty=combineQty(ex.qty,qty||'');}else{appData.shopping.push({name,qty:qty||'',done:false});}}
-function saveData(){userRef().set(appData).catch(console.error);}
-function getMeal(date,mi){return appData.meals[date+'_'+mi]||'';}
-function setMeal(date,mi,val){appData.meals[date+'_'+mi]=val;saveData();}
-
-function showTab(tab){document.getElementById('loginForm').style.display=tab==='login'?'':'none';document.getElementById('regForm').style.display=tab==='register'?'':'none';document.getElementById('authErr').style.display='none';document.querySelectorAll('.auth-tab').forEach((el,i)=>el.classList.toggle('active',i===(tab==='login'?0:1)));}
-function authErr(msg){const el=document.getElementById('authErr');el.textContent=msg;el.style.display='block';}
-function setBusy(btnId,busy){const btn=document.getElementById(btnId);btn.disabled=busy;btn.textContent=busy?'Bitte warten \u2026':(btnId==='loginBtn'?'Anmelden':'Registrieren');}
-
-async function doLogin(){
-  const user=document.getElementById('lUser').value.trim().toLowerCase();
-  const pass=document.getElementById('lPass').value;
-  if(!user||!pass)return authErr('Bitte alle Felder ausf\u00fcllen.');
-  if(!/^[a-z0-9_]+$/.test(user))return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
-  setBusy('loginBtn',true);
-  const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),10000));
-  try{await Promise.race([auth.signInWithEmailAndPassword(user+FAKE_DOMAIN,pass),timeout]);}
-  catch(e){
-    if(e.message==='timeout')authErr('Keine Verbindung zu Firebase. Bitte Internetverbindung pr\u00fcfen.');
-    else if(e.code==='auth/user-not-found'||e.code==='auth/wrong-password'||e.code==='auth/invalid-credential')authErr('Benutzername oder Passwort falsch.');
-    else authErr('Fehler: '+e.message);
-    setBusy('loginBtn',false);
+// ── Data (Firestore) ─────────────────────────────────────────────
+async function loadData() {
+  const doc = await userRef().get();
+  if (doc.exists) {
+    appData = Object.assign({ meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} }, doc.data());
+    appData.recipes = appData.recipes.map(function(r) {
+      return Object.assign({}, r, {
+        ingredients: (r.ingredients || []).map(function(ing) {
+          return typeof ing === 'string' ? { name: ing, qty: '' } : ing;
+        })
+      });
+    });
+    appData.shopping = appData.shopping.map(function(item) {
+      return typeof item === 'object' ? Object.assign({ qty: '' }, item) : { name: String(item), qty: '', done: false };
+    });
+  } else {
+    appData = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
   }
 }
 
-async function doRegister(){
-  const user=document.getElementById('rUser').value.trim().toLowerCase();
-  const pass=document.getElementById('rPass').value,pass2=document.getElementById('rPass2').value;
-  if(!user||!pass||!pass2)return authErr('Bitte alle Felder ausf\u00fcllen.');
-  if(!/^[a-z0-9_]+$/.test(user))return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
-  if(pass!==pass2)return authErr('Passw\u00f6rter stimmen nicht \u00fcberein.');
-  if(pass.length<6)return authErr('Passwort muss mindestens 6 Zeichen haben.');
-  setBusy('registerBtn',true);
-  try{const cred=await auth.createUserWithEmailAndPassword(user+FAKE_DOMAIN,pass);await db.collection('users').doc(cred.user.uid).set({username:user,password:pass});}
-  catch(e){authErr(e.code==='auth/email-already-in-use'?'Benutzername bereits vergeben.':'Fehler: '+e.message);setBusy('registerBtn',false);}
+// ── Quantity helpers ──────────────────────────────────────────────
+function parseQty(s) {
+  s = (s || '').trim();
+  const m = s.match(/^(\d+(?:[.,]\d+)?)\s*(.*)/);
+  if (m) return { amount: parseFloat(m[1].replace(',', '.')), unit: m[2].trim().toLowerCase() };
+  return { amount: null, unit: s.toLowerCase() };
 }
 
-async function startSession(uid,username){
-  currentUid=uid;currentUser=username;
-  const uDoc=await db.collection('users').doc(uid).get();
-  let groupIds=[];
-  if(uDoc.exists){const d=uDoc.data();if(d.groupId&&!d.groupIds){groupIds=[d.groupId];await db.collection('users').doc(uid).update({groupIds:[d.groupId],groupId:firebase.firestore.FieldValue.delete()});}else{groupIds=d.groupIds||[];}}
-  userGroups=[];const validIds=[];
-  for(const gid of groupIds){const gDoc=await db.collection('groups').doc(gid).get();if(gDoc.exists&&gDoc.data().members&&gDoc.data().members[uid]){userGroups.push({id:gid,name:gDoc.data().name,role:gDoc.data().members[uid].role});validIds.push(gid);}}
-  if(validIds.length!==groupIds.length)await db.collection('users').doc(uid).update({groupIds:validIds});
-  currentGroupId=null;currentGroupRole=null;currentGroupName='';
+function combineQty(qa, qb) {
+  if (!qa) return qb || '';
+  if (!qb) return qa || '';
+  const a = parseQty(qa), b = parseQty(qb);
+  if (a.amount !== null && b.amount !== null && a.unit === b.unit) {
+    const sum = +(a.amount + b.amount).toFixed(4).replace(/\.?0+$/, '');
+    return sum + (a.unit ? ' ' + a.unit : '');
+  }
+  return qa + ' + ' + qb;
+}
+
+function addToShopping(name, qty) {
+  const existing = appData.shopping.find(function(x) { return x.name.toLowerCase() === name.toLowerCase(); });
+  if (existing) {
+    existing.qty = combineQty(existing.qty, qty || '');
+  } else {
+    appData.shopping.push({ name: name, qty: qty || '', done: false });
+  }
+}
+
+function saveData() {
+  userRef().set(appData).catch(console.error);
+}
+
+function getMeal(date, mi)      { return appData.meals[date + '_' + mi] || ''; }
+function setMeal(date, mi, val) { appData.meals[date + '_' + mi] = val; saveData(); }
+
+// ── Auth ─────────────────────────────────────────────────────────
+function showTab(tab) {
+  document.getElementById('loginForm').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('regForm').style.display   = tab === 'register' ? '' : 'none';
+  document.getElementById('authErr').style.display   = 'none';
+  document.querySelectorAll('.auth-tab').forEach(function(el, i) {
+    el.classList.toggle('active', i === (tab === 'login' ? 0 : 1));
+  });
+}
+
+function authErr(msg) {
+  const el = document.getElementById('authErr');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function setBusy(btnId, busy) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = busy;
+  btn.textContent = busy ? 'Bitte warten \u2026' : (btnId === 'loginBtn' ? 'Anmelden' : 'Registrieren');
+}
+
+async function doLogin() {
+  const user = document.getElementById('lUser').value.trim().toLowerCase();
+  const pass = document.getElementById('lPass').value;
+  if (!user || !pass) return authErr('Bitte alle Felder ausf\u00FCllen.');
+  if (!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
+
+  setBusy('loginBtn', true);
+  const timeout = new Promise(function(_, reject) {
+    setTimeout(function() { reject(new Error('timeout')); }, 10000);
+  });
+  try {
+    await Promise.race([
+      auth.signInWithEmailAndPassword(user + FAKE_DOMAIN, pass),
+      timeout
+    ]);
+  } catch (e) {
+    if (e.message === 'timeout') {
+      authErr('Keine Verbindung zu Firebase. Bitte Internetverbindung pr\u00FCfen.');
+    } else if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+      authErr('Benutzername oder Passwort falsch.');
+    } else {
+      authErr('Fehler: ' + e.message);
+    }
+    setBusy('loginBtn', false);
+  }
+}
+
+async function doRegister() {
+  const user  = document.getElementById('rUser').value.trim().toLowerCase();
+  const pass  = document.getElementById('rPass').value;
+  const pass2 = document.getElementById('rPass2').value;
+  if (!user || !pass || !pass2) return authErr('Bitte alle Felder ausf\u00FCllen.');
+  if (!/^[a-z0-9_]+$/.test(user)) return authErr('Nur Buchstaben, Zahlen und _ erlaubt.');
+  if (pass !== pass2) return authErr('Passw\u00F6rter stimmen nicht \u00FCberein.');
+  if (pass.length < 6) return authErr('Passwort muss mindestens 6 Zeichen haben.');
+
+  setBusy('registerBtn', true);
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(user + FAKE_DOMAIN, pass);
+    await db.collection('users').doc(cred.user.uid).set({ username: user, password: pass });
+  } catch (e) {
+    if (e.code === 'auth/email-already-in-use') {
+      authErr('Benutzername bereits vergeben.');
+    } else {
+      authErr('Fehler: ' + e.message);
+    }
+    setBusy('registerBtn', false);
+  }
+}
+
+async function startSession(uid, username) {
+  currentUid  = uid;
+  currentUser = username;
+
+  const uDoc = await db.collection('users').doc(uid).get();
+  let groupIds = [];
+  if (uDoc.exists) {
+    const d = uDoc.data();
+    if (d.groupId && !d.groupIds) {
+      groupIds = [d.groupId];
+      await db.collection('users').doc(uid).update({
+        groupIds: [d.groupId],
+        groupId: firebase.firestore.FieldValue.delete()
+      });
+    } else {
+      groupIds = d.groupIds || [];
+    }
+  }
+
+  userGroups = [];
+  const validIds = [];
+  for (const gid of groupIds) {
+    const gDoc = await db.collection('groups').doc(gid).get();
+    if (gDoc.exists && gDoc.data().members && gDoc.data().members[uid]) {
+      userGroups.push({ id: gid, name: gDoc.data().name, role: gDoc.data().members[uid].role });
+      validIds.push(gid);
+    }
+  }
+  if (validIds.length !== groupIds.length) {
+    await db.collection('users').doc(uid).update({ groupIds: validIds });
+  }
+
+  currentGroupId = null; currentGroupRole = null; currentGroupName = '';
+
   await loadData();
-  document.getElementById('authScreen').style.display='none';
-  document.getElementById('appScreen').style.display='';
-  document.getElementById('navName').textContent=username;
-  updateContextSwitcher();renderPlan();
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display  = '';
+  document.getElementById('navName').textContent = username;
+  updateContextSwitcher();
+  renderPlan();
 }
 
-function showAuthScreen(){currentUid=null;currentUser=null;currentGroupId=null;currentGroupRole=null;currentGroupName='';userGroups=[];appData={meals:{},shopping:[],checked:{}};document.getElementById('appScreen').style.display='none';document.getElementById('authScreen').style.display='flex';setBusy('loginBtn',false);setBusy('registerBtn',false);}
-function doLogout(){auth.signOut();}
+function showAuthScreen() {
+  currentUid        = null;
+  currentUser       = null;
+  currentGroupId    = null;
+  currentGroupRole  = null;
+  currentGroupName  = '';
+  userGroups        = [];
+  appData           = { meals: {}, shopping: [], checked: {} };
+  document.getElementById('appScreen').style.display  = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+  setBusy('loginBtn', false);
+  setBusy('registerBtn', false);
+}
 
-function canEdit(){return!currentGroupId||['owner','admin','member'].includes(currentGroupRole);}
-function canManageRecipes(){return!currentGroupId||['owner','admin'].includes(currentGroupRole);}
-function canManageGroup(){return['owner','admin'].includes(currentGroupRole);}
+function doLogout() {
+  auth.signOut();
+}
 
-auth.onAuthStateChanged(async function(fu){
-  document.getElementById('loadingScreen').style.display='none';
-  if(fu){const pd=await db.collection('users').doc(fu.uid).get();const username=pd.exists?pd.data().username:fu.email.split('@')[0];_cachedPw=pd.exists?(pd.data().password||''):'';await startSession(fu.uid,username);}
-  else{showAuthScreen();}
+// ── Permissions ───────────────────────────────────────────────────
+function canEdit()          { return !currentGroupId || ['owner','admin','member'].includes(currentGroupRole); }
+function canManageRecipes() { return !currentGroupId || ['owner','admin'].includes(currentGroupRole); }
+function canManageGroup()   { return ['owner','admin'].includes(currentGroupRole); }
+
+// ── Firebase Auth State ───────────────────────────────────────────
+auth.onAuthStateChanged(async function(fu) {
+  document.getElementById('loadingScreen').style.display = 'none';
+  if (fu) {
+    const pd = await db.collection('users').doc(fu.uid).get();
+    const username = pd.exists ? pd.data().username : fu.email.split('@')[0];
+    _cachedPw = pd.exists ? (pd.data().password || '') : '';
+    await startSession(fu.uid, username);
+  } else {
+    showAuthScreen();
+  }
 });
 
-function toggleShowPw(){_pwVisible=!_pwVisible;document.getElementById('settingsPwDisplay').textContent=_pwVisible?(_cachedPw||'(nicht verf\u00fcgbar)'):'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';document.getElementById('settingsPwToggleBtn').textContent=_pwVisible?'Verbergen':'Anzeigen';}
-function toggleChangePwForm(){const form=document.getElementById('changePwForm'),open=form.style.display==='none';form.style.display=open?'':'none';if(open){['currentPw','newPw1','newPw2'].forEach(id=>document.getElementById(id).value='');document.getElementById('changePwErr').style.display='none';document.getElementById('currentPw').focus();}}
-
-async function saveNewPw(){
-  const cpw=document.getElementById('currentPw').value,pw1=document.getElementById('newPw1').value,pw2=document.getElementById('newPw2').value;
-  const errEl=document.getElementById('changePwErr');errEl.style.display='none';
-  if(!cpw||!pw1||!pw2){errEl.textContent='Bitte alle Felder ausf\u00fcllen.';errEl.style.display='block';return;}
-  if(pw1.length<6){errEl.textContent='Passwort muss mindestens 6 Zeichen haben.';errEl.style.display='block';return;}
-  if(pw1!==pw2){errEl.textContent='Passw\u00f6rter stimmen nicht \u00fcberein.';errEl.style.display='block';return;}
-  try{const cred=firebase.auth.EmailAuthProvider.credential(currentUser+FAKE_DOMAIN,cpw);await auth.currentUser.reauthenticateWithCredential(cred);await auth.currentUser.updatePassword(pw1);await db.collection('users').doc(currentUid).update({password:pw1});_cachedPw=pw1;if(_pwVisible)document.getElementById('settingsPwDisplay').textContent=pw1;toggleChangePwForm();alert('Passwort erfolgreich ge\u00e4ndert.');}
-  catch(e){errEl.textContent=(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential')?'Aktuelles Passwort ist falsch.':'Fehler: '+e.message;errEl.style.display='block';}
+// ── Password management ───────────────────────────────────────────
+function toggleShowPw() {
+  _pwVisible = !_pwVisible;
+  document.getElementById('settingsPwDisplay').textContent = _pwVisible ? (_cachedPw || '(nicht verf\u00FCgbar)') : '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+  document.getElementById('settingsPwToggleBtn').textContent = _pwVisible ? 'Verbergen' : 'Anzeigen';
 }
 
-function applyTheme(dark){document.documentElement.setAttribute('data-theme',dark?'dark':'light');localStorage.setItem('ep_theme',dark?'dark':'light');}
-function toggleDark(dark){applyTheme(dark);}
-(function(){if(localStorage.getItem('ep_theme')==='dark')applyTheme(true);})();
-
-async function deleteAccount(){
-  if(!confirm('Willst du deinen Account und alle deine Daten wirklich unwiderruflich l\u00f6schen?'))return;
-  try{for(const g of userGroups)await db.collection('groups').doc(g.id).update({[`members.${currentUid}`]:firebase.firestore.FieldValue.delete()});await db.collection('users').doc(currentUid).collection('data').doc('main').delete();await db.collection('users').doc(currentUid).delete();await auth.currentUser.delete();}
-  catch(e){alert(e.code==='auth/requires-recent-login'?'Bitte melde dich ab und erneut an, um deinen Account zu l\u00f6schen.':'Fehler beim L\u00f6schen: '+e.message);}
+function toggleChangePwForm() {
+  const form = document.getElementById('changePwForm');
+  const open = form.style.display === 'none';
+  form.style.display = open ? '' : 'none';
+  if (open) {
+    document.getElementById('currentPw').value = '';
+    document.getElementById('newPw1').value = '';
+    document.getElementById('newPw2').value = '';
+    document.getElementById('changePwErr').style.display = 'none';
+    document.getElementById('currentPw').focus();
+  }
 }
 
-function showPage(name,btn){
-  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
-  document.getElementById(name+'Page').classList.add('active');btn.classList.add('active');
-  if(name==='shopping')renderShopping();
-  if(name==='recipes')renderRecipes();
-  if(name==='group')renderGroupPage();
-  if(name==='settings'){document.getElementById('darkToggle').checked=localStorage.getItem('ep_theme')==='dark';document.getElementById('settingsUsername').textContent=currentUser||'';_pwVisible=false;document.getElementById('settingsPwDisplay').textContent='\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';document.getElementById('settingsPwToggleBtn').textContent='Anzeigen';document.getElementById('changePwForm').style.display='none';}
+async function saveNewPw() {
+  const currentPw = document.getElementById('currentPw').value;
+  const pw1 = document.getElementById('newPw1').value;
+  const pw2 = document.getElementById('newPw2').value;
+  const errEl = document.getElementById('changePwErr');
+  errEl.style.display = 'none';
+
+  if (!currentPw || !pw1 || !pw2) { errEl.textContent = 'Bitte alle Felder ausf\u00FCllen.'; errEl.style.display = 'block'; return; }
+  if (pw1.length < 6) { errEl.textContent = 'Passwort muss mindestens 6 Zeichen haben.'; errEl.style.display = 'block'; return; }
+  if (pw1 !== pw2) { errEl.textContent = 'Passw\u00F6rter stimmen nicht \u00FCberein.'; errEl.style.display = 'block'; return; }
+
+  try {
+    const credential = firebase.auth.EmailAuthProvider.credential(currentUser + FAKE_DOMAIN, currentPw);
+    await auth.currentUser.reauthenticateWithCredential(credential);
+    await auth.currentUser.updatePassword(pw1);
+    await db.collection('users').doc(currentUid).update({ password: pw1 });
+    _cachedPw = pw1;
+    if (_pwVisible) document.getElementById('settingsPwDisplay').textContent = pw1;
+    toggleChangePwForm();
+    alert('Passwort erfolgreich ge\u00E4ndert.');
+  } catch (e) {
+    if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+      errEl.textContent = 'Aktuelles Passwort ist falsch.';
+    } else {
+      errEl.textContent = 'Fehler: ' + e.message;
+    }
+    errEl.style.display = 'block';
+  }
 }
 
-function setView(v){currentView=v;weekOffset=0;['day','week','month'].forEach(x=>document.getElementById('v'+x[0].toUpperCase()+x.slice(1)).classList.toggle('active',x===v));renderPlan();}
-function changeOffset(dir){weekOffset+=dir;renderPlan();}
-function renderPlan(){if(currentView==='week')renderWeek();else if(currentView==='day')renderDay();else renderMonth();}
-
-function renderDay(){
-  const d=new Date();d.setDate(d.getDate()+weekOffset);d.setHours(0,0,0,0);
-  const dk=dateKey(d),isToday=dk===todayKey(),di=(d.getDay()+6)%7;
-  document.getElementById('planTitle').textContent='Tagesplan';
-  document.getElementById('weekLabel').textContent=weekOffset===0?'Heute':weekOffset===1?'Morgen':weekOffset===-1?'Gestern':DAYS[di]+', '+dateFmt(d);
-  const view=document.getElementById('planView'),card=document.createElement('div');
-  card.className='day-view-card'+(isToday?' today':'');
-  card.innerHTML='<div class="day-view-head"><div class="day-view-name">'+DAYS[di]+(isToday?' \u25cf':'')+'</div><div class="day-view-date">'+d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})+'</div></div>'+
-    MEALS.map((m,mi)=>'<div class="meal-slot" id="slot_'+dk+'_'+mi+'"><div class="meal-type">'+m+'</div><div class="meal-name" onclick="editMeal(\''+dk+'\','+mi+')">'+esc(getMeal(dk,mi))+'</div></div>').join('');
-  view.innerHTML='';view.appendChild(card);
+// ── Dark Mode ────────────────────────────────────────────────────
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  localStorage.setItem('ep_theme', dark ? 'dark' : 'light');
 }
 
-function renderWeek(){
-  const mon=monday(weekOffset),sun=new Date(mon);sun.setDate(mon.getDate()+6);
-  document.getElementById('planTitle').textContent='Wochenplan';
-  document.getElementById('weekLabel').textContent=weekOffset===0?'Diese Woche':weekOffset===1?'N\u00e4chste Woche':weekOffset===-1?'Letzte Woche':dateFmt(mon)+' \u2013 '+dateFmt(sun);
-  const view=document.getElementById('planView'),grid=document.createElement('div');grid.className='week-grid';
-  for(let i=0;i<7;i++){
-    const d=new Date(mon);d.setDate(mon.getDate()+i);const dk=dateKey(d),isToday=dk===todayKey();
-    const card=document.createElement('div');card.className='day-card'+(isToday?' today':'');
-    card.innerHTML='<div class="day-head"><div class="day-name">'+DAYS[i]+(isToday?' \u25cf':'')+'</div><div class="day-date">'+dateFmt(d)+'</div></div>'+
-      MEALS.map((m,mi)=>'<div class="meal-slot" id="slot_'+dk+'_'+mi+'"><div class="meal-type">'+m+'</div><div class="meal-name" onclick="editMeal(\''+dk+'\','+mi+')">'+esc(getMeal(dk,mi))+'</div>'+mealIngBtn(dk,mi)+'</div>').join('');
+function toggleDark(dark) { applyTheme(dark); }
+
+(function() {
+  const saved = localStorage.getItem('ep_theme');
+  if (saved === 'dark') applyTheme(true);
+})();
+
+// ── Account Deletion ─────────────────────────────────────────────
+async function deleteAccount() {
+  if (!confirm('Willst du deinen Account und alle deine Daten wirklich unwiderruflich l\u00F6schen?')) return;
+  try {
+    for (const g of userGroups) {
+      await db.collection('groups').doc(<g.id>).update({
+        ['members.' + currentUid]: firebase.firestore.FieldValue.delete()
+      });
+    }
+    await db.collection('users').doc(currentUid).collection('data').doc('main').delete();
+    await db.collection('users').doc(currentUid).delete();
+    await auth.currentUser.delete();
+  } catch (e) {
+    if (e.code === 'auth/requires-recent-login') {
+      alert('Bitte melde dich ab und erneut an, um deinen Account zu l\u00F6schen.');
+    } else {
+      alert('Fehler beim L\u00F6schen: ' + e.message);
+    }
+  }
+}
+
+// ── Navigation ───────────────────────────────────────────────────
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById(name + 'Page').classList.add('active');
+  btn.classList.add('active');
+  if (name === 'shopping') renderShopping();
+  if (name === 'recipes')  renderRecipes();
+  if (name === 'group')    renderGroupPage();
+  if (name === 'settings') {
+    document.getElementById('darkToggle').checked = localStorage.getItem('ep_theme') === 'dark';
+    document.getElementById('settingsUsername').textContent = currentUser || '';
+    _pwVisible = false;
+    document.getElementById('settingsPwDisplay').textContent = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+    document.getElementById('settingsPwToggleBtn').textContent = 'Anzeigen';
+    document.getElementById('changePwForm').style.display = 'none';
+  }
+}
+
+// ── View switching ────────────────────────────────────────────────
+function setView(v) {
+  currentView = v;
+  weekOffset  = 0;
+  ['day','week','month'].forEach(function(x) {
+    document.getElementById('v' + x.charAt(0).toUpperCase() + x.slice(1))
+            .classList.toggle('active', x === v);
+  });
+  renderPlan();
+}
+
+function changeOffset(dir) { weekOffset += dir; renderPlan(); }
+
+function renderPlan() {
+  if (currentView === 'week')  renderWeek();
+  else if (currentView === 'day') renderDay();
+  else renderMonth();
+}
+
+// ── Day view ─────────────────────────────────────────────────────
+function renderDay() {
+  const d = new Date();
+  d.setDate(d.getDate() + weekOffset);
+  d.setHours(0,0,0,0);
+  const dk = dateKey(d);
+  const isToday = dk === todayKey();
+  const dayIdx  = (d.getDay() + 6) % 7;
+
+  document.getElementById('planTitle').textContent = 'Tagesplan';
+  document.getElementById('weekLabel').textContent =
+    weekOffset === 0 ? 'Heute' :
+    weekOffset === 1 ? 'Morgen' :
+    weekOffset === -1 ? 'Gestern' :
+    DAYS[dayIdx] + ', ' + dateFmt(d);
+
+  const view = document.getElementById('planView');
+  const card = document.createElement('div');
+  card.className = 'day-view-card' + (isToday ? ' today' : '');
+  card.innerHTML =
+    '<div class="day-view-head">' +
+    '<div class="day-view-name">' + DAYS[dayIdx] + (isToday ? ' \u25CF' : '') + '</div>' +
+    '<div class="day-view-date">' + d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}) + '</div>' +
+    '</div>' +
+    MEALS.map(function(m, mi) {
+      return '<div class="meal-slot" id="slot_' + dk + '_' + mi + '">' +
+        '<div class="meal-type">' + m + '</div>' +
+        '<div class="meal-name" onclick="editMeal(\'' + dk + '\',' + mi + ')">' + esc(getMeal(dk, mi)) + '</div>' +
+        '</div>';
+    }).join('');
+
+  view.innerHTML = '';
+  view.appendChild(card);
+}
+
+// ── Week view ─────────────────────────────────────────────────────
+function renderWeek() {
+  const mon = monday(weekOffset);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+
+  document.getElementById('planTitle').textContent = 'Wochenplan';
+  document.getElementById('weekLabel').textContent =
+    weekOffset ===  0 ? 'Diese Woche' :
+    weekOffset ===  1 ? 'N\u00E4chste Woche' :
+    weekOffset === -1 ? 'Letzte Woche'  :
+    dateFmt(mon) + ' \u2013 ' + dateFmt(sun);
+
+  const view = document.getElementById('planView');
+  const grid = document.createElement('div');
+  grid.className = 'week-grid';
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    const dk = dateKey(d);
+    const isToday = dk === todayKey();
+
+    const card = document.createElement('div');
+    card.className = 'day-card' + (isToday ? ' today' : '');
+    card.innerHTML =
+      '<div class="day-head">' +
+      '<div class="day-name">' + DAYS[i] + (isToday ? ' \u25CF' : '') + '</div>' +
+      '<div class="day-date">' + dateFmt(d) + '</div>' +
+      '</div>' +
+      MEALS.map(function(m, mi) {
+        return '<div class="meal-slot" id="slot_' + dk + '_' + mi + '" draggable="true"' +
+          ' ondragstart="onMealDragStart(event,\'' + dk + '\',' + mi + ')"' +
+          ' ondragover="onMealDragOver(event)"' +
+          ' ondragleave="onMealDragLeave(event)"' +
+          ' ondrop="onMealDrop(event,\'' + dk + '\',' + mi + ')"' +
+          ' ondragend="onMealDragEnd(event)">' +
+          '<div class="meal-type">' + m + '</div>' +
+          '<div class="meal-name" onclick="editMeal(\'' + dk + '\',' + mi + ')">' + esc(getMeal(dk, mi)) + '</div>' +
+          mealIngBtn(dk, mi) +
+          '</div>';
+      }).join('');
+
     grid.appendChild(card);
   }
-  view.innerHTML='';view.appendChild(grid);
-}
 
-function renderMonth(){
-  const now=new Date(),year=now.getFullYear(),month=now.getMonth()+weekOffset;
-  const first=new Date(year,month,1),last=new Date(year,month+1,0);
-  document.getElementById('planTitle').textContent='Monatsplan';
-  document.getElementById('weekLabel').textContent=first.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
-  const view=document.getElementById('planView');view.innerHTML='';
-  const hdr=document.createElement('div');hdr.className='month-header';
-  DAYS.forEach(n=>{hdr.innerHTML+='<div class="month-dname">'+n+'</div>';});view.appendChild(hdr);
-  const grid=document.createElement('div');grid.className='month-grid';
-  const startDow=(first.getDay()+6)%7;
-  for(let i=0;i<startDow;i++)grid.appendChild(monthCell(new Date(year,month,1-startDow+i),true));
-  for(let d2=1;d2<=last.getDate();d2++)grid.appendChild(monthCell(new Date(year,month,d2),false));
-  const rem=(7-(startDow+last.getDate())%7)%7;
-  for(let j=1;j<=rem;j++)grid.appendChild(monthCell(new Date(year,month+1,j),true));
+  view.innerHTML = '';
   view.appendChild(grid);
 }
 
-function monthCell(d,other){
-  const dk=dateKey(d),isToday=dk===todayKey();
-  const cell=document.createElement('div');
-  cell.className='month-cell'+(isToday?' today':'')+(other?' other-month':'');
-  let html='<div class="month-num">'+d.getDate()+(isToday?'<span class="month-today-badge">Heute</span>':'')+'</div>';
-  MEALS.forEach((m,mi)=>{const v=getMeal(dk,mi);if(v)html+='<div class="month-meal-dot" title="'+esc(m)+': '+esc(v)+'">&#xB7; '+esc(v)+'</div>';});
-  cell.innerHTML=html;
-  cell.onclick=()=>{const t=new Date();t.setHours(0,0,0,0);d.setHours(0,0,0,0);weekOffset=Math.round((d-t)/86400000);document.getElementById('vWeek').classList.remove('active');document.getElementById('vMonth').classList.remove('active');document.getElementById('vDay').classList.add('active');currentView='day';renderPlan();};
+// ── Month view ────────────────────────────────────────────────────
+function renderMonth() {
+  const now   = new Date();
+  const year  = now.getFullYear();
+  const month = now.getMonth() + weekOffset;
+  const first = new Date(year, month, 1);
+  const last  = new Date(year, month + 1, 0);
+
+  document.getElementById('planTitle').textContent = 'Monatsplan';
+  document.getElementById('weekLabel').textContent =
+    first.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+
+  const view = document.getElementById('planView');
+  view.innerHTML = '';
+
+  const hdr = document.createElement('div');
+  hdr.className = 'month-header';
+  DAYS.forEach(function(n) { hdr.innerHTML += '<div class="month-dname">' + n + '</div>'; });
+  view.appendChild(hdr);
+
+  const grid = document.createElement('div');
+  grid.className = 'month-grid';
+
+  const startDow = (first.getDay() + 6) % 7;
+  for (let i = 0; i < startDow; i++) {
+    grid.appendChild(monthCell(new Date(year, month, 1 - startDow + i), true));
+  }
+  for (let d = 1; d <= last.getDate(); d++) {
+    grid.appendChild(monthCell(new Date(year, month, d), false));
+  }
+  const total = startDow + last.getDate();
+  const remainder = (7 - (total % 7)) % 7;
+  for (let i = 1; i <= remainder; i++) {
+    grid.appendChild(monthCell(new Date(year, month + 1, i), true));
+  }
+
+  view.appendChild(grid);
+}
+
+function monthCell(d, otherMonth) {
+  const dk = dateKey(d);
+  const isToday = dk === todayKey();
+
+  const cell = document.createElement('div');
+  cell.className = 'month-cell' + (isToday ? ' today' : '') + (otherMonth ? ' other-month' : '');
+  cell.title = 'Tag anzeigen';
+
+  let html = '<div class="month-num">' + d.getDate() + (isToday ? '<span class="month-today-badge">Heute</span>' : '') + '</div>';
+  MEALS.forEach(function(m, mi) {
+    const val = getMeal(dk, mi);
+    if (val) html += '<div class="month-meal-dot" title="' + esc(m) + ': ' + esc(val) + '">\u00B7 ' + esc(val) + '</div>';
+  });
+  cell.innerHTML = html;
+
+  cell.onclick = function() {
+    const today = new Date(); today.setHours(0,0,0,0);
+    d.setHours(0,0,0,0);
+    const diff = Math.round((d - today) / 86400000);
+    weekOffset = diff;
+    document.getElementById('vWeek').classList.remove('active');
+    document.getElementById('vMonth').classList.remove('active');
+    document.getElementById('vDay').classList.add('active');
+    currentView = 'day';
+    renderPlan();
+  };
   return cell;
 }
 
-function mealIngBtn(dk,mi){const rid=(appData.mealRecipes||{})[dk+'_'+mi];if(!rid)return'';const rec=(appData.recipes||[]).find(r=>r.id===rid);if(!rec||!rec.ingredients.length)return'';return'<button class="meal-ing-btn" onclick="addRecipeToShop(\''+dk+'\','+mi+',event)">\uD83D\uDED2 Zutaten zur Einkaufsliste</button>';}
-
-let _ingModalRecipe=null;
-function addRecipeToShop(dk,mi,e){e.stopPropagation();const rid=(appData.mealRecipes||{})[dk+'_'+mi];const rec=(appData.recipes||[]).find(r=>r.id===rid);if(!rec||!rec.ingredients.length)return;_ingModalRecipe=rec;document.getElementById('ingModalTitle').textContent='Zutaten von \u201e'+rec.name+'\u201c';document.getElementById('ingModalList').innerHTML=rec.ingredients.map((ing,i)=>'<div class="modal-ing-item"><input type="checkbox" id="ingCb_'+i+'" checked /><span style="flex:1">'+esc(ing.name)+'</span><input type="text" id="ingQtyCb_'+i+'" class="qty-inp" value="'+esc(ing.qty||'')+'" placeholder="Menge" /></div>').join('');document.getElementById('ingModal').style.display='flex';}
-function closeIngModal(e){if(e&&e.target!==document.getElementById('ingModal'))return;document.getElementById('ingModal').style.display='none';_ingModalRecipe=null;}
-function confirmIngModal(){if(!_ingModalRecipe)return;_ingModalRecipe.ingredients.forEach((ing,i)=>{const cb=document.getElementById('ingCb_'+i);if(cb&&cb.checked){const qty=(document.getElementById('ingQtyCb_'+i)||{}).value||ing.qty||'';addToShopping(ing.name,qty.trim());}});saveData();document.getElementById('ingModal').style.display='none';_ingModalRecipe=null;}
-
-let _editDk=null,_editMi=null;
-function editMeal(dk,mi){
-  if(!canEdit())return;
-  _editDk=dk;_editMi=mi;
-  const slot=document.getElementById('slot_'+dk+'_'+mi);
-  const popup=document.getElementById('mealEditPopup');
-  const inp=document.getElementById('mealEditInput');
-  document.getElementById('mealEditPopupLabel').textContent=MEALS[mi];
-  inp.value=getMeal(dk,mi);
-  document.getElementById('mealEditAC').style.display='none';
-  popup.style.display='block';
-  const rect=slot.getBoundingClientRect();
-  popup.style.left=Math.max(8,Math.min(rect.left,window.innerWidth-340))+'px';
-  popup.style.top=(rect.bottom+window.scrollY+6)+'px';
-  requestAnimationFrame(()=>{const ph=popup.offsetHeight;if(rect.bottom+ph+6>window.innerHeight)popup.style.top=(rect.top+window.scrollY-ph-6)+'px';inp.focus();inp.select();});
+function mealIngBtn(dk, mi) {
+  const rid = (appData.mealRecipes || {})[dk + '_' + mi];
+  if (!rid) return '';
+  const rec = (appData.recipes || []).find(function(r) { return <r.id> === rid; });
+  if (!rec || !rec.ingredients.length) return '';
+  return '<button class="meal-ing-btn" onclick="addRecipeToShop(\'' + dk + '\',' + mi + ',event)">\uD83D\uDED2 Zutaten zur Einkaufsliste</button>';
 }
-document.addEventListener('DOMContentLoaded',function(){
-  const inp=document.getElementById('mealEditInput');
-  inp.addEventListener('input',()=>showMealEditAC(inp.value));
-  inp.addEventListener('keydown',e=>{if(e.key==='Enter')saveMealFromPopup();if(e.key==='Escape')closeMealEditPopup();});
-  document.addEventListener('mousedown',function(e){const popup=document.getElementById('mealEditPopup');if(popup.style.display!=='none'&&!popup.contains(e.target)&&!e.target.classList.contains('meal-name'))closeMealEditPopup();});
+
+let _ingModalRecipe = null;
+
+function addRecipeToShop(dk, mi, e) {
+  e.stopPropagation();
+  const rid = (appData.mealRecipes || {})[dk + '_' + mi];
+  const rec = (appData.recipes || []).find(function(r) { return <r.id> === rid; });
+  if (!rec || !rec.ingredients.length) return;
+  _ingModalRecipe = rec;
+
+  document.getElementById('ingModalTitle').textContent = 'Zutaten von \u201E' + rec.name + '\u201C';
+  const list = document.getElementById('ingModalList');
+  list.innerHTML = rec.ingredients.map(function(ing, i) {
+    return '<div class="modal-ing-item">' +
+      '<input type="checkbox" id="ingCb_' + i + '" checked />' +
+      '<span style="flex:1">' + esc(ing.name) + '</span>' +
+      '<input type="text" id="ingQtyCb_' + i + '" class="qty-inp" value="' + esc(ing.qty||'') + '" placeholder="Menge" />' +
+      '</div>';
+  }).join('');
+  document.getElementById('ingModal').style.display = 'flex';
+}
+
+function closeIngModal(e) {
+  if (e && e.target !== document.getElementById('ingModal')) return;
+  document.getElementById('ingModal').style.display = 'none';
+  _ingModalRecipe = null;
+}
+
+function confirmIngModal() {
+  if (!_ingModalRecipe) return;
+  _ingModalRecipe.ingredients.forEach(function(ing, i) {
+    const cb = document.getElementById('ingCb_' + i);
+    if (cb && cb.checked) {
+      const qtyEl = document.getElementById('ingQtyCb_' + i);
+      const qty = qtyEl ? qtyEl.value.trim() : (ing.qty || '');
+      addToShopping(ing.name, qty);
+    }
+  });
+  saveData();
+  document.getElementById('ingModal').style.display = 'none';
+  _ingModalRecipe = null;
+}
+
+let _editDk = null, _editMi = null;
+
+function editMeal(dk, mi) {
+  if (!canEdit()) return;
+  _editDk = dk; _editMi = mi;
+
+  const slot  = document.getElementById('slot_' + dk + '_' + mi);
+  const popup = document.getElementById('mealEditPopup');
+  const inp   = document.getElementById('mealEditInput');
+  const ac    = document.getElementById('mealEditAC');
+
+  document.getElementById('mealEditPopupLabel').textContent = MEALS[mi];
+  inp.value = getMeal(dk, mi);
+  ac.style.display = 'none';
+  popup.style.display = 'block';
+
+  const rect = slot.getBoundingClientRect();
+  popup.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 340)) + 'px';
+  popup.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
+
+  requestAnimationFrame(function() {
+    const ph = popup.offsetHeight;
+    if (rect.bottom + ph + 6 > window.innerHeight) {
+      popup.style.top = (rect.top + window.scrollY - ph - 6) + 'px';
+    }
+    inp.focus(); inp.select();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const inp = document.getElementById('mealEditInput');
+  inp.addEventListener('input', function() { showMealEditAC(inp.value); });
+  inp.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter')  saveMealFromPopup();
+    if (e.key === 'Escape') closeMealEditPopup();
+  });
+  document.addEventListener('mousedown', function(e) {
+    const popup = document.getElementById('mealEditPopup');
+    if (popup.style.display !== 'none' && !popup.contains(e.target) && !e.target.classList.contains('meal-name')) {
+      closeMealEditPopup();
+    }
+  });
 });
-function showMealEditAC(val){const drop=document.getElementById('mealEditAC');if(!val.trim()){drop.style.display='none';return;}const matches=(appData.recipes||[]).filter(r=>r.name.toLowerCase().includes(val.toLowerCase()));if(!matches.length){drop.style.display='none';return;}drop.innerHTML=matches.map(r=>'<div class="ac-item" onmousedown="pickMealEditRecipe(\''+r.id+'\')">'+esc(r.name)+'</div>').join('');drop.style.display='';}
-function pickMealEditRecipe(rid){const rec=(appData.recipes||[]).find(r=>r.id===rid);if(!rec)return;document.getElementById('mealEditInput').value=rec.name;document.getElementById('mealEditAC').style.display='none';if(!appData.mealRecipes)appData.mealRecipes={};appData.mealRecipes[_editDk+'_'+_editMi]=rid;}
-function saveMealFromPopup(){if(_editDk===null)return;const val=document.getElementById('mealEditInput').value.trim();const rid=(appData.mealRecipes||{})[_editDk+'_'+_editMi];if(rid){const rec=(appData.recipes||[]).find(r=>r.id===rid);if(!rec||rec.name!==val)delete appData.mealRecipes[_editDk+'_'+_editMi];}setMeal(_editDk,_editMi,val);closeMealEditPopup();renderPlan();}
-function closeMealEditPopup(){document.getElementById('mealEditPopup').style.display='none';_editDk=null;_editMi=null;}
 
-function renderShopping(){
-  const custom=appData.shopping||[],el=document.getElementById('sList');el.innerHTML='';
-  if(!custom.length){el.innerHTML='<div class="empty">Keine Eintr\u00e4ge. F\u00fcge Artikel hinzu oder nutze \uD83D\uDED2 im Wochenplan.</div>';}
-  else{
-    const active=custom.map((x,i)=>({...x,i})).filter(x=>!x.done);
-    const done=custom.map((x,i)=>({...x,i})).filter(x=>x.done);
-    if(active.length){el.innerHTML+='<div class="s-section">Einkaufsliste</div>';active.forEach(({name,qty,i})=>{el.innerHTML+='<div class="s-item" id="ci_'+i+'"><input type="checkbox" onchange="toggleCustom('+i+',this)" /><span class="s-text">'+(qty?'<b>'+esc(qty)+'</b> ':'')+esc(name)+'</span><button class="s-del" onclick="delCustom('+i+')" title="L\u00f6schen">\u2715</button></div>';});}
-    if(done.length){el.innerHTML+='<div class="s-section done-section">Erledigt</div>';done.forEach(({name,qty,i})=>{el.innerHTML+='<div class="s-item done"><input type="checkbox" checked onchange="toggleCustom('+i+',this)" /><span class="s-text">'+(qty?'<b>'+esc(qty)+'</b> ':'')+esc(name)+'</span><button class="s-del" onclick="delCustom('+i+')" title="L\u00f6schen">\u2715</button></div>';});}
-  }
-  el.innerHTML+='<div class="s-add"><input type="text" id="newItem" placeholder="Artikel \u2026" onkeydown="if(event.key===\'Enter\')addItem()" /><input type="text" id="newItemQty" class="qty-inp" placeholder="Menge" onkeydown="if(event.key===\'Enter\')addItem()" /><button class="btn btn-primary btn-sm" onclick="addItem()">+ Hinzuf\u00fcgen</button></div>';
+function showMealEditAC(val) {
+  const drop = document.getElementById('mealEditAC');
+  if (!val.trim()) { drop.style.display = 'none'; return; }
+  const matches = (appData.recipes || []).filter(function(r) { return r.name.toLowerCase().includes(val.toLowerCase()); });
+  if (!matches.length) { drop.style.display = 'none'; return; }
+  drop.innerHTML = matches.map(function(r) {
+    return '<div class="ac-item" onmousedown="pickMealEditRecipe(\'' + <r.id> + '\')">' + esc(r.name) + '</div>';
+  }).join('');
+  drop.style.display = '';
 }
-function toggleCustom(i,cb){appData.shopping[i].done=cb.checked;saveData();renderShopping();}
-function delCustom(i){if(!canEdit())return;appData.shopping.splice(i,1);saveData();renderShopping();}
-function addItem(){if(!canEdit())return;const inp=document.getElementById('newItem'),qi=document.getElementById('newItemQty');const name=inp.value.trim();if(!name)return;addToShopping(name,qi?qi.value.trim():'');saveData();inp.value='';if(qi)qi.value='';renderShopping();}
 
-let formIngredients=[];
-function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36);}
-function showRecipeForm(recipeId){if(!canManageRecipes())return;formIngredients=[];document.getElementById('recipeEditId').value='';document.getElementById('rName').value='';document.getElementById('rDesc').value='';document.getElementById('recipeFormTitle').textContent='Neues Rezept';if(recipeId){const rec=appData.recipes.find(r=>r.id===recipeId);if(rec){document.getElementById('recipeEditId').value=rec.id;document.getElementById('rName').value=rec.name;document.getElementById('rDesc').value=rec.description||'';formIngredients=[...rec.ingredients];document.getElementById('recipeFormTitle').textContent='Rezept bearbeiten';}}renderIngListEdit();document.getElementById('recipeFormWrap').style.display='';document.getElementById('rName').focus();}
-function hideRecipeForm(){document.getElementById('recipeFormWrap').style.display='none';}
-function renderIngListEdit(){document.getElementById('ingListEdit').innerHTML=formIngredients.map((ing,i)=>'<span class="ing-tag-edit">'+(ing.qty?esc(ing.qty)+' ':'')+esc(ing.name)+'<button onclick="removeIngredient('+i+')" title="Entfernen">\u00d7</button></span>').join('');}
-function removeIngredient(i){formIngredients.splice(i,1);renderIngListEdit();}
-function addIngredientToForm(){const inp=document.getElementById('ingInput'),qi=document.getElementById('ingQtyInput');const name=inp.value.trim();if(!name)return;formIngredients.push({name,qty:qi?qi.value.trim():''});inp.value='';if(qi)qi.value='';renderIngListEdit();inp.focus();}
-function saveRecipe(){const name=document.getElementById('rName').value.trim();if(!name){alert('Bitte einen Namen eingeben.');return;}const desc=document.getElementById('rDesc').value.trim(),editId=document.getElementById('recipeEditId').value;if(!appData.recipes)appData.recipes=[];if(editId){const idx=appData.recipes.findIndex(r=>r.id===editId);if(idx!==-1)appData.recipes[idx]={id:editId,name,description:desc,ingredients:[...formIngredients]};}else{appData.recipes.push({id:uid(),name,description:desc,ingredients:[...formIngredients]});}saveData();hideRecipeForm();renderRecipes();}
-function deleteRecipe(id){if(!canManageRecipes())return;if(!confirm('Rezept wirklich l\u00f6schen?'))return;appData.recipes=appData.recipes.filter(r=>r.id!==id);for(const k in appData.mealRecipes){if(appData.mealRecipes[k]===id)delete appData.mealRecipes[k];}saveData();renderRecipes();}
-function renderRecipes(){const grid=document.getElementById('recipeGrid'),recipes=appData.recipes||[];if(!recipes.length){grid.innerHTML='<div class="empty">Noch keine Rezepte. Klicke auf \u201e+ Neues Rezept\u201c.</div>';return;}grid.innerHTML=recipes.map(r=>'<div class="recipe-card"><div class="recipe-card-name">'+esc(r.name)+'</div>'+(r.description?'<div class="recipe-card-desc">'+esc(r.description)+'</div>':'')+(r.ingredients.length?'<div class="ingredient-tags">'+r.ingredients.map(i=>'<span class="ingredient-tag">'+(i.qty?esc(i.qty)+' ':'')+esc(i.name)+'</span>').join('')+'</div>':'')+(canManageRecipes()?'<div class="recipe-actions"><button class="btn btn-outline btn-sm" onclick="showRecipeForm(\''+r.id+'\')">Bearbeiten</button><button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe(\''+r.id+'\')">L\u00f6schen</button></div>':'')+'</div>').join('');}
+function pickMealEditRecipe(rid) {
+  const rec = (appData.recipes || []).find(function(r) { return <r.id> === rid; });
+  if (!rec) return;
+  document.getElementById('mealEditInput').value = rec.name;
+  document.getElementById('mealEditAC').style.display = 'none';
+  if (!appData.mealRecipes) appData.mealRecipes = {};
+  appData.mealRecipes[_editDk + '_' + _editMi] = rid;
+}
 
-const ROLE_LABELS={owner:'Owner',admin:'Admin',member:'Mitglied',viewer:'Zuschauer'};
-const ROLE_CLASS={owner:'role-owner',admin:'role-admin',member:'role-member',viewer:'role-viewer'};
-
-function updateContextSwitcher(){const sel=document.getElementById('contextSelect');if(userGroups.length===0){sel.style.display='none';return;}sel.innerHTML='<option value="">\uD83D\uDE4B Pers\u00f6nlich</option>'+userGroups.map(g=>'<option value="'+g.id+'">'+esc(g.name)+'</option>').join('');sel.value=currentGroupId||'';sel.style.display='';}
-async function switchContext(val){if(!val){currentGroupId=null;currentGroupRole=null;currentGroupName='';}else{const g=userGroups.find(g=>g.id===val);if(g){currentGroupId=g.id;currentGroupRole=g.role;currentGroupName=g.name;}}await loadData();renderPlan();const ap=document.querySelector('.page.active');if(ap&&ap.id==='shoppingPage')renderShopping();if(ap&&ap.id==='recipesPage')renderRecipes();if(ap&&ap.id==='groupPage')renderGroupPage();}
-
-async function createGroup(){const name=document.getElementById('newGroupName').value.trim();if(!name)return alert('Bitte einen Gruppennamen eingeben.');const inviteCode=Math.random().toString(36).slice(2,8).toUpperCase();const groupRef=db.collection('groups').doc();await groupRef.set({name,inviteCode,createdBy:currentUid,members:{[currentUid]:{username:currentUser,role:'owner'}}});await db.collection('users').doc(currentUid).update({groupIds:firebase.firestore.FieldValue.arrayUnion(groupRef.id)});userGroups.push({id:groupRef.id,name,role:'owner'});currentGroupId=groupRef.id;currentGroupRole='owner';currentGroupName=name;appData={meals:{},shopping:[],checked:{},recipes:[],mealRecipes:{}};document.getElementById('newGroupName').value='';updateContextSwitcher();await renderGroupPage();renderPlan();}
-
-async function joinGroup(){const code=document.getElementById('joinCodeInput').value.trim().toUpperCase();const errEl=document.getElementById('groupJoinErr');errEl.style.display='none';if(!code){errEl.textContent='Bitte einen Code eingeben.';errEl.style.display='block';return;}const snap=await db.collection('groups').where('inviteCode','==',code).get();if(snap.empty){errEl.textContent='Ung\u00fcltiger Einladungscode.';errEl.style.display='block';return;}const gDoc=snap.docs[0];if((gDoc.data().members&&gDoc.data().members[currentUid])||userGroups.find(g=>g.id===gDoc.id)){errEl.textContent='Du bist bereits in dieser Gruppe.';errEl.style.display='block';return;}await db.collection('groups').doc(gDoc.id).update({[`members.${currentUid}`]:{username:currentUser,role:'member'}});await db.collection('users').doc(currentUid).update({groupIds:firebase.firestore.FieldValue.arrayUnion(gDoc.id)});userGroups.push({id:gDoc.id,name:gDoc.data().name,role:'member'});currentGroupId=gDoc.id;currentGroupRole='member';currentGroupName=gDoc.data().name;await loadData();document.getElementById('joinCodeInput').value='';updateContextSwitcher();await renderGroupPage();renderPlan();}
-
-async function leaveGroup(groupId){const g=userGroups.find(g=>g.id===groupId);if(!g)return;if(g.role==='owner'){const gd=await db.collection('groups').doc(groupId).get();const others=Object.keys(gd.data().members||{}).filter(u=>u!==currentUid);if(others.length>0)return alert('Du bist der Owner. \u00dcbertrage zuerst den Owner-Status oder l\u00f6sche die Gruppe.');}if(!confirm('Gruppe wirklich verlassen?'))return;await db.collection('groups').doc(groupId).update({[`members.${currentUid}`]:firebase.firestore.FieldValue.delete()});await db.collection('users').doc(currentUid).update({groupIds:firebase.firestore.FieldValue.arrayRemove(groupId)});userGroups=userGroups.filter(g=>g.id!==groupId);if(currentGroupId===groupId){currentGroupId=null;currentGroupRole=null;currentGroupName='';await loadData();}updateContextSwitcher();await renderGroupPage();renderPlan();}
-
-async function deleteGroup(groupId){const g=userGroups.find(g=>g.id===groupId);if(!g||g.role!=='owner')return;if(!confirm('Gruppe und alle gemeinsamen Daten wirklich unwiderruflich l\u00f6schen?'))return;const gd=await db.collection('groups').doc(groupId).get();const batch=db.batch();Object.keys(gd.data().members||{}).forEach(uid2=>{batch.update(db.collection('users').doc(uid2),{groupIds:firebase.firestore.FieldValue.arrayRemove(groupId)});});batch.delete(db.collection('groups').doc(groupId).collection('data').doc('main'));batch.delete(db.collection('groups').doc(groupId));await batch.commit();userGroups=userGroups.filter(g=>g.id!==groupId);if(currentGroupId===groupId){currentGroupId=null;currentGroupRole=null;currentGroupName='';await loadData();}updateContextSwitcher();await renderGroupPage();renderPlan();}
-
-async function setMemberRole(groupId,memberUid,role){const g=userGroups.find(g=>g.id===groupId);if(!g||!['owner','admin'].includes(g.role))return;await db.collection('groups').doc(groupId).update({[`members.${memberUid}.role`]:role});if(role==='owner'&&g.role==='owner'){await db.collection('groups').doc(groupId).update({[`members.${currentUid}.role`]:'admin'});g.role='admin';if(currentGroupId===groupId)currentGroupRole='admin';}await renderGroupPage();}
-async function removeMember(groupId,memberUid){const g=userGroups.find(g=>g.id===groupId);if(!g||!['owner','admin'].includes(g.role))return;if(!confirm('Mitglied wirklich entfernen?'))return;await db.collection('groups').doc(groupId).update({[`members.${memberUid}`]:firebase.firestore.FieldValue.delete()});await db.collection('users').doc(memberUid).update({groupIds:firebase.firestore.FieldValue.arrayRemove(groupId)});await renderGroupPage();}
-async function copyInviteCode(code){try{await navigator.clipboard.writeText(code);}catch(e){}alert('Einladungscode kopiert: '+code);}
-
-async function renderGroupPage(){
-  const container=document.getElementById('myGroupsList');
-  if(userGroups.length===0){container.innerHTML='<div class="empty" style="background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:1rem">Du bist noch in keiner Gruppe.</div>';return;}
-  let html='';
-  for(const g of userGroups){
-    const gDoc=await db.collection('groups').doc(g.id).get();if(!gDoc.exists)continue;
-    const gData=gDoc.data(),isActive=currentGroupId===g.id;
-    const membersHtml=Object.entries(gData.members||{}).map(([mUid,m])=>{
-      const isMe=mUid===currentUid;
-      const editable=!isMe&&(g.role==='owner'||(g.role==='admin'&&m.role!=='owner'&&m.role!=='admin'));
-      const roles=g.role==='owner'?['owner','admin','member','viewer']:['member','viewer'];
-      return '<div class="member-row"><div><div class="member-name">'+esc(m.username)+(isMe?' <span style="color:var(--muted);font-size:.82rem;font-weight:400">(du)</span>':'')+'</div><span class="member-role-badge '+(ROLE_CLASS[m.role]||'')+'">'+( ROLE_LABELS[m.role]||m.role)+'</span></div><div style="display:flex;gap:.4rem;align-items:center">'+(editable?'<select class="role-select" onchange="setMemberRole(\''+g.id+'\',\''+mUid+'\',this.value)">'+roles.map(r=>'<option value="'+r+'"'+(r===m.role?' selected':'')+'>'+ROLE_LABELS[r]+'</option>').join('')+'</select><button class="btn btn-danger btn-sm" onclick="removeMember(\''+g.id+'\',\''+mUid+'\')">Entfernen</button>':'')+'</div></div>';
-    }).join('');
-    html+='<div class="settings-card" style="margin-bottom:1rem">'+
-      '<div class="settings-section" style="display:flex;justify-content:space-between;align-items:center"><span>'+esc(gData.name)+'</span><span class="member-role-badge '+(ROLE_CLASS[g.role]||'')+'">'+( ROLE_LABELS[g.role]||g.role)+'</span></div>'+
-      '<div class="settings-row"><div><div class="settings-label">Aktiver Kontext</div><div class="settings-sub">Daten die du gerade bearbeitest</div></div><button class="btn '+(isActive?'btn-primary':'btn-outline')+' btn-sm" style="width:auto" onclick="switchContext(\''+g.id+'\');updateContextSwitcher()">'+(isActive?'\u2713 Aktiv':'Wechseln')+'</button></div>'+
-      '<div class="settings-row"><div class="settings-label">Einladungscode</div><div style="display:flex;align-items:center;gap:.6rem"><span class="invite-code">'+esc(gData.inviteCode)+'</span><button class="btn btn-outline btn-sm" onclick="copyInviteCode(\''+esc(gData.inviteCode)+'\')">Kopieren</button></div></div>'+
-      '<div class="settings-section" style="font-size:.72rem">Mitglieder</div>'+membersHtml+
-      '<div class="settings-row" style="gap:.5rem"><div><div class="settings-label">Gruppe verlassen</div><div class="settings-sub">Kehrt zum pers\u00f6nlichen Plan zur\u00fcck</div></div><button class="btn btn-danger btn-sm" onclick="leaveGroup(\''+g.id+'\')">Verlassen</button>'+(g.role==='owner'?'<button class="btn btn-danger btn-sm" onclick="deleteGroup(\''+g.id+'\')">L\u00f6schen</button>':'')+'</div></div>';
+function saveMealFromPopup() {
+  if (_editDk === null) return;
+  const val = document.getElementById('mealEditInput').value.trim();
+  const rid = (appData.mealRecipes || {})[_editDk + '_' + _editMi];
+  if (rid) {
+    const rec = (appData.recipes || []).find(function(r) { return <r.id> === rid; });
+    if (!rec || rec.name !== val) delete appData.mealRecipes[_editDk + '_' + _editMi];
   }
-  container.innerHTML=html;
+  setMeal(_editDk, _editMi, val);
+  closeMealEditPopup();
+  renderPlan();
+}
+
+function closeMealEditPopup() {
+  document.getElementById('mealEditPopup').style.display = 'none';
+  _editDk = null; _editMi = null;
+}
+
+// ── Drag & Drop ───────────────────────────────────────────────────
+let _dragSrcDk = null, _dragSrcMi = null;
+
+function onMealDragStart(e, dk, mi) {
+  if (!canEdit()) { e.preventDefault(); return; }
+  _dragSrcDk = dk; _dragSrcMi = mi;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dk + '|' + mi);
+  setTimeout(function() {
+    const el = document.getElementById('slot_' + dk + '_' + mi);
+    if (el) el.classList.add('dragging');
+  }, 0);
+}
+
+function onMealDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onMealDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onMealDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.meal-slot.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
+}
+
+function onMealDrop(e, tgtDk, tgtMi) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!canEdit()) return;
+  if (_dragSrcDk === null) return;
+  if (_dragSrcDk === tgtDk && _dragSrcMi === tgtMi) return;
+
+  const srcVal = getMeal(_dragSrcDk, _dragSrcMi);
+  const tgtVal = getMeal(tgtDk, tgtMi);
+
+  const srcKey = _dragSrcDk + '_' + _dragSrcMi;
+  const tgtKey = tgtDk + '_' + tgtMi;
+  if (!appData.mealRecipes) appData.mealRecipes = {};
+  const srcRid = appData.mealRecipes[srcKey] || null;
+  const tgtRid = appData.mealRecipes[tgtKey] || null;
+
+  setMeal(_dragSrcDk, _dragSrcMi, tgtVal);
+  setMeal(tgtDk, tgtMi, srcVal);
+
+  if (srcRid) appData.mealRecipes[tgtKey] = srcRid; else delete appData.mealRecipes[tgtKey];
+  if (tgtRid) appData.mealRecipes[srcKey] = tgtRid; else delete appData.mealRecipes[srcKey];
+
+  _dragSrcDk = null; _dragSrcMi = null;
+  saveData();
+  renderPlan();
+}
+
+// ── Touch drag fallback (mobile) ──────────────────────────────────
+(function() {
+  let touchSrcDk = null, touchSrcMi = null, touchClone = null, lastOver = null;
+
+  function slotFromPoint(x, y) {
+    const els = document.elementsFromPoint(x, y);
+    for (let i = 0; i < els.length; i++) {
+      if (els[i].classList && els[i].classList.contains('meal-slot')) return els[i];
+    }
+    return null;
+  }
+
+  function parsSlot(el) {
+    const id = <el.id> || '';
+    const m = id.match(/^slot_(.+)_(\d+)$/);
+    if (!m) return null;
+    return { dk: m[1], mi: parseInt(m[2], 10) };
+  }
+
+  document.addEventListener('touchstart', function(e) {
+    const slot = e.target.closest('.meal-slot');
+    if (!slot || !canEdit()) return;
+    const info = parsSlot(slot);
+    if (!info) return;
+    touchSrcDk = <info.dk>; touchSrcMi = info.mi;
+
+    const rect = slot.getBoundingClientRect();
+    touchClone = slot.cloneNode(true);
+    touchClone.style.cssText =
+      'position:fixed;pointer-events:none;z-index:9999;opacity:.7;width:' + rect.width + 'px;' +
+      'top:' + rect.top + 'px;left:' + rect.left + 'px;transition:none;border-radius:8px;';
+    document.body.appendChild(touchClone);
+    slot.classList.add('dragging');
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!touchSrcDk) return;
+    const t = e.touches[0];
+    if (touchClone) {
+      touchClone.style.top  = (t.clientY - 20) + 'px';
+      touchClone.style.left = (t.clientX - 40) + 'px';
+    }
+    const over = slotFromPoint(t.clientX, t.clientY);
+    if (lastOver && lastOver !== over) lastOver.classList.remove('drag-over');
+    if (over && over !== document.getElementById('slot_' + touchSrcDk + '_' + touchSrcMi)) {
+      over.classList.add('drag-over');
+      lastOver = over;
+    } else {
+      lastOver = null;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    if (!touchSrcDk) return;
+    const srcEl = document.getElementById('slot_' + touchSrcDk + '_' + touchSrcMi);
+    if (srcEl) srcEl.classList.remove('dragging');
+    if (touchClone) { touchClone.remove(); touchClone = null; }
+    document.querySelectorAll('.meal-slot.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
+
+    const t = e.changedTouches[0];
+    const tgtEl = slotFromPoint(t.clientX, t.clientY);
+    if (tgtEl) {
+      const info = parsSlot(tgtEl);
+      if (info && !(<info.dk> === touchSrcDk && info.mi === touchSrcMi)) {
+        _dragSrcDk = touchSrcDk; _dragSrcMi = touchSrcMi;
+        onMealDrop({ preventDefault: function(){}, currentTarget: tgtEl }, <info.dk>, info.mi);
+      }
+    }
+    touchSrcDk = null; touchSrcMi = null; lastOver = null;
+  }, { passive: true });
+})();
+
+// ── Shopping list ─────────────────────────────────────────────────
+function renderShopping() {
+  const custom = appData.shopping || [];
+  const el     = document.getElementById('sList');
+  el.innerHTML = '';
+
+  if (!custom.length) {
+    el.innerHTML = '<div class="empty">Keine Eintr\u00E4ge. F\u00FCge Artikel hinzu oder nutze \uD83D\uDED2 im Wochenplan.</div>';
+  } else {
+    const active = custom.map(function(x, i) { return Object.assign({}, x, { i: i }); }).filter(function(x) { return !x.done; });
+    const done   = custom.map(function(x, i) { return Object.assign({}, x, { i: i }); }).filter(function(x) { return x.done; });
+
+    if (active.length) {
+      el.innerHTML += '<div class="s-section">Einkaufsliste</div>';
+      active.forEach(function(item) {
+        el.innerHTML += '<div class="s-item" id="ci_' + item.i + '">' +
+          '<input type="checkbox" onchange="toggleCustom(' + item.i + ',this)" />' +
+          '<span class="s-text">' + (item.qty ? '<b>' + esc(item.qty) + '</b> ' : '') + esc(item.name) + '</span>' +
+          '<button class="s-del" onclick="delCustom(' + item.i + ')" title="L\u00F6schen">\u2715</button>' +
+          '</div>';
+      });
+    }
+
+    if (done.length) {
+      el.innerHTML += '<div class="s-section done-section">Erledigt</div>';
+      done.forEach(function(item) {
+        el.innerHTML += '<div class="s-item done">' +
+          '<input type="checkbox" checked onchange="toggleCustom(' + item.i + ',this)" />' +
+          '<span class="s-text">' + (item.qty ? '<b>' + esc(item.qty) + '</b> ' : '') + esc(item.name) + '</span>' +
+          '<button class="s-del" onclick="delCustom(' + item.i + ')" title="L\u00F6schen">\u2715</button>' +
+          '</div>';
+      });
+    }
+  }
+
+  el.innerHTML += '<div class="s-add">' +
+    '<input type="text" id="newItem" placeholder="Artikel \u2026" onkeydown="if(event.key===\'Enter\')addItem()" />' +
+    '<input type="text" id="newItemQty" class="qty-inp" placeholder="Menge" onkeydown="if(event.key===\'Enter\')addItem()" />' +
+    '<button class="btn btn-primary btn-sm" onclick="addItem()">+ Hinzuf\u00FCgen</button>' +
+    '</div>';
+}
+
+function toggleCustom(i, cb) {
+  appData.shopping[i].done = cb.checked;
+  saveData();
+  renderShopping();
+}
+
+function delCustom(i) {
+  if (!canEdit()) return;
+  appData.shopping.splice(i, 1);
+  saveData();
+  renderShopping();
+}
+
+function addItem() {
+  if (!canEdit()) return;
+  const inp    = document.getElementById('newItem');
+  const qtyInp = document.getElementById('newItemQty');
+  const name   = inp.value.trim();
+  if (!name) return;
+  const qty = qtyInp ? qtyInp.value.trim() : '';
+  addToShopping(name, qty);
+  saveData();
+  inp.value = '';
+  if (qtyInp) qtyInp.value = '';
+  renderShopping();
+}
+
+// ── Recipes ───────────────────────────────────────────────────────
+let formIngredients = [];
+
+function uid() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function showRecipeForm(recipeId) {
+  if (!canManageRecipes()) return;
+  formIngredients = [];
+  document.getElementById('recipeEditId').value = '';
+  document.getElementById('rName').value = '';
+  document.getElementById('rDesc').value = '';
+  document.getElementById('recipeFormTitle').textContent = 'Neues Rezept';
+
+  if (recipeId) {
+    const rec = appData.recipes.find(function(r) { return <r.id> === recipeId; });
+    if (rec) {
+      document.getElementById('recipeEditId').value = <rec.id>;
+      document.getElementById('rName').value = rec.name;
+      document.getElementById('rDesc').value = rec.description || '';
+      formIngredients = rec.ingredients.slice();
+      document.getElementById('recipeFormTitle').textContent = 'Rezept bearbeiten';
+    }
+  }
+
+  renderIngListEdit();
+  document.getElementById('recipeFormWrap').style.display = '';
+  document.getElementById('rName').focus();
+}
+
+function hideRecipeForm() {
+  document.getElementById('recipeFormWrap').style.display = 'none';
+}
+
+function renderIngListEdit() {
+  const el = document.getElementById('ingListEdit');
+  el.innerHTML = formIngredients.map(function(ing, i) {
+    return '<span class="ing-tag-edit">' + (ing.qty ? esc(ing.qty) + ' ' : '') + esc(ing.name) +
+      '<button onclick="removeIngredient(' + i + ')" title="Entfernen">\u00D7</button></span>';
+  }).join('');
+}
+
+function removeIngredient(i) {
+  formIngredients.splice(i, 1);
+  renderIngListEdit();
+}
+
+function addIngredientToForm() {
+  const inp    = document.getElementById('ingInput');
+  const qtyInp = document.getElementById('ingQtyInput');
+  const name   = inp.value.trim();
+  if (!name) return;
+  const qty = qtyInp ? qtyInp.value.trim() : '';
+  formIngredients.push({ name: name, qty: qty });
+  inp.value = '';
+  if (qtyInp) qtyInp.value = '';
+  renderIngListEdit();
+  inp.focus();
+}
+
+function saveRecipe() {
+  const name = document.getElementById('rName').value.trim();
+  if (!name) { alert('Bitte einen Namen eingeben.'); return; }
+  const desc   = document.getElementById('rDesc').value.trim();
+  const editId = document.getElementById('recipeEditId').value;
+
+  if (!appData.recipes) appData.recipes = [];
+
+  if (editId) {
+    const idx = appData.recipes.findIndex(function(r) { return <r.id> === editId; });
+    if (idx !== -1) {
+      appData.recipes[idx] = { id: editId, name: name, description: desc, ingredients: formIngredients.slice() };
+    }
+  } else {
+    appData.recipes.push({ id: uid(), name: name, description: desc, ingredients: formIngredients.slice() });
+  }
+
+  saveData();
+  hideRecipeForm();
+  renderRecipes();
+}
+
+function deleteRecipe(id) {
+  if (!canManageRecipes()) return;
+  if (!confirm('Rezept wirklich l\u00F6schen?')) return;
+  appData.recipes = appData.recipes.filter(function(r) { return <r.id> !== id; });
+  for (const key in appData.mealRecipes) {
+    if (appData.mealRecipes[key] === id) delete appData.mealRecipes[key];
+  }
+  saveData();
+  renderRecipes();
+}
+
+function renderRecipes() {
+  const grid    = document.getElementById('recipeGrid');
+  const recipes = appData.recipes || [];
+
+  if (!recipes.length) {
+    grid.innerHTML = '<div class="empty">Noch keine Rezepte. Klicke auf \u201E+ Neues Rezept\u201C.</div>';
+    return;
+  }
+
+  grid.innerHTML = recipes.map(function(r) {
+    return '<div class="recipe-card">' +
+      '<div class="recipe-card-name">' + esc(r.name) + '</div>' +
+      (r.description ? '<div class="recipe-card-desc">' + esc(r.description) + '</div>' : '') +
+      (r.ingredients.length ? '<div class="ingredient-tags">' +
+        r.ingredients.map(function(i) { return '<span class="ingredient-tag">' + (i.qty ? esc(i.qty) + ' ' : '') + esc(i.name) + '</span>'; }).join('') +
+        '</div>' : '') +
+      (canManageRecipes() ? '<div class="recipe-actions">' +
+        '<button class="btn btn-outline btn-sm" onclick="showRecipeForm(\'' + <r.id> + '\')">Bearbeiten</button>' +
+        '<button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe(\'' + <r.id> + '\')">L\u00F6schen</button>' +
+        '</div>' : '') +
+      '</div>';
+  }).join('');
+}
+
+// ── Group management ──────────────────────────────────────────────
+const ROLE_LABELS = { owner:'Owner', admin:'Admin', member:'Mitglied', viewer:'Zuschauer' };
+const ROLE_CLASS  = { owner:'role-owner', admin:'role-admin', member:'role-member', viewer:'role-viewer' };
+
+function updateContextSwitcher() {
+  const sel = document.getElementById('contextSelect');
+  if (userGroups.length === 0) { sel.style.display = 'none'; return; }
+  sel.innerHTML = '<option value="">\uD83D\uDC4B Pers\u00F6nlich</option>' +
+    userGroups.map(function(g) { return '<option value="' + <g.id> + '">' + esc(g.name) + '</option>'; }).join('');
+  sel.value = currentGroupId || '';
+  sel.style.display = '';
+}
+
+async function switchContext(val) {
+  if (!val) {
+    currentGroupId = null; currentGroupRole = null; currentGroupName = '';
+  } else {
+    const g = userGroups.find(function(g) { return <g.id> === val; });
+    if (g) { currentGroupId = <g.id>; currentGroupRole = g.role; currentGroupName = g.name; }
+  }
+  await loadData();
+  renderPlan();
+  const ap = document.querySelector('.page.active');
+  if (ap && <ap.id> === 'shoppingPage') renderShopping();
+  if (ap && <ap.id> === 'recipesPage')  renderRecipes();
+  if (ap && <ap.id> === 'groupPage')    renderGroupPage();
+}
+
+async function createGroup() {
+  const name = document.getElementById('newGroupName').value.trim();
+  if (!name) return alert('Bitte einen Gruppennamen eingeben.');
+  const inviteCode = Math.random().toString(36).slice(2, 8).toUpperCase();
+  const groupRef = db.collection('groups').doc();
+  await groupRef.set({
+    name: name, inviteCode: inviteCode, createdBy: currentUid,
+    members: { [currentUid]: { username: currentUser, role: 'owner' } }
+  });
+  await db.collection('users').doc(currentUid).update({
+    groupIds: firebase.firestore.FieldValue.arrayUnion(<groupRef.id>)
+  });
+  userGroups.push({ id: <groupRef.id>, name: name, role: 'owner' });
+  currentGroupId = <groupRef.id>; currentGroupRole = 'owner'; currentGroupName = name;
+  appData = { meals:{}, shopping:[], checked:{}, recipes:[], mealRecipes:{} };
+  document.getElementById('newGroupName').value = '';
+  updateContextSwitcher();
+  await renderGroupPage();
+  renderPlan();
+}
+
+async function joinGroup() {
+  const code  = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+  const errEl = document.getElementById('groupJoinErr');
+  errEl.style.display = 'none';
+  if (!code) { errEl.textContent = 'Bitte einen Code eingeben.'; errEl.style.display = 'block'; return; }
+  const snap = await db.collection('groups').where('inviteCode', '==', code).get();
+  if (snap.empty) { errEl.textContent = 'Ung\u00FCltiger Einladungscode.'; errEl.style.display = 'block'; return; }
+  const gDoc = snap.docs[0];
+  if ((gDoc.data().members && gDoc.data().members[currentUid]) || userGroups.find(function(g) { return <g.id> === <gDoc.id>; })) {
+    errEl.textContent = 'Du bist bereits in dieser Gruppe.'; errEl.style.display = 'block'; return;
+  }
+  await db.collection('groups').doc(<gDoc.id>).update({
+    ['members.' + currentUid]: { username: currentUser, role: 'member' }
+  });
+  await db.collection('users').doc(currentUid).update({
+    groupIds: firebase.firestore.FieldValue.arrayUnion(<gDoc.id>)
+  });
+  userGroups.push({ id: <gDoc.id>, name: gDoc.data().name, role: 'member' });
+  currentGroupId = <gDoc.id>; currentGroupRole = 'member'; currentGroupName = gDoc.data().name;
+  await loadData();
+  document.getElementById('joinCodeInput').value = '';
+  updateContextSwitcher();
+  await renderGroupPage();
+  renderPlan();
+}
+
+async function leaveGroup(groupId) {
+  const g = userGroups.find(function(g) { return <g.id> === groupId; });
+  if (!g) return;
+  if (g.role === 'owner') {
+    const gDoc = await db.collection('groups').doc(groupId).get();
+    const others = Object.keys(gDoc.data().members || {}).filter(function(u) { return u !== currentUid; });
+    if (others.length > 0) return alert('Du bist der Owner. \u00DCbertrage zuerst den Owner-Status oder l\u00F6sche die Gruppe.');
+  }
+  if (!confirm('Gruppe wirklich verlassen?')) return;
+  await db.collection('groups').doc(groupId).update({
+    ['members.' + currentUid]: firebase.firestore.FieldValue.delete()
+  });
+  await db.collection('users').doc(currentUid).update({
+    groupIds: firebase.firestore.FieldValue.arrayRemove(groupId)
+  });
+  userGroups = userGroups.filter(function(g) { return <g.id> !== groupId; });
+  if (currentGroupId === groupId) {
+    currentGroupId = null; currentGroupRole = null; currentGroupName = '';
+    await loadData();
+  }
+  updateContextSwitcher();
+  await renderGroupPage();
+  renderPlan();
+}
+
+async function deleteGroup(groupId) {
+  const g = userGroups.find(function(g) { return <g.id> === groupId; });
+  if (!g || g.role !== 'owner') return;
+  if (!confirm('Gruppe und alle gemeinsamen Daten wirklich unwiderruflich l\u00F6schen?')) return;
+  const gDoc = await db.collection('groups').doc(groupId).get();
+  const members = gDoc.data().members || {};
+  const batch = db.batch();
+  for (const uid of Object.keys(members)) {
+    batch.update(db.collection('users').doc(uid), {
+      groupIds: firebase.firestore.FieldValue.arrayRemove(groupId)
+    });
+  }
+  batch.delete(db.collection('groups').doc(groupId).collection('data').doc('main'));
+  batch.delete(db.collection('groups').doc(groupId));
+  await batch.commit();
+  userGroups = userGroups.filter(function(g) { return <g.id> !== groupId; });
+  if (currentGroupId === groupId) {
+    currentGroupId = null; currentGroupRole = null; currentGroupName = '';
+    await loadData();
+  }
+  updateContextSwitcher();
+  await renderGroupPage();
+  renderPlan();
+}
+
+async function setMemberRole(groupId, memberUid, role) {
+  const g = userGroups.find(function(g) { return <g.id> === groupId; });
+  if (!g || !['owner','admin'].includes(g.role)) return;
+  await db.collection('groups').doc(groupId).update({ ['members.' + memberUid + '.role']: role });
+  if (role === 'owner' && g.role === 'owner') {
+    await db.collection('groups').doc(groupId).update({ ['members.' + currentUid + '.role']: 'admin' });
+    g.role = 'admin';
+    if (currentGroupId === groupId) currentGroupRole = 'admin';
+  }
+  await renderGroupPage();
+}
+
+async function removeMember(groupId, memberUid) {
+  const g = userGroups.find(function(g) { return <g.id> === groupId; });
+  if (!g || !['owner','admin'].includes(g.role)) return;
+  if (!confirm('Mitglied wirklich entfernen?')) return;
+  await db.collection('groups').doc(groupId).update({
+    ['members.' + memberUid]: firebase.firestore.FieldValue.delete()
+  });
+  await db.collection('users').doc(memberUid).update({
+    groupIds: firebase.firestore.FieldValue.arrayRemove(groupId)
+  });
+  await renderGroupPage();
+}
+
+async function copyInviteCode(code) {
+  try { await navigator.clipboard.writeText(code); } catch(e) {}
+  alert('Einladungscode kopiert: ' + code);
+}
+
+async function renderGroupPage() {
+  const container = document.getElementById('myGroupsList');
+  if (userGroups.length === 0) {
+    container.innerHTML = '<div class="empty" style="background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:1rem">Du bist noch in keiner Gruppe.</div>';
+    return;
+  }
+
+  let html = '';
+  for (const g of userGroups) {
+    const gDoc = await db.collection('groups').doc(<g.id>).get();
+    if (!gDoc.exists) continue;
+    const gData    = gDoc.data();
+    const isActive = currentGroupId === <g.id>;
+
+    const membersHtml = Object.entries(gData.members || {}).map(function(entry) {
+      const mUid = entry[0], m = entry[1];
+      const isMe = mUid === currentUid;
+      const editable = !isMe && (g.role === 'owner' || (g.role === 'admin' && m.role !== 'owner' && m.role !== 'admin'));
+      const roles = g.role === 'owner' ? ['owner','admin','member','viewer'] : ['member','viewer'];
+      return '<div class="member-row">' +
+        '<div>' +
+        '<div class="member-name">' + esc(m.username) + (isMe ? ' <span style="color:var(--muted);font-size:.82rem;font-weight:400">(du)</span>' : '') + '</div>' +
+        '<span class="member-role-badge ' + (ROLE_CLASS[m.role]||'') + '">' + (ROLE_LABELS[m.role]||m.role) + '</span>' +
+        '</div>' +
+        '<div style="display:flex;gap:.4rem;align-items:center">' +
+        (editable ?
+          '<select class="role-select" onchange="setMemberRole(\'' + <g.id> + '\',\'' + mUid + '\',this.value)">' +
+          roles.map(function(r) { return '<option value="' + r + '"' + (r===m.role?' selected':'') + '>' + ROLE_LABELS[r] + '</option>'; }).join('') +
+          '</select>' +
+          '<button class="btn btn-danger btn-sm" onclick="removeMember(\'' + <g.id> + '\',\'' + mUid + '\')">Entfernen</button>'
+          : '') +
+        '</div>' +
+        '</div>';
+    }).join('');
+
+    html += '<div class="settings-card" style="margin-bottom:1rem">' +
+      '<div class="settings-section" style="display:flex;justify-content:space-between;align-items:center">' +
+      '<span>' + esc(gData.name) + '</span>' +
+      '<span class="member-role-badge ' + (ROLE_CLASS[g.role]||'') + '">' + (ROLE_LABELS[g.role]||g.role) + '</span>' +
+      '</div>' +
+      '<div class="settings-row">' +
+      '<div><div class="settings-label">Aktiver Kontext</div><div class="settings-sub">Daten die du gerade bearbeitest</div></div>' +
+      '<button class="btn ' + (isActive ? 'btn-primary' : 'btn-outline') + ' btn-sm" style="width:auto" onclick="switchContext(\'' + <g.id> + '\');updateContextSwitcher()">' +
+      (isActive ? '\u2713 Aktiv' : 'Wechseln') +
+      '</button>' +
+      '</div>' +
+      '<div class="settings-row">' +
+      '<div class="settings-label">Einladungscode</div>' +
+      '<div style="display:flex;align-items:center;gap:.6rem">' +
+      '<span class="invite-code">' + esc(gData.inviteCode) + '</span>' +
+      '<button class="btn btn-outline btn-sm" onclick="copyInviteCode(\'' + esc(gData.inviteCode) + '\')">Kopieren</button>' +
+      '</div>' +
+      '</div>' +
+      '<div class="settings-section" style="font-size:.72rem">Mitglieder</div>' +
+      membersHtml +
+      '<div class="settings-row" style="gap:.5rem">' +
+      '<div><div class="settings-label">Gruppe verlassen</div><div class="settings-sub">Kehrt zum pers\u00F6nlichen Plan zur\u00FCck</div></div>' +
+      '<button class="btn btn-danger btn-sm" onclick="leaveGroup(\'' + <g.id> + '\')">Verlassen</button>' +
+      (g.role === 'owner' ? '<button class="btn btn-danger btn-sm" onclick="deleteGroup(\'' + <g.id> + '\')">L\u00F6schen</button>' : '') +
+      '</div>' +
+      '</div>';
+  }
+  container.innerHTML = html;
 }
 </script>
 </body>
