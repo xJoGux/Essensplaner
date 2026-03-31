@@ -220,6 +220,12 @@
     .meal-slot.drag-over { border: 2px dashed var(--primary) !important; background: #eef2ff; }
     [data-theme="dark"] .meal-slot.drag-over { background: #1e2a4a; }
 
+    /* ── Portion controls ────────────────────────────────────── */
+    .portion-ctrl { display:flex; align-items:center; gap:.35rem; margin:.35rem 0 .1rem; }
+    .portion-btn  { width:22px; height:22px; border-radius:50%; border:1.5px solid var(--border); background:var(--card); color:var(--text); font-size:.9rem; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transition:.15s; line-height:1; }
+    .portion-btn:hover { border-color:var(--primary); color:var(--primary); }
+    .portion-val  { font-size:.8rem; font-weight:600; color:var(--muted); min-width:72px; text-align:center; }
+
     /* ── Group ───────────────────────────────────────────────── */
     .group-badge { font-size:.75rem; background:#eef2ff; color:var(--primary); border-radius:99px; padding:.15rem .65rem; font-weight:600; white-space:nowrap; }
     [data-theme="dark"] .group-badge { background:#312e81; }
@@ -343,6 +349,7 @@
           <input type="hidden" id="recipeEditId" />
           <div class="fg"><label>Name</label><input type="text" id="rName" placeholder="z.B. Spaghetti Bolognese" /></div>
           <div class="fg"><label>Beschreibung (optional)</label><textarea id="rDesc" rows="3" placeholder="Zubereitung, Tipps …"></textarea></div>
+          <div class="fg"><label>Portionen (Grundrezept)</label><input type="number" id="rPortions" min="1" max="99" value="4" style="width:80px" /></div>
           <div class="fg">
             <label>Zutaten</label>
             <div class="ing-list-edit" id="ingListEdit"></div>
@@ -466,6 +473,14 @@
     <input id="mealEditInput" style="width:100%;padding:.5rem .75rem;border:1.5px solid var(--primary);border-radius:8px;font-size:.95rem;outline:none;font-family:inherit;background:var(--card);color:var(--text)" placeholder="z.B. Pasta" autocomplete="off" />
     <div class="ac-dropdown" id="mealEditAC" style="display:none"></div>
   </div>
+  <div id="mealPortionRow" style="display:none;margin-bottom:.5rem">
+    <div style="font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:.3rem">Portionen</div>
+    <div class="portion-ctrl">
+      <button class="portion-btn" onclick="adjustMealPortion(-1)">&#x2212;</button>
+      <span class="portion-val" id="mealPortionVal">4 Portionen</span>
+      <button class="portion-btn" onclick="adjustMealPortion(1)">+</button>
+    </div>
+  </div>
   <div style="display:flex;gap:.4rem">
     <button class="btn btn-primary btn-sm" style="width:auto;flex:1" onclick="saveMealFromPopup()">&#x2713; Speichern</button>
     <button class="btn btn-outline btn-sm" onclick="closeMealEditPopup()">Abbrechen</button>
@@ -543,13 +558,15 @@ let currentUser = null;
 let currentUid  = null;
 let weekOffset  = 0;   // weeks for week-view, days for day-view, months for month-view
 let currentView = 'week';
-let appData     = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
+let appData     = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {}, mealPortions: {} };
 let _cachedPw   = '';
 let _pwVisible  = false;
 let currentGroupId   = null;
 let currentGroupRole = null;   // 'owner'|'admin'|'member'|'viewer'
 let currentGroupName = '';
 let userGroups       = [];     // [{ id, name, role }]
+let _recipePortions  = {};     // { rid: currentPortionsDisplayed } — not persisted
+let _editPortions    = 4;      // portions selected in meal edit popup
 
 // ── Helpers ──────────────────────────────────────────────────────
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -574,10 +591,11 @@ function userRef() {
 async function loadData() {
   const doc = await userRef().get();
   if (doc.exists) {
-    appData = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {}, ...doc.data() };
-    // Migrate ingredients: string → { name, qty }
+    appData = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {}, mealPortions: {}, ...doc.data() };
+    // Migrate ingredients: string → { name, qty }; add portions default
     appData.recipes = appData.recipes.map(r => ({
       ...r,
+      portions: r.portions || 4,
       ingredients: (r.ingredients || []).map(ing =>
         typeof ing === 'string' ? { name: ing, qty: '' } : ing
       )
@@ -586,9 +604,11 @@ async function loadData() {
     appData.shopping = appData.shopping.map(item =>
       typeof item === 'object' ? { qty: '', ...item } : { name: String(item), qty: '', done: false }
     );
+    if (!appData.mealPortions) appData.mealPortions = {};
   } else {
-    appData = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {} };
+    appData = { meals: {}, shopping: [], checked: {}, recipes: [], mealRecipes: {}, mealPortions: {} };
   }
+  _recipePortions = {};
 }
 
 // ── Quantity helpers ──────────────────────────────────────────────
@@ -609,6 +629,25 @@ function combineQty(qa, qb) {
   }
   return qa + ' + ' + qb;
 }
+
+function smartRound(n) {
+  if (n <= 0) return 0;
+  if (n >= 100) return Math.round(n / 10) * 10;
+  if (n >= 50)  return Math.round(n / 5) * 5;
+  if (n >= 10)  return Math.round(n);
+  if (n >= 1)   return Math.round(n * 2) / 2;
+  return Math.round(n * 4) / 4;
+}
+
+function scaleQty(qtyStr, factor) {
+  if (!qtyStr || factor === 1) return qtyStr || '';
+  const p = parseQty(qtyStr);
+  if (p.amount === null) return qtyStr;
+  const scaled = smartRound(p.amount * factor);
+  return scaled + (p.unit ? ' ' + p.unit : '');
+}
+
+function portionLabel(n) { return n + (n === 1 ? ' Portion' : ' Portionen'); }
 
 function addToShopping(name, qty) {
   const existing = appData.shopping.find(x => x.name.toLowerCase() === name.toLowerCase());
@@ -1070,31 +1109,40 @@ function monthCell(d, otherMonth) {
 }
 
 function mealIngBtn(dk, mi) {
-  const rid = (appData.mealRecipes || {})[dk + '_' + mi];
+  const key = dk + '_' + mi;
+  const rid = (appData.mealRecipes || {})[key];
   if (!rid) return '';
   const rec = (appData.recipes || []).find(r => r.id === rid);
   if (!rec || !rec.ingredients.length) return '';
-  return `<button class="meal-ing-btn" onclick="addRecipeToShop('${dk}',${mi},event)">🛒 Zutaten zur Einkaufsliste</button>`;
+  const portions = (appData.mealPortions || {})[key] || rec.portions || 4;
+  const badge    = portions !== (rec.portions || 4) ? ` (${portions}P)` : '';
+  return `<button class="meal-ing-btn" onclick="addRecipeToShop('${dk}',${mi},event)">\uD83D\uDED2 Zutaten zur Einkaufsliste${badge}</button>`;
 }
 
 let _ingModalRecipe = null;
 
 function addRecipeToShop(dk, mi, e) {
   e.stopPropagation();
-  const rid = (appData.mealRecipes || {})[dk + '_' + mi];
+  const key = dk + '_' + mi;
+  const rid = (appData.mealRecipes || {})[key];
   const rec = (appData.recipes || []).find(r => r.id === rid);
   if (!rec || !rec.ingredients.length) return;
   _ingModalRecipe = rec;
 
-  document.getElementById('ingModalTitle').textContent = `Zutaten von „${rec.name}"`;
+  const base     = rec.portions || 4;
+  const portions = (appData.mealPortions || {})[key] || base;
+  const factor   = portions / base;
+  const suffix   = factor !== 1 ? ` (${portions} Portionen)` : '';
+  document.getElementById('ingModalTitle').textContent = `Zutaten von \u201e${rec.name}\u201c${suffix}`;
   const list = document.getElementById('ingModalList');
-  list.innerHTML = rec.ingredients.map((ing, i) =>
-    `<div class="modal-ing-item">
+  list.innerHTML = rec.ingredients.map((ing, i) => {
+    const sq = scaleQty(ing.qty, factor);
+    return `<div class="modal-ing-item">
       <input type="checkbox" id="ingCb_${i}" checked />
       <span style="flex:1">${esc(ing.name)}</span>
-      <input type="text" id="ingQtyCb_${i}" class="qty-inp" value="${esc(ing.qty||'')}" placeholder="Menge" />
-    </div>`
-  ).join('');
+      <input type="text" id="ingQtyCb_${i}" class="qty-inp" value="${esc(sq)}" placeholder="Menge" />
+    </div>`;
+  }).join('');
   document.getElementById('ingModal').style.display = 'flex';
 }
 
@@ -1131,6 +1179,24 @@ function editMeal(dk, mi) {
   document.getElementById('mealEditPopupLabel').textContent = MEALS[mi];
   inp.value = getMeal(dk, mi);
   ac.style.display = 'none';
+
+  // Populate portion row if a recipe is linked
+  const key = dk + '_' + mi;
+  const rid = (appData.mealRecipes || {})[key];
+  const portionRow = document.getElementById('mealPortionRow');
+  if (rid) {
+    const rec = (appData.recipes || []).find(r => r.id === rid);
+    if (rec) {
+      _editPortions = (appData.mealPortions || {})[key] || rec.portions || 4;
+      document.getElementById('mealPortionVal').textContent = portionLabel(_editPortions);
+      portionRow.style.display = '';
+    } else {
+      portionRow.style.display = 'none';
+    }
+  } else {
+    portionRow.style.display = 'none';
+  }
+
   popup.style.display = 'block';
 
   // Position popup near slot, adjusted to stay on screen
@@ -1178,16 +1244,28 @@ function pickMealEditRecipe(rid) {
   document.getElementById('mealEditInput').value = rec.name;
   document.getElementById('mealEditAC').style.display = 'none';
   if (!appData.mealRecipes) appData.mealRecipes = {};
-  appData.mealRecipes[_editDk + '_' + _editMi] = rid;
+  const key = _editDk + '_' + _editMi;
+  appData.mealRecipes[key] = rid;
+  // Show portion row with current or default portions
+  _editPortions = (appData.mealPortions || {})[key] || rec.portions || 4;
+  document.getElementById('mealPortionVal').textContent = portionLabel(_editPortions);
+  document.getElementById('mealPortionRow').style.display = '';
 }
 
 function saveMealFromPopup() {
   if (_editDk === null) return;
   const val = document.getElementById('mealEditInput').value.trim();
-  const rid = (appData.mealRecipes || {})[_editDk + '_' + _editMi];
+  const key = _editDk + '_' + _editMi;
+  const rid = (appData.mealRecipes || {})[key];
   if (rid) {
     const rec = (appData.recipes || []).find(r => r.id === rid);
-    if (!rec || rec.name !== val) delete appData.mealRecipes[_editDk + '_' + _editMi];
+    if (!rec || rec.name !== val) {
+      delete appData.mealRecipes[key];
+      if (appData.mealPortions) delete appData.mealPortions[key];
+    } else {
+      if (!appData.mealPortions) appData.mealPortions = {};
+      appData.mealPortions[key] = _editPortions;
+    }
   }
   setMeal(_editDk, _editMi, val);
   closeMealEditPopup();
@@ -1196,6 +1274,7 @@ function saveMealFromPopup() {
 
 function closeMealEditPopup() {
   document.getElementById('mealEditPopup').style.display = 'none';
+  document.getElementById('mealPortionRow').style.display = 'none';
   _editDk = null; _editMi = null;
 }
 
@@ -1239,18 +1318,23 @@ function onMealDrop(e, tgtDk, tgtMi) {
   const srcVal = getMeal(_dragSrcDk, _dragSrcMi);
   const tgtVal = getMeal(tgtDk, tgtMi);
 
-  // Swap recipe links too
+  // Swap recipe links and portion counts too
   const srcKey = _dragSrcDk + '_' + _dragSrcMi;
   const tgtKey = tgtDk + '_' + tgtMi;
-  if (!appData.mealRecipes) appData.mealRecipes = {};
-  const srcRid = appData.mealRecipes[srcKey] || null;
-  const tgtRid = appData.mealRecipes[tgtKey] || null;
+  if (!appData.mealRecipes)  appData.mealRecipes  = {};
+  if (!appData.mealPortions) appData.mealPortions = {};
+  const srcRid = appData.mealRecipes[srcKey]  || null;
+  const tgtRid = appData.mealRecipes[tgtKey]  || null;
+  const srcPor = appData.mealPortions[srcKey] || null;
+  const tgtPor = appData.mealPortions[tgtKey] || null;
 
   setMeal(_dragSrcDk, _dragSrcMi, tgtVal);
   setMeal(tgtDk, tgtMi, srcVal);
 
-  if (srcRid) appData.mealRecipes[tgtKey] = srcRid; else delete appData.mealRecipes[tgtKey];
-  if (tgtRid) appData.mealRecipes[srcKey] = tgtRid; else delete appData.mealRecipes[srcKey];
+  if (srcRid) appData.mealRecipes[tgtKey]  = srcRid; else delete appData.mealRecipes[tgtKey];
+  if (tgtRid) appData.mealRecipes[srcKey]  = tgtRid; else delete appData.mealRecipes[srcKey];
+  if (srcPor) appData.mealPortions[tgtKey] = srcPor; else delete appData.mealPortions[tgtKey];
+  if (tgtPor) appData.mealPortions[srcKey] = tgtPor; else delete appData.mealPortions[srcKey];
 
   _dragSrcDk = null; _dragSrcMi = null;
   saveData();
@@ -1413,6 +1497,7 @@ function showRecipeForm(recipeId) {
   document.getElementById('recipeEditId').value = '';
   document.getElementById('rName').value = '';
   document.getElementById('rDesc').value = '';
+  document.getElementById('rPortions').value = 4;
   document.getElementById('recipeFormTitle').textContent = 'Neues Rezept';
 
   if (recipeId) {
@@ -1421,6 +1506,7 @@ function showRecipeForm(recipeId) {
       document.getElementById('recipeEditId').value = rec.id;
       document.getElementById('rName').value = rec.name;
       document.getElementById('rDesc').value = rec.description || '';
+      document.getElementById('rPortions').value = rec.portions || 4;
       formIngredients = [...rec.ingredients];
       document.getElementById('recipeFormTitle').textContent = 'Rezept bearbeiten';
     }
@@ -1463,18 +1549,20 @@ function addIngredientToForm() {
 function saveRecipe() {
   const name = document.getElementById('rName').value.trim();
   if (!name) { alert('Bitte einen Namen eingeben.'); return; }
-  const desc = document.getElementById('rDesc').value.trim();
-  const editId = document.getElementById('recipeEditId').value;
+  const desc    = document.getElementById('rDesc').value.trim();
+  const portions = Math.max(1, parseInt(document.getElementById('rPortions').value) || 4);
+  const editId  = document.getElementById('recipeEditId').value;
 
   if (!appData.recipes) appData.recipes = [];
 
   if (editId) {
     const idx = appData.recipes.findIndex(r => r.id === editId);
     if (idx !== -1) {
-      appData.recipes[idx] = { id: editId, name, description: desc, ingredients: [...formIngredients] };
+      appData.recipes[idx] = { id: editId, name, description: desc, portions, ingredients: [...formIngredients] };
     }
+    delete _recipePortions[editId];
   } else {
-    appData.recipes.push({ id: uid(), name, description: desc, ingredients: [...formIngredients] });
+    appData.recipes.push({ id: uid(), name, description: desc, portions, ingredients: [...formIngredients] });
   }
 
   saveData();
@@ -1484,11 +1572,15 @@ function saveRecipe() {
 
 function deleteRecipe(id) {
   if (!canManageRecipes()) return;
-  if (!confirm('Rezept wirklich löschen?')) return;
+  if (!confirm('Rezept wirklich l\u00f6schen?')) return;
   appData.recipes = appData.recipes.filter(r => r.id !== id);
+  delete _recipePortions[id];
   // Remove links from meal plan
   for (const key in appData.mealRecipes) {
-    if (appData.mealRecipes[key] === id) delete appData.mealRecipes[key];
+    if (appData.mealRecipes[key] === id) {
+      delete appData.mealRecipes[key];
+      if (appData.mealPortions) delete appData.mealPortions[key];
+    }
   }
   saveData();
   renderRecipes();
@@ -1499,21 +1591,63 @@ function renderRecipes() {
   const recipes = appData.recipes || [];
 
   if (!recipes.length) {
-    grid.innerHTML = '<div class="empty">Noch keine Rezepte. Klicke auf „+ Neues Rezept".</div>';
+    grid.innerHTML = '<div class="empty">Noch keine Rezepte. Klicke auf \u201e+ Neues Rezept\u201c.</div>';
     return;
   }
 
-  grid.innerHTML = recipes.map(r => `
-    <div class="recipe-card">
+  grid.innerHTML = recipes.map(r => {
+    const base   = r.portions || 4;
+    const cur    = _recipePortions[r.id] !== undefined ? _recipePortions[r.id] : base;
+    const factor = cur / base;
+    const tags   = r.ingredients.length
+      ? `<div class="ingredient-tags">${r.ingredients.map(i => {
+          const sq = factor === 1 ? (i.qty || '') : scaleQty(i.qty, factor);
+          return `<span class="ingredient-tag">${sq ? esc(sq) + ' ' : ''}${esc(i.name)}</span>`;
+        }).join('')}</div>`
+      : '';
+    return `
+    <div class="recipe-card" data-rid="${r.id}">
       <div class="recipe-card-name">${esc(r.name)}</div>
       ${r.description ? `<div class="recipe-card-desc">${esc(r.description)}</div>` : ''}
-      ${r.ingredients.length ? `<div class="ingredient-tags">${r.ingredients.map(i => `<span class="ingredient-tag">${i.qty ? esc(i.qty) + ' ' : ''}${esc(i.name)}</span>`).join('')}</div>` : ''}
+      <div class="portion-ctrl">
+        <button class="portion-btn" onclick="setRecipePortions('${r.id}',-1)">&#x2212;</button>
+        <span class="portion-val" id="rpc_${r.id}">${portionLabel(cur)}</span>
+        <button class="portion-btn" onclick="setRecipePortions('${r.id}',1)">+</button>
+      </div>
+      ${tags}
       ${canManageRecipes() ? `<div class="recipe-actions">
         <button class="btn btn-outline btn-sm" onclick="showRecipeForm('${r.id}')">Bearbeiten</button>
-        <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${r.id}')">Löschen</button>
+        <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${r.id}')">L\u00f6schen</button>
       </div>` : ''}
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
+}
+
+function setRecipePortions(rid, delta) {
+  const rec = (appData.recipes || []).find(r => r.id === rid);
+  if (!rec) return;
+  const base = rec.portions || 4;
+  const cur  = _recipePortions[rid] !== undefined ? _recipePortions[rid] : base;
+  const next = Math.max(1, cur + delta);
+  _recipePortions[rid] = next;
+  // Update label
+  const valEl = document.getElementById('rpc_' + rid);
+  if (valEl) valEl.textContent = portionLabel(next);
+  // Update ingredient tags in-place
+  const card = document.querySelector('.recipe-card[data-rid="' + rid + '"]');
+  if (!card) return;
+  const tags   = card.querySelectorAll('.ingredient-tag');
+  const factor = next / base;
+  rec.ingredients.forEach((ing, i) => {
+    if (!tags[i]) return;
+    const sq = factor === 1 ? (ing.qty || '') : scaleQty(ing.qty, factor);
+    tags[i].textContent = (sq ? sq + ' ' : '') + ing.name;
+  });
+}
+
+function adjustMealPortion(delta) {
+  _editPortions = Math.max(1, _editPortions + delta);
+  document.getElementById('mealPortionVal').textContent = portionLabel(_editPortions);
 }
 
 // ── Group management ──────────────────────────────────────────────
