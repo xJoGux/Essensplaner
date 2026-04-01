@@ -131,7 +131,7 @@
     .meal-slot  { padding: .55rem .875rem; border-bottom: 1px solid var(--border); min-height: 52px; }
     .meal-slot:last-child { border-bottom: none; }
     .meal-type  { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: .2rem; }
-    .meal-name  { font-size: .85rem; cursor: pointer; min-height: 1.2em; }
+    .meal-name  { font-size: .85rem; cursor: pointer; min-height: 1.2em; display:flex; align-items:center; gap:.3rem; }
     .meal-name:empty::before { content: '+ Mahlzeit'; color: #aaa; font-size: .8rem; }
     .meal-name:hover { color: var(--primary); }
     .meal-edit  { display: flex; gap: .3rem; }
@@ -180,11 +180,13 @@
     .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; font-size: 1rem; color: var(--muted); }
 
     /* ── Recipes ─────────────────────────────────────────────── */
-    .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-    .recipe-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 1rem; }
-    .recipe-card-name { font-weight: 700; font-size: 1rem; margin-bottom: .25rem; }
-    .recipe-card-desc { font-size: .82rem; color: var(--muted); margin-bottom: .6rem; white-space: pre-wrap; }
-    .ingredient-tags { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .6rem; }
+    .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+    @media (max-width: 500px) { .recipe-grid { grid-template-columns: 1fr; } }
+    .recipe-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; }
+    .recipe-card-body { padding: .875rem; flex: 1; display: flex; flex-direction: column; gap: .35rem; }
+    .recipe-card-name { font-weight: 700; font-size: 1rem; }
+    .recipe-card-desc { font-size: .82rem; color: var(--muted); white-space: pre-wrap; }
+    .ingredient-tags { display: flex; flex-wrap: wrap; gap: .3rem; }
     .ingredient-tag  { background: #eef2ff; color: var(--primary); font-size: .75rem; padding: .2rem .55rem; border-radius: 99px; font-weight: 600; }
     [data-theme="dark"] .ingredient-tag { background: #312e81; }
     .recipe-actions  { display: flex; gap: .4rem; }
@@ -251,6 +253,20 @@
     .perm-table tr:last-child td { border-bottom:none; }
     .perm-check { color:#10b981; font-weight:700; }
     .perm-cross  { color:var(--muted); }
+
+    /* ── Recipe images ───────────────────────────────────────────── */
+    .recipe-img-wrap { width:100%; aspect-ratio:3/2; overflow:hidden; background:var(--bg); border-bottom:1px solid var(--border); flex-shrink:0; }
+    .recipe-img-wrap img { width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity .35s; }
+    .recipe-img-wrap img.loaded { opacity:1; }
+    .recipe-img-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+    .img-tab-row { display:flex; gap:.3rem; margin-bottom:.5rem; }
+    .img-tab { flex:1; padding:.3rem .5rem; border:1.5px solid var(--border); border-radius:6px; background:none; font-size:.78rem; font-weight:600; color:var(--muted); cursor:pointer; transition:.15s; font-family:inherit; }
+    .img-tab.active { border-color:var(--primary); color:var(--primary); background:#eef2ff; }
+    [data-theme="dark"] .img-tab.active { background:#312e81; }
+    .recipe-img-preview { width:100%; aspect-ratio:3/2; object-fit:cover; border-radius:8px; margin-top:.5rem; display:none; }
+    .recipe-img-preview.show { display:block; }
+    .meal-thumb { width:18px; height:18px; border-radius:3px; object-fit:cover; flex-shrink:0; opacity:0; transition:opacity .25s; }
+    .meal-thumb.loaded { opacity:1; }
   </style>
 </head>
 <body>
@@ -350,6 +366,21 @@
           <div class="fg"><label>Name</label><input type="text" id="rName" placeholder="z.B. Spaghetti Bolognese" /></div>
           <div class="fg"><label>Beschreibung (optional)</label><textarea id="rDesc" rows="3" placeholder="Zubereitung, Tipps …"></textarea></div>
           <div class="fg"><label>Portionen (Grundrezept)</label><input type="number" id="rPortions" min="1" max="99" value="4" style="width:80px" /></div>
+          <div class="fg">
+            <label>Bild (optional)</label>
+            <div class="img-tab-row">
+              <button type="button" class="img-tab active" id="imgTabUpload" onclick="switchImgTab('upload')">Hochladen</button>
+              <button type="button" class="img-tab" id="imgTabUrl" onclick="switchImgTab('url')">URL</button>
+            </div>
+            <div id="imgUploadWrap">
+              <input type="file" id="rImgFile" accept="image/jpeg,image/png,image/webp" onchange="handleImgUpload(this)" style="font-size:.82rem;width:100%;color:var(--text)" />
+              <div style="font-size:.72rem;color:var(--muted);margin-top:.25rem">JPG / PNG / WebP · max 2 MB · wird auf 800 px skaliert</div>
+            </div>
+            <div id="imgUrlWrap" style="display:none">
+              <input type="text" id="rImgUrl" placeholder="https://beispiel.de/bild.jpg" oninput="previewImgUrl(this.value)" />
+            </div>
+            <img id="rImgPreview" class="recipe-img-preview" alt="Vorschau" />
+          </div>
           <div class="fg">
             <label>Zutaten</label>
             <div class="ing-list-edit" id="ingListEdit"></div>
@@ -567,6 +598,7 @@ let currentGroupName = '';
 let userGroups       = [];     // [{ id, name, role }]
 let _recipePortions  = {};     // { rid: currentPortionsDisplayed } — not persisted
 let _editPortions    = 4;      // portions selected in meal edit popup
+let _formImgData     = '';     // base64 data URL from file upload in recipe form
 
 // ── Helpers ──────────────────────────────────────────────────────
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -975,7 +1007,7 @@ function renderDay() {
     MEALS.map((m, mi) =>
       `<div class="meal-slot" id="slot_${dk}_${mi}">
         <div class="meal-type">${m}</div>
-        <div class="meal-name" onclick="editMeal('${dk}',${mi})">${esc(getMeal(dk, mi))}</div>
+        <div class="meal-name" onclick="editMeal('${dk}',${mi})">${getMeal(dk,mi) ? mealThumb(dk,mi) + esc(getMeal(dk,mi)) : ''}</div>
       </div>`
     ).join('');
 
@@ -1020,7 +1052,7 @@ function renderWeek() {
           ondrop="onMealDrop(event,'${dk}',${mi})"
           ondragend="onMealDragEnd(event)">
           <div class="meal-type">${m}</div>
-          <div class="meal-name" onclick="editMeal('${dk}',${mi})">${esc(getMeal(dk, mi))}</div>
+          <div class="meal-name" onclick="editMeal('${dk}',${mi})">${getMeal(dk,mi) ? mealThumb(dk,mi) + esc(getMeal(dk,mi)) : ''}</div>
           ${mealIngBtn(dk, mi)}
         </div>`
       ).join('');
@@ -1494,11 +1526,18 @@ function uid() {
 function showRecipeForm(recipeId) {
   if (!canManageRecipes()) return;
   formIngredients = [];
+  _formImgData = '';
   document.getElementById('recipeEditId').value = '';
   document.getElementById('rName').value = '';
   document.getElementById('rDesc').value = '';
   document.getElementById('rPortions').value = 4;
   document.getElementById('recipeFormTitle').textContent = 'Neues Rezept';
+  // Reset image fields
+  document.getElementById('rImgFile').value = '';
+  document.getElementById('rImgUrl').value = '';
+  const prevEl = document.getElementById('rImgPreview');
+  prevEl.src = ''; prevEl.classList.remove('show');
+  switchImgTab('upload');
 
   if (recipeId) {
     const rec = appData.recipes.find(r => r.id === recipeId);
@@ -1509,6 +1548,17 @@ function showRecipeForm(recipeId) {
       document.getElementById('rPortions').value = rec.portions || 4;
       formIngredients = [...rec.ingredients];
       document.getElementById('recipeFormTitle').textContent = 'Rezept bearbeiten';
+      // Restore image
+      if (rec.image) {
+        if (rec.image.startsWith('data:')) {
+          _formImgData = rec.image;
+          prevEl.src = rec.image; prevEl.classList.add('show');
+        } else {
+          switchImgTab('url');
+          document.getElementById('rImgUrl').value = rec.image;
+          previewImgUrl(rec.image);
+        }
+      }
     }
   }
 
@@ -1549,20 +1599,23 @@ function addIngredientToForm() {
 function saveRecipe() {
   const name = document.getElementById('rName').value.trim();
   if (!name) { alert('Bitte einen Namen eingeben.'); return; }
-  const desc    = document.getElementById('rDesc').value.trim();
+  const desc     = document.getElementById('rDesc').value.trim();
   const portions = Math.max(1, parseInt(document.getElementById('rPortions').value) || 4);
-  const editId  = document.getElementById('recipeEditId').value;
+  const editId   = document.getElementById('recipeEditId').value;
+  const image    = document.getElementById('imgTabUrl').classList.contains('active')
+    ? document.getElementById('rImgUrl').value.trim()
+    : _formImgData;
 
   if (!appData.recipes) appData.recipes = [];
 
   if (editId) {
     const idx = appData.recipes.findIndex(r => r.id === editId);
     if (idx !== -1) {
-      appData.recipes[idx] = { id: editId, name, description: desc, portions, ingredients: [...formIngredients] };
+      appData.recipes[idx] = { id: editId, name, description: desc, portions, ingredients: [...formIngredients], image };
     }
     delete _recipePortions[editId];
   } else {
-    appData.recipes.push({ id: uid(), name, description: desc, portions, ingredients: [...formIngredients] });
+    appData.recipes.push({ id: uid(), name, description: desc, portions, ingredients: [...formIngredients], image });
   }
 
   saveData();
@@ -1605,20 +1658,22 @@ function renderRecipes() {
           return `<span class="ingredient-tag">${sq ? esc(sq) + ' ' : ''}${esc(i.name)}</span>`;
         }).join('')}</div>`
       : '';
-    return `
-    <div class="recipe-card" data-rid="${r.id}">
-      <div class="recipe-card-name">${esc(r.name)}</div>
-      ${r.description ? `<div class="recipe-card-desc">${esc(r.description)}</div>` : ''}
-      <div class="portion-ctrl">
-        <button class="portion-btn" onclick="setRecipePortions('${r.id}',-1)">&#x2212;</button>
-        <span class="portion-val" id="rpc_${r.id}">${portionLabel(cur)}</span>
-        <button class="portion-btn" onclick="setRecipePortions('${r.id}',1)">+</button>
+    return `<div class="recipe-card" data-rid="${r.id}">
+      ${recipeImgHtml(r.image)}
+      <div class="recipe-card-body">
+        <div class="recipe-card-name">${esc(r.name)}</div>
+        ${r.description ? `<div class="recipe-card-desc">${esc(r.description)}</div>` : ''}
+        <div class="portion-ctrl">
+          <button class="portion-btn" onclick="setRecipePortions('${r.id}',-1)">−</button>
+          <span class="portion-val" id="rpc_${r.id}">${portionLabel(cur)}</span>
+          <button class="portion-btn" onclick="setRecipePortions('${r.id}',1)">+</button>
+        </div>
+        ${tags}
+        ${canManageRecipes() ? `<div class="recipe-actions">
+          <button class="btn btn-outline btn-sm" onclick="showRecipeForm('${r.id}')">Bearbeiten</button>
+          <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${r.id}')">Löschen</button>
+        </div>` : ''}
       </div>
-      ${tags}
-      ${canManageRecipes() ? `<div class="recipe-actions">
-        <button class="btn btn-outline btn-sm" onclick="showRecipeForm('${r.id}')">Bearbeiten</button>
-        <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${r.id}')">L\u00f6schen</button>
-      </div>` : ''}
     </div>`;
   }).join('');
 }
@@ -1648,6 +1703,73 @@ function setRecipePortions(rid, delta) {
 function adjustMealPortion(delta) {
   _editPortions = Math.max(1, _editPortions + delta);
   document.getElementById('mealPortionVal').textContent = portionLabel(_editPortions);
+}
+
+// ── Recipe images ─────────────────────────────────────────────────
+function switchImgTab(tab) {
+  document.getElementById('imgTabUpload').classList.toggle('active', tab === 'upload');
+  document.getElementById('imgTabUrl').classList.toggle('active', tab === 'url');
+  document.getElementById('imgUploadWrap').style.display = tab === 'upload' ? '' : 'none';
+  document.getElementById('imgUrlWrap').style.display   = tab === 'url'    ? '' : 'none';
+}
+
+function resizeImage(file, maxPx = 800) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let w = img.width, h = img.height;
+      if (w > maxPx || h > maxPx) {
+        if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+        else       { w = Math.round(w * maxPx / h); h = maxPx; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.src = url;
+  });
+}
+
+async function handleImgUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) {
+    alert('Das Bild ist zu groß (max. 2 MB).');
+    input.value = '';
+    return;
+  }
+  _formImgData = await resizeImage(file);
+  const prev = document.getElementById('rImgPreview');
+  prev.src = _formImgData;
+  prev.classList.add('show');
+}
+
+function previewImgUrl(val) {
+  const prev = document.getElementById('rImgPreview');
+  if (val.trim()) {
+    prev.src = val.trim();
+    prev.classList.add('show');
+    prev.onerror = () => prev.classList.remove('show');
+  } else {
+    prev.classList.remove('show');
+  }
+}
+
+function recipeImgHtml(image) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--border)"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+  if (!image) return `<div class="recipe-img-wrap"><div class="recipe-img-placeholder">${svg}</div></div>`;
+  return `<div class="recipe-img-wrap"><img src="${esc(image)}" alt="" loading="lazy" onload="this.classList.add('loaded')" /></div>`;
+}
+
+function mealThumb(dk, mi) {
+  const rid = (appData.mealRecipes || {})[dk + '_' + mi];
+  if (!rid) return '';
+  const rec = (appData.recipes || []).find(r => r.id === rid);
+  if (!rec || !rec.image) return '';
+  return `<img class="meal-thumb" src="${esc(rec.image)}" alt="" loading="lazy" onload="this.classList.add('loaded')" />`;
 }
 
 // ── Group management ──────────────────────────────────────────────
