@@ -1451,3 +1451,190 @@ function resizeImage(file, maxPx) {
       var canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d
+').drawImage(img, 0, 0, w, h);
+resolve(canvas.toDataURL('image/jpeg', 0.82));
+};
+img.src = url;
+});
+}
+async function handleImgUpload(input) {
+var file = input.files[0]; if (!file) return;
+if (file.size > 2 * 1024 * 1024) { alert('Das Bild ist zu gro\u00DF (max. 2 MB).'); input.value = ''; return; }
+_formImgData = await resizeImage(file);
+var prev = document.getElementById('rImgPreview');
+prev.src = _formImgData; prev.classList.add('show');
+}
+function previewImgUrl(val) {
+var prev = document.getElementById('rImgPreview');
+if (val.trim()) {
+prev.src = val.trim(); prev.classList.add('show');
+prev.onerror = function() { prev.classList.remove('show'); };
+} else { prev.classList.remove('show'); }
+}
+function recipeImgHtml(image) {
+var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--border)"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+if (!image) return '<div class="recipe-img-wrap"><div class="recipe-img-placeholder">' + svg + '</div></div>';
+return '<div class="recipe-img-wrap"><img src="' + esc(image) + '" alt="" loading="lazy" onload="this.classList.add(\'loaded\')" /></div>';
+}
+function mealThumb(dk, mi) {
+var rid = (appData.mealRecipes || {})[dk + '_' + mi]; if (!rid) return '';
+var rec = (appData.recipes || []).find(function(r) { return r.id === rid; });
+if (!rec || !rec.image) return '';
+return '<img class="meal-thumb" src="' + esc(rec.image) + '" alt="" loading="lazy" onload="this.classList.add(\'loaded\')" />';
+}
+// ── Group management ──────────────────────────────────────────────
+var ROLE_LABELS = { owner:'Owner', admin:'Admin', member:'Mitglied', viewer:'Zuschauer' };
+var ROLE_CLASS = { owner:'role-owner', admin:'role-admin', member:'role-member', viewer:'role-viewer' };
+function updateContextSwitcher() {
+var sel = document.getElementById('contextSelect');
+if (userGroups.length === 0) { sel.style.display = 'none'; return; }
+sel.innerHTML = '<option value="">\uD83D\uDE4B Pers\u00F6nlich</option>' +
+userGroups.map(function(g) { return '<option value="' + g.id + '">' + esc(g.name) + '</option>'; }).join('');
+sel.value = currentGroupId || '';
+sel.style.display = '';
+}
+async function switchContext(val) {
+if (!val) { currentGroupId = null; currentGroupRole = null; currentGroupName = ''; }
+else {
+var g = userGroups.find(function(g) { return g.id === val; });
+if (g) { currentGroupId = g.id; currentGroupRole = g.role; currentGroupName = g.name; }
+}
+await loadData(); renderPlan();
+var ap = document.querySelector('.page.active');
+if (ap && ap.id === 'shoppingPage') renderShopping();
+if (ap && ap.id === 'recipesPage') renderRecipes();
+if (ap && ap.id === 'groupPage') renderGroupPage();
+}
+async function createGroup() {
+var name = document.getElementById('newGroupName').value.trim();
+if (!name) return alert('Bitte einen Gruppennamen eingeben.');
+var inviteCode = Math.random().toString(36).slice(2, 8).toUpperCase();
+var groupRef = db.collection('groups').doc();
+await groupRef.set({ name: name, inviteCode: inviteCode, createdBy: currentUid, members: { [currentUid]: { username: currentUser, role: 'owner' } } });
+await db.collection('users').doc(currentUid).update({ groupIds: firebase.firestore.FieldValue.arrayUnion(groupRef.id) });
+userGroups.push({ id: groupRef.id, name: name, role: 'owner' });
+currentGroupId = groupRef.id; currentGroupRole = 'owner'; currentGroupName = name;
+appData = { meals:{}, shopping:[], checked:{}, recipes:[], mealRecipes:{} };
+document.getElementById('newGroupName').value = '';
+updateContextSwitcher(); await renderGroupPage(); renderPlan();
+}
+async function joinGroup() {
+var code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+var errEl = document.getElementById('groupJoinErr'); errEl.style.display = 'none';
+if (!code) { errEl.textContent = 'Bitte einen Code eingeben.'; errEl.style.display = 'block'; return; }
+var snap = await db.collection('groups').where('inviteCode', '==', code).get();
+if (snap.empty) { errEl.textContent = 'Ung\u00FCltiger Einladungscode.'; errEl.style.display = 'block'; return; }
+var gDoc = snap.docs[0];
+if ((gDoc.data().members && gDoc.data().members[currentUid]) || userGroups.find(function(g) { return g.id === gDoc.id; })) {
+errEl.textContent = 'Du bist bereits in dieser Gruppe.'; errEl.style.display = 'block'; return;
+}
+await db.collection('groups').doc(gDoc.id).update({ ['members.' + currentUid]: { username: currentUser, role: 'member' } });
+await db.collection('users').doc(currentUid).update({ groupIds: firebase.firestore.FieldValue.arrayUnion(gDoc.id) });
+userGroups.push({ id: gDoc.id, name: gDoc.data().name, role: 'member' });
+currentGroupId = gDoc.id; currentGroupRole = 'member'; currentGroupName = gDoc.data().name;
+await loadData();
+document.getElementById('joinCodeInput').value = '';
+updateContextSwitcher(); await renderGroupPage(); renderPlan();
+}
+async function leaveGroup(groupId) {
+var g = userGroups.find(function(g) { return g.id === groupId; }); if (!g) return;
+if (g.role === 'owner') {
+var gDoc2 = await db.collection('groups').doc(groupId).get();
+var others = Object.keys(gDoc2.data().members || {}).filter(function(u) { return u !== currentUid; });
+if (others.length > 0) return alert('Du bist der Owner. \u00DCbertrage zuerst den Owner-Status oder l\u00F6sche die Gruppe.');
+}
+if (!confirm('Gruppe wirklich verlassen?')) return;
+await db.collection('groups').doc(groupId).update({ ['members.' + currentUid]: firebase.firestore.FieldValue.delete() });
+await db.collection('users').doc(currentUid).update({ groupIds: firebase.firestore.FieldValue.arrayRemove(groupId) });
+userGroups = userGroups.filter(function(g) { return g.id !== groupId; });
+if (currentGroupId === groupId) { currentGroupId = null; currentGroupRole = null; currentGroupName = ''; await loadData(); }
+updateContextSwitcher(); await renderGroupPage(); renderPlan();
+}
+async function deleteGroup(groupId) {
+var g = userGroups.find(function(g) { return g.id === groupId; });
+if (!g || g.role !== 'owner') return;
+if (!confirm('Gruppe und alle gemeinsamen Daten wirklich unwiderruflich l\u00F6schen?')) return;
+var gDoc3 = await db.collection('groups').doc(groupId).get();
+var members = gDoc3.data().members || {};
+var batch = db.batch();
+Object.keys(members).forEach(function(uid) {
+batch.update(db.collection('users').doc(uid), { groupIds: firebase.firestore.FieldValue.arrayRemove(groupId) });
+});
+batch.delete(db.collection('groups').doc(groupId).collection('data').doc('main'));
+batch.delete(db.collection('groups').doc(groupId));
+await batch.commit();
+userGroups = userGroups.filter(function(g) { return g.id !== groupId; });
+if (currentGroupId === groupId) { currentGroupId = null; currentGroupRole = null; currentGroupName = ''; await loadData(); }
+updateContextSwitcher(); await renderGroupPage(); renderPlan();
+}
+async function setMemberRole(groupId, memberUid, role) {
+var g = userGroups.find(function(g) { return g.id === groupId; });
+if (!g || !['owner','admin'].includes(g.role)) return;
+await db.collection('groups').doc(groupId).update({ ['members.' + memberUid + '.role']: role });
+if (role === 'owner' && g.role === 'owner') {
+await db.collection('groups').doc(groupId).update({ ['members.' + currentUid + '.role']: 'admin' });
+g.role = 'admin'; if (currentGroupId === groupId) currentGroupRole = 'admin';
+}
+await renderGroupPage();
+}
+async function removeMember(groupId, memberUid) {
+var g = userGroups.find(function(g) { return g.id === groupId; });
+if (!g || !['owner','admin'].includes(g.role)) return;
+if (!confirm('Mitglied wirklich entfernen?')) return;
+await db.collection('groups').doc(groupId).update({ ['members.' + memberUid]: firebase.firestore.FieldValue.delete() });
+await db.collection('users').doc(memberUid).update({ groupIds: firebase.firestore.FieldValue.arrayRemove(groupId) });
+await renderGroupPage();
+}
+async function copyInviteCode(code) {
+try { await navigator.clipboard.writeText(code); } catch(e) {}
+alert('Einladungscode kopiert: ' + code);
+}
+async function renderGroupPage() {
+var container = document.getElementById('myGroupsList');
+if (userGroups.length === 0) {
+container.innerHTML = '<div class="empty" style="background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:1rem">Du bist noch in keiner Gruppe.</div>';
+return;
+}
+var html = '';
+for (var gi = 0; gi < userGroups.length; gi++) {
+var g = userGroups[gi];
+var gDoc = await db.collection('groups').doc(g.id).get(); if (!gDoc.exists) continue;
+var gData = gDoc.data();
+var isActive = currentGroupId === g.id;
+var membersHtml = Object.entries(gData.members || {}).map(function(entry) {
+var mUid = entry[0], m = entry[1];
+var isMe = mUid === currentUid;
+var editable = !isMe && (g.role === 'owner' || (g.role === 'admin' && m.role !== 'owner' && m.role !== 'admin'));
+var roles = g.role === 'owner' ? ['owner','admin','member','viewer'] : ['member','viewer'];
+return '<div class="member-row"><div>' +
+'<div class="member-name">' + esc(m.username) + (isMe ? ' <span style="color:var(--muted);font-size:.82rem;font-weight:400">(du)</span>' : '') + '</div>' +
+'<span class="member-role-badge ' + (ROLE_CLASS[m.role]||'') + '">' + (ROLE_LABELS[m.role]||m.role) + '</span>' +
+'</div><div style="display:flex;gap:.4rem;align-items:center">' +
+(editable ? '<select class="role-select" onchange="setMemberRole(\'' + g.id + '\',\'' + mUid + '\',this.value)">' +
+roles.map(function(r) { return '<option value="' + r + '"' + (r===m.role?' selected':'') + '>' + ROLE_LABELS[r] + '</option>'; }).join('') +
+'</select><button class="btn btn-danger btn-sm" onclick="removeMember(\'' + g.id + '\',\'' + mUid + '\')">Entfernen</button>' : '') +
+'</div></div>';
+}).join('');
+html += '<div class="settings-card" style="margin-bottom:1rem">' +
+'<div class="settings-section" style="display:flex;justify-content:space-between;align-items:center">' +
+'<span>' + esc(gData.name) + '</span>' +
+'<span class="member-role-badge ' + (ROLE_CLASS[g.role]||'') + '">' + (ROLE_LABELS[g.role]||g.role) + '</span>' +
+'</div>' +
+'<div class="settings-row"><div><div class="settings-label">Aktiver Kontext</div><div class="settings-sub">Daten die du gerade bearbeitest</div></div>' +
+'<button class="btn ' + (isActive ? 'btn-primary' : 'btn-outline') + ' btn-sm" style="width:auto" onclick="switchContext(\'' + g.id + '\');updateContextSwitcher()">' +
+(isActive ? '\u2713 Aktiv' : 'Wechseln') + '</button></div>' +
+'<div class="settings-row"><div class="settings-label">Einladungscode</div>' +
+'<div style="display:flex;align-items:center;gap:.6rem"><span class="invite-code">' + esc(gData.inviteCode) + '</span>' +
+'<button class="btn btn-outline btn-sm" onclick="copyInviteCode(\'' + esc(gData.inviteCode) + '\')">Kopieren</button></div></div>' +
+'<div class="settings-section" style="font-size:.72rem">Mitglieder</div>' +
+membersHtml +
+'<div class="settings-row" style="gap:.5rem"><div><div class="settings-label">Gruppe verlassen</div>' +
+'<div class="settings-sub">Kehrt zum pers\u00F6nlichen Plan zur\u00FCck</div></div>' +
+'<button class="btn btn-danger btn-sm" onclick="leaveGroup(\'' + g.id + '\')">Verlassen</button>' +
+(g.role === 'owner' ? '<button class="btn btn-danger btn-sm" onclick="deleteGroup(\'' + g.id + '\')">L\u00F6schen</button>' : '') +
+'</div></div>';
+}
+container.innerHTML = html;
+}
+</script>
+</body> </html> ```
