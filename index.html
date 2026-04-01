@@ -267,6 +267,11 @@
     .recipe-img-preview.show { display:block; }
     .meal-thumb { width:18px; height:18px; border-radius:3px; object-fit:cover; flex-shrink:0; opacity:0; transition:opacity .25s; }
     .meal-thumb.loaded { opacity:1; }
+
+    /* ── Import modal ────────────────────────────────────────────── */
+    .import-spinner { display:inline-block; width:16px; height:16px; border:2.5px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; margin-right:.4rem; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .import-err { color:var(--danger); font-size:.82rem; background:#fef2f2; padding:.4rem .65rem; border-radius:6px; margin-top:.4rem; display:none; }
   </style>
 </head>
 <body>
@@ -357,7 +362,10 @@
     <div id="recipesPage" class="page">
       <div class="page-header">
         <div class="page-title">Rezepte</div>
-        <button class="btn btn-primary btn-sm" onclick="showRecipeForm()">+ Neues Rezept</button>
+        <div style="display:flex;gap:.4rem">
+          <button class="btn btn-outline btn-sm" onclick="openImportModal()">&#8659; Rezept importieren</button>
+          <button class="btn btn-primary btn-sm" onclick="showRecipeForm()">+ Neues Rezept</button>
+        </div>
       </div>
       <div id="recipeFormWrap" style="display:none">
         <div class="recipe-form">
@@ -526,6 +534,26 @@
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" onclick="closeIngModal()">Abbrechen</button>
       <button class="btn btn-primary btn-sm" style="width:auto" onclick="confirmIngModal()">Zur Einkaufsliste</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Recipe import modal ────────────────────────────────────────── -->
+<div id="importModal" class="modal-overlay" style="display:none" onclick="closeImportModal(event)">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-title">Rezept importieren</div>
+    <div style="font-size:.85rem;color:var(--muted);margin-bottom:.75rem">URL einer Rezeptseite eingeben (z.B. Chefkoch)</div>
+    <input type="text" id="importUrlInput" placeholder="https://www.chefkoch.de/rezepte/…"
+      style="width:100%;padding:.6rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;outline:none;font-family:inherit;transition:border-color .15s"
+      onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
+      onkeydown="if(event.key==='Enter')doImportRecipe()" />
+    <div id="importErr" class="import-err"></div>
+    <div id="importLoading" style="display:none;font-size:.85rem;color:var(--muted);margin-top:.5rem">
+      <span class="import-spinner"></span>Lade Rezept…
+    </div>
+    <div style="display:flex;gap:.5rem;margin-top:.75rem">
+      <button class="btn btn-primary btn-sm" style="width:auto" onclick="doImportRecipe()">Importieren</button>
+      <button class="btn btn-outline btn-sm" onclick="closeImportModal()">Abbrechen</button>
     </div>
   </div>
 </div>
@@ -1989,6 +2017,218 @@ async function renderGroupPage() {
     </div>`;
   }
   container.innerHTML = html;
+}
+
+// ── Recipe Import ────────────────────────────────────────────────
+
+function openImportModal() {
+  document.getElementById('importUrlInput').value = '';
+  document.getElementById('importErr').style.display = 'none';
+  document.getElementById('importLoading').style.display = 'none';
+  document.getElementById('importModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('importUrlInput').focus(), 50);
+}
+
+function closeImportModal(e) {
+  if (e && e.target !== document.getElementById('importModal')) return;
+  document.getElementById('importModal').style.display = 'none';
+}
+
+async function doImportRecipe() {
+  const urlInput = document.getElementById('importUrlInput');
+  const errEl    = document.getElementById('importErr');
+  const loadEl   = document.getElementById('importLoading');
+  const url      = urlInput.value.trim();
+
+  errEl.style.display = 'none';
+  if (!url) {
+    errEl.textContent = 'Bitte eine URL eingeben.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!/^https?:\/\//i.test(url)) {
+    errEl.textContent = 'Bitte eine vollständige URL mit https:// eingeben.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  loadEl.style.display = 'block';
+  errEl.style.display  = 'none';
+
+  try {
+    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+    const res = await fetch(proxyUrl);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if (!json.contents) throw new Error('Keine Inhalte erhalten.');
+
+    const recipe = parseRecipeFromHtml(json.contents, url);
+    if (!recipe) {
+      errEl.textContent = 'Kein Rezept auf dieser Seite gefunden. Versuche eine andere URL.';
+      errEl.style.display = 'block';
+      loadEl.style.display = 'none';
+      return;
+    }
+
+    // Close modal and pre-fill form
+    document.getElementById('importModal').style.display = 'none';
+    loadEl.style.display = 'none';
+
+    // Switch to recipes page if not already there
+    showPage('recipes', document.getElementById('navRecipes'));
+    showRecipeForm();
+
+    // Pre-fill fields
+    if (recipe.name)        document.getElementById('rName').value = recipe.name;
+    if (recipe.description) document.getElementById('rDesc').value = recipe.description;
+    if (recipe.portions)    document.getElementById('rPortions').value = recipe.portions;
+    if (recipe.image) {
+      switchImgTab('url');
+      document.getElementById('rImgUrl').value = recipe.image;
+      previewImgUrl(recipe.image);
+    }
+    if (recipe.ingredients && recipe.ingredients.length) {
+      formIngredients = recipe.ingredients.map(s => parseIngredientString(s));
+      renderIngListEdit();
+    }
+    document.getElementById('rName').focus();
+
+  } catch (err) {
+    errEl.textContent = 'Fehler beim Laden: ' + (err.message || 'Unbekannter Fehler');
+    errEl.style.display = 'block';
+    loadEl.style.display = 'none';
+  }
+}
+
+function parseRecipeFromHtml(html, sourceUrl) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  // 1. JSON-LD
+  const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
+  for (const s of scripts) {
+    try {
+      let data = JSON.parse(s.textContent);
+      // Handle @graph
+      if (data['@graph']) data = data['@graph'];
+      if (Array.isArray(data)) {
+        for (const item of data) {
+          const t = Array.isArray(item['@type']) ? item['@type'] : [item['@type']];
+          if (t.some(x => x === 'Recipe' || x === 'schema:Recipe')) {
+            const r = extractFromJsonLd(item);
+            if (r && r.name) return r;
+          }
+        }
+      } else {
+        const t = Array.isArray(data['@type']) ? data['@type'] : [data['@type']];
+        if (t.some(x => x === 'Recipe' || x === 'schema:Recipe')) {
+          const r = extractFromJsonLd(data);
+          if (r && r.name) return r;
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  // 2. Microdata
+  const mdEl = doc.querySelector('[itemtype*="schema.org/Recipe"]');
+  if (mdEl) {
+    const r = extractFromMicrodata(mdEl);
+    if (r && r.name) return r;
+  }
+
+  // 3. Meta-tag fallback
+  const r = extractFromMeta(doc);
+  if (r && r.name) return r;
+
+  return null;
+}
+
+function extractFromJsonLd(data) {
+  let image = '';
+  if (data.image) {
+    if (typeof data.image === 'string') image = data.image;
+    else if (Array.isArray(data.image)) image = typeof data.image[0] === 'string' ? data.image[0] : (data.image[0] && data.image[0].url) || '';
+    else if (data.image.url) image = data.image.url;
+  }
+
+  let portions = '';
+  const yld = data.recipeYield;
+  if (yld) {
+    const num = parseInt(Array.isArray(yld) ? yld[0] : yld, 10);
+    if (!isNaN(num) && num > 0) portions = num;
+  }
+
+  const ingredients = Array.isArray(data.recipeIngredient) ? data.recipeIngredient.filter(Boolean) : [];
+
+  return {
+    name:        data.name || '',
+    description: data.description || '',
+    image,
+    portions,
+    ingredients
+  };
+}
+
+function extractFromMicrodata(el) {
+  const q = (prop) => {
+    const e = el.querySelector('[itemprop="' + prop + '"]');
+    if (!e) return '';
+    return e.getAttribute('content') || e.textContent.trim();
+  };
+  const qAll = (prop) => [...el.querySelectorAll('[itemprop="' + prop + '"]')].map(e => (e.getAttribute('content') || e.textContent).trim()).filter(Boolean);
+
+  const imgEl = el.querySelector('[itemprop="image"]');
+  const image = imgEl ? (imgEl.getAttribute('src') || imgEl.getAttribute('content') || '') : '';
+
+  let portions = '';
+  const yld = q('recipeYield');
+  if (yld) { const n = parseInt(yld, 10); if (!isNaN(n)) portions = n; }
+
+  return {
+    name:        q('name'),
+    description: q('description'),
+    image,
+    portions,
+    ingredients: qAll('recipeIngredient')
+  };
+}
+
+function extractFromMeta(doc) {
+  const m = (prop) => {
+    const el = doc.querySelector('meta[property="' + prop + '"],meta[name="' + prop + '"]');
+    return el ? el.getAttribute('content') || '' : '';
+  };
+  return {
+    name:        m('og:title') || doc.title || '',
+    description: m('og:description') || m('description') || '',
+    image:       m('og:image') || '',
+    portions:    '',
+    ingredients: []
+  };
+}
+
+function parseIngredientString(s) {
+  s = s.trim();
+  // Match optional number (int, decimal, fraction like 1/2) + optional unit + rest
+  const numPat  = '(\\d+(?:[,./]\\d+)?)';
+  const unitPat = '(g|kg|ml|l|EL|TL|Prise|Pck\\.?|Pkg\\.?|Stk\\.?|Stück|Becher|Dose|Tasse|Bund|Zweig|Zehe|etwas|nach Geschmack|ca\\.)';
+  const re = new RegExp('^' + numPat + '\\s*' + numPat + '?\\s*' + unitPat + '?\\s*(.+)?$', 'i');
+  const m = s.match(re);
+
+  if (m) {
+    let qty  = m[1] || '';
+    if (m[2]) qty += (qty ? '-' : '') + m[2];
+    if (m[3]) qty += (qty ? ' ' : '') + m[3];
+    const name = (m[4] || '').trim();
+    if (name) return { qty: qty.trim(), name };
+  }
+
+  // "etwas Salz", "nach Geschmack" etc. without number
+  const etwasRe = /^(etwas|nach Geschmack|n\.B\.|wenig|reichlich)\s+(.+)/i;
+  const em = s.match(etwasRe);
+  if (em) return { qty: em[1], name: em[2].trim() };
+
+  return { qty: '', name: s };
 }
 </script>
 </body>
