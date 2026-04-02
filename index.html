@@ -1045,7 +1045,7 @@ function renderDay() {
     MEALS.map((m, mi) =>
       `<div class="meal-slot" id="slot_${dk}_${mi}">
         <div class="meal-type">${m}</div>
-        <div class="meal-name" onclick="editMeal('${dk}',${mi})">${getMeal(dk,mi) ? mealThumb(dk,mi) + esc(getMeal(dk,mi)) : ''}</div>
+        <div class="meal-name" onclick="editMeal('${dk}',${mi})">${getMeal(dk,mi) ? esc(getMeal(dk,mi)) : ''}</div>
       </div>`
     ).join('');
 
@@ -1090,7 +1090,7 @@ function renderWeek() {
           ondrop="onMealDrop(event,'${dk}',${mi})"
           ondragend="onMealDragEnd(event)">
           <div class="meal-type">${m}</div>
-          <div class="meal-name" onclick="editMeal('${dk}',${mi})">${getMeal(dk,mi) ? mealThumb(dk,mi) + esc(getMeal(dk,mi)) : ''}</div>
+          <div class="meal-name" onclick="editMeal('${dk}',${mi})">${getMeal(dk,mi) ? esc(getMeal(dk,mi)) : ''}</div>
           ${mealIngBtn(dk, mi)}
         </div>`
       ).join('');
