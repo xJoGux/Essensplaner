@@ -558,6 +558,16 @@
   </div>
 </div>
 
+<!-- ── Copy-to-group modal ─────────────────────────────────────────── -->
+<div id="copyGroupModal" class="modal-overlay" style="display:none" onclick="closeCopyGroupModal(event)">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-title">Rezept in Gruppe kopieren</div>
+    <div style="font-size:.85rem;color:var(--muted);margin-bottom:.75rem" id="copyGroupRecipeName"></div>
+    <div id="copyGroupList" style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.75rem"></div>
+    <button class="btn btn-outline btn-sm" onclick="closeCopyGroupModal()">Abbrechen</button>
+  </div>
+</div>
+
 <!-- ── Error handler + emergency timeout (vor Firebase, damit es immer läuft) ── -->
 <script>
 window.onerror = function(msg, src, line) {
@@ -1697,10 +1707,11 @@ function renderRecipes() {
           <button class="portion-btn" onclick="setRecipePortions('${r.id}',1)">+</button>
         </div>
         ${tags}
-        ${canManageRecipes() ? `<div class="recipe-actions">
-          <button class="btn btn-outline btn-sm" onclick="showRecipeForm('${r.id}')">Bearbeiten</button>
-          <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${r.id}')">Löschen</button>
-        </div>` : ''}
+        <div class="recipe-actions">
+          ${canManageRecipes() ? `<button class="btn btn-outline btn-sm" onclick="showRecipeForm('${r.id}')">Bearbeiten</button>` : ''}
+          ${canManageRecipes() ? `<button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="deleteRecipe('${r.id}')">Löschen</button>` : ''}
+          ${!currentGroupId && userGroups.length > 0 ? `<button class="btn btn-outline btn-sm" onclick="openCopyGroupModal('${r.id}')" title="In Gruppe kopieren">→ Gruppe</button>` : ''}
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -2019,6 +2030,56 @@ async function renderGroupPage() {
   container.innerHTML = html;
 }
 
+// ── Copy recipe to group ──────────────────────────────────────────
+let _copyGroupRecipeId = null;
+
+function openCopyGroupModal(recipeId) {
+  const rec = (appData.recipes || []).find(r => r.id === recipeId);
+  if (!rec) return;
+  _copyGroupRecipeId = recipeId;
+  document.getElementById('copyGroupRecipeName').textContent = '„' + rec.name + '"';
+  const list = document.getElementById('copyGroupList');
+  list.innerHTML = userGroups.map(g =>
+    `<button class="btn btn-outline btn-sm" style="width:100%;justify-content:flex-start" onclick="doCopyRecipeToGroup('${g.id}','${esc(g.name)}')">${esc(g.name)}</button>`
+  ).join('');
+  document.getElementById('copyGroupModal').style.display = 'flex';
+}
+
+function closeCopyGroupModal(e) {
+  if (e && e.target !== document.getElementById('copyGroupModal')) return;
+  document.getElementById('copyGroupModal').style.display = 'none';
+  _copyGroupRecipeId = null;
+}
+
+async function doCopyRecipeToGroup(groupId, groupName) {
+  const rec = (appData.recipes || []).find(r => r.id === _copyGroupRecipeId);
+  if (!rec) return;
+  document.getElementById('copyGroupModal').style.display = 'none';
+
+  try {
+    const groupDataRef = db.collection('groups').doc(groupId).collection('data').doc('main');
+    const doc = await groupDataRef.get();
+    const groupData = doc.exists
+      ? { meals:{}, shopping:[], checked:{}, recipes:[], mealRecipes:{}, mealPortions:{}, ...doc.data() }
+      : { meals:{}, shopping:[], checked:{}, recipes:[], mealRecipes:{}, mealPortions:{} };
+    if (!groupData.recipes) groupData.recipes = [];
+
+    const exists = groupData.recipes.some(r => r.name === rec.name);
+    if (exists && !confirm('Ein Rezept mit diesem Namen existiert bereits in der Gruppe. Trotzdem kopieren?')) {
+      _copyGroupRecipeId = null;
+      return;
+    }
+
+    groupData.recipes.push({ ...rec, id: uid() });
+    await groupDataRef.set(groupData);
+    _copyGroupRecipeId = null;
+    alert('Rezept „' + rec.name + '" wurde in die Gruppe „' + groupName + '" kopiert.');
+  } catch (e) {
+    alert('Fehler beim Kopieren: ' + e.message);
+    _copyGroupRecipeId = null;
+  }
+}
+
 // ── Recipe Import ────────────────────────────────────────────────
 
 function openImportModal() {
@@ -2032,6 +2093,33 @@ function openImportModal() {
 function closeImportModal(e) {
   if (e && e.target !== document.getElementById('importModal')) return;
   document.getElementById('importModal').style.display = 'none';
+}
+
+async function fetchViaProxy(url) {
+  const proxies = [
+    async () => {
+      const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return await r.text();
+    },
+    async () => {
+      const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json();
+      if (!j.contents) throw new Error('Keine Inhalte');
+      return j.contents;
+    },
+    async () => {
+      const r = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url));
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return await r.text();
+    }
+  ];
+  let lastErr = null;
+  for (const tryProxy of proxies) {
+    try { return await tryProxy(); } catch (e) { lastErr = e; }
+  }
+  throw new Error('Seite konnte nicht geladen werden. Bitte URL prüfen. (' + (lastErr && lastErr.message) + ')');
 }
 
 async function doImportRecipe() {
@@ -2056,13 +2144,8 @@ async function doImportRecipe() {
   errEl.style.display  = 'none';
 
   try {
-    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-    const res = await fetch(proxyUrl);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const json = await res.json();
-    if (!json.contents) throw new Error('Keine Inhalte erhalten.');
-
-    const recipe = parseRecipeFromHtml(json.contents, url);
+    const html = await fetchViaProxy(url);
+    const recipe = parseRecipeFromHtml(html, url);
     if (!recipe) {
       errEl.textContent = 'Kein Rezept auf dieser Seite gefunden. Versuche eine andere URL.';
       errEl.style.display = 'block';
