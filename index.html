@@ -2243,13 +2243,27 @@ function extractFromJsonLd(data) {
 
   const ingredients = Array.isArray(data.recipeIngredient) ? data.recipeIngredient.filter(Boolean) : [];
 
-  return {
-    name:        data.name || '',
-    description: data.description || '',
-    image,
-    portions,
-    ingredients
-  };
+  // recipeInstructions: string | HowToStep[] | HowToSection[]
+  let instructions = '';
+  if (data.recipeInstructions) {
+    const steps = Array.isArray(data.recipeInstructions) ? data.recipeInstructions : [data.recipeInstructions];
+    const lines = [];
+    steps.forEach(step => {
+      if (typeof step === 'string') { lines.push(step); }
+      else if (step['@type'] === 'HowToSection') {
+        if (step.name) lines.push(step.name + ':');
+        (step.itemListElement || []).forEach(s => { const t = s.text || s.name || ''; if (t) lines.push(t); });
+      } else {
+        const t = step.text || step.name || ''; if (t) lines.push(t);
+      }
+    });
+    instructions = lines.filter(Boolean).join('\n');
+  }
+
+  let description = data.description || '';
+  if (instructions) description = description ? description + '\n\n' + instructions : instructions;
+
+  return { name: data.name || '', description, image, portions, ingredients };
 }
 
 function extractFromMicrodata(el) {
@@ -2267,13 +2281,15 @@ function extractFromMicrodata(el) {
   const yld = q('recipeYield');
   if (yld) { const n = parseInt(yld, 10); if (!isNaN(n)) portions = n; }
 
-  return {
-    name:        q('name'),
-    description: q('description'),
-    image,
-    portions,
-    ingredients: qAll('recipeIngredient')
-  };
+  // recipeInstructions via microdata
+  const instrEls = [...el.querySelectorAll('[itemprop="recipeInstructions"],[itemprop="step"]')];
+  const instrText = instrEls.map(e => e.getAttribute('content') || e.textContent.trim()).filter(Boolean).join('\n');
+  const desc = q('description');
+  const description = (desc && instrText && !desc.includes(instrText.slice(0, 40)))
+    ? desc + '\n\n' + instrText
+    : (instrText || desc);
+
+  return { name: q('name'), description, image, portions, ingredients: qAll('recipeIngredient') };
 }
 
 function extractFromMeta(doc) {
